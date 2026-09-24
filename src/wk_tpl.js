@@ -133,6 +133,23 @@ function groundOf(m,fit){
   const g=project([gx,93,gz]);
   return {cx:g.x*fit.sc+fit.ox,cy:g.y*fit.sc+fit.oy,ry:40*Math.sin(R(PITCH))};
 }
+// set-check freshness (pure; qa/wk.js unit-tests it). Checks live for one LOCAL
+// calendar day, and a fully-checked workout clears on its next load — done means the
+// next visit is a new session. Partial same-day checks persist across phone lock /
+// app switches. Unstamped (legacy) or malformed data starts fresh.
+function dayKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function freshChecks(st,day,sets){
+  const out={A:{},B:{},day};
+  if(!st||typeof st!=='object'||st.day!==day)return out;
+  ['A','B'].forEach(id=>{
+    const w=st[id]; if(!w||typeof w!=='object')return;
+    const done=sets[id].length>0&&sets[id].every((n,i)=>{const a=w[i];
+      if(!Array.isArray(a))return false;
+      for(let s=0;s<n;s++)if(!a[s])return false; return true;});
+    if(!done)out[id]=w;
+  });
+  return out;
+}
 // ---- DOM ----
 const $=id=>document.getElementById(id);
 const WORKOUTS=[{id:'A',moves:WK_A},{id:'B',moves:WK_B}];
@@ -143,7 +160,10 @@ const store={
   set(k,v){try{if(typeof localStorage!=='undefined')localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 };
 let tab=store.get('wkTab','A'); if(tab!=='A'&&tab!=='B')tab='A';
-let checks=store.get('wkChk',null); if(!checks||!checks.A||!checks.B)checks={A:{},B:{}};
+const SETS={A:WK_A.map(m=>m.sets),B:WK_B.map(m=>m.sets)};
+let checks=freshChecks(store.get('wkChk',null),dayKey(new Date()),SETS);
+const saveChecks=()=>{checks.day=dayKey(new Date());store.set('wkChk',checks);};
+saveChecks();
 const setsTxt=m=>m.sets+' × '+m.reps+(m.each?' <span class="each">each side</span>':'');
 WORKOUTS.forEach(w=>{
   $('list'+w.id).innerHTML=w.moves.map((m,i)=>
@@ -176,11 +196,11 @@ WORKOUTS.forEach(w=>{
     for(let s=0;s<m.sets;s++){
       $('ck-'+w.id+'-'+i+'-'+s).onclick=()=>{
         const arr=checks[w.id][i]||(checks[w.id][i]=[]);
-        arr[s]=!arr[s]; store.set('wkChk',checks); paintChecks();
+        arr[s]=!arr[s]; saveChecks(); paintChecks();
       };
     }
   });
-  $('reset-'+w.id).onclick=()=>{checks[w.id]={};store.set('wkChk',checks);paintChecks();};
+  $('reset-'+w.id).onclick=()=>{checks[w.id]={};saveChecks();paintChecks();};
 });
 paintChecks();
 function setTab(t){

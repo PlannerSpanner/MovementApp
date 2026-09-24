@@ -6,7 +6,7 @@ const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..')
 const h=fs.readFileSync(path.join(ROOT,'strength.html'),'utf8');
 const js=h.split('<script>')[1].split('</script>')[0];
 const core=js.slice(0,js.indexOf('// ---- DOM ----'));
-const ctx=new Function(core+'\nreturn {WK_A,WK_B,solve,poseAt,propShapes,fitOf,figMarkup,TORSO,PROP};')();
+const ctx=new Function(core+'\nreturn {WK_A,WK_B,solve,poseAt,propShapes,fitOf,figMarkup,TORSO,PROP,freshChecks,dayKey};')();
 const {WK_A,WK_B,solve,poseAt,propShapes}=ctx;
 const SEGS=[['pelvis','chest',13],['chest','neck',13],['neck','head',9],
  ['hpL','knL',19],['knL','ftL',19],['hpR','knR',19],['knR','ftR',19],
@@ -117,6 +117,32 @@ const OKCOL=new Set(['#42591f','#a8bc85','#5c7d34','#b9a98b']);
     if(t<0||after!==nAtt)issues.push(`${m.n}: held implement behind the torso at ph ${ph} (${after}/${nAtt} PROP elements after torso)`);
   }
 });
+// set-check freshness: checks auto-clear on a new calendar day, and a fully-checked
+// workout clears on the next same-day load (done = next visit is a new session).
+// Partial same-day checks persist (phone lock / app switch mid-workout).
+(function(){
+  const {freshChecks,dayKey}=ctx;
+  if(typeof freshChecks!=='function'||typeof dayKey!=='function'){issues.push('freshChecks/dayKey missing from pure section');return;}
+  const sets={A:WK_A.map(m=>m.sets),B:WK_B.map(m=>m.sets)};
+  const today='2026-09-24';
+  const full=id=>{const o={};sets[id].forEach((n,i)=>{o[i]=Array.from({length:n},()=>true);});return o;};
+  const partial={0:[true,false,true]};
+  let r=freshChecks(null,today,sets);
+  if(!r||!r.A||!r.B||r.day!==today||Object.keys(r.A).length)issues.push('freshChecks(null) must give empty checks stamped today');
+  r=freshChecks({A:partial,B:{}},today,sets);
+  if(Object.keys(r.A).length)issues.push('legacy unstamped checks must be treated as stale and cleared');
+  r=freshChecks({A:partial,B:{},day:today},today,sets);
+  if(!(r.A[0]&&r.A[0][2]===true))issues.push('same-day partial checks must persist');
+  r=freshChecks({A:partial,B:{},day:'2026-09-23'},today,sets);
+  if(Object.keys(r.A).length||r.day!==today)issues.push('checks from a different day must clear');
+  r=freshChecks({A:full('A'),B:partial,day:today},today,sets);
+  if(Object.keys(r.A).length)issues.push('a fully-checked workout must clear on the next same-day load');
+  if(!(r.B[0]&&r.B[0][2]===true))issues.push('clearing a done workout must not touch the other workout');
+  r=freshChecks({A:full('A'),B:{},day:today},today,sets); r.A.x=1;
+  const k=dayKey(new Date(2026,8,24,0,30));   // local midnight-adjacent: must be LOCAL date
+  if(k!=='2026-09-24')issues.push('dayKey must be the local calendar date, got '+k);
+  if(dayKey(new Date(2026,0,5))!=='2026-01-05')issues.push('dayKey must zero-pad');
+})();
 const u=[...new Set(issues)];
 console.log(u.length?`WK FAIL\n  `+u.join('\n  '):`WK PASS — ${WK_A.length+WK_B.length} movements, ${PH.length} phases each`);
 process.exit(u.length?1:0);

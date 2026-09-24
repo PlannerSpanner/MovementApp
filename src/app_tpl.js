@@ -273,7 +273,8 @@ const cDone=()=>{chime(440,.12,1.2);setTimeout(()=>chime(554.37,.1,1),200);
 // pick the most natural installed voice: iOS/macOS "Enhanced"/"Premium" voices and
 // Edge "Natural" voices beat the robotic default by a mile when present. The list is
 // async on most browsers, so re-pick on voiceschanged.
-let voicePick=null;
+let voicePick=null,voiceWarned=false;
+const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){}};
 function pickVoice(){try{
   const vs=speechSynthesis.getVoices(); if(!vs||!vs.length)return;
   const NICE=['ava','zoe','samantha','allison','serena','karen','moira','tessa','nicky'];
@@ -293,17 +294,37 @@ function pickVoice(){try{
 }catch(e){}}
 if(window.speechSynthesis&&speechSynthesis.getVoices){pickVoice();
   if(speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',pickVoice);}
+// iOS Safari only lets speak() through when it is rooted SYNCHRONOUSLY in a user
+// gesture; every cue below fires from a setTimeout after a chime, which breaks that
+// chain and is dropped without any error. So the Start/Resume tap speaks a silent
+// utterance itself — the same unlock the AudioContext resume beside it gets. Never
+// throws, never touches the timer.
+function primeSpeech(){try{
+  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
+    if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues will be silent, timer unaffected');}return;}
+  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
+  u.onerror=e=>vlog('prime utterance error: '+(e&&e.error));
+  speechSynthesis.speak(u);pickVoice();
+}catch(e){vlog('prime threw: '+e.message);}}
 let sayRef=null;
 function say(t){if(!voiceOn)return;try{
+  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
+    if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+t);}return;}
   pickVoice();   // iOS Safari: voiceschanged often never fires and getVoices() is
                  // empty/compact-only at load — re-pick at speak time, every time
   const u=new SpeechSynthesisUtterance(t);
   // iOS ignores u.voice unless u.lang matches it; keep a live ref too, or WebKit
-  // can GC the utterance mid-speech and fall back to the default voice
+  // can GC the utterance mid-speech and fall back to the default voice.
+  // No match (empty or non-English list): leave u.voice unset = system default voice,
+  // and say so once in the console rather than failing silently.
   if(voicePick){u.voice=voicePick;u.lang=voicePick.lang;}
+  else if(!voiceWarned){voiceWarned=true;
+    const n=speechSynthesis.getVoices?speechSynthesis.getVoices().length:'?';
+    vlog('no matching voice ('+n+' listed) — using the system default voice');}
   u.rate=.8;u.pitch=1;u.volume=.8;
+  u.onerror=e=>vlog('utterance error '+(e&&e.error)+' on “'+t+'”');
   sayRef=u;u.onend=()=>{if(sayRef===u)sayRef=null;};
-  speechSynthesis.speak(u);}catch(e){}}
+  speechSynthesis.speak(u);}catch(e){vlog('say threw: '+e.message);}}
 
 function paint(){
   const g=SEGS[idx], m=g.m;
@@ -370,7 +391,10 @@ function finish(){
 }
 $('bMain').onclick=()=>{
   if(!running){
-    running=true;$('bMain').textContent='Pause';lockScreen();ac();if(actx.state==='suspended')actx.resume();
+    running=true;$('bMain').textContent='Pause';lockScreen();
+    // audio unlock inside the gesture — but no audio API may ever block the timer
+    try{ac();if(actx.state==='suspended')actx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}
+    primeSpeech();
     if(!started){started=true;go(0);}
     else{segEnd=Date.now()+pausedRem;}
     tick=setInterval(sync,300);

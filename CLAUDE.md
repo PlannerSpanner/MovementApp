@@ -14,7 +14,12 @@ props, authored per-movement transitions via TR_ALL, exactly 715s; renamed from 
 by rebuild.py),
 `strength` (two-workout gym REFERENCE — no timer/audio; scrollable cards, tabs A/B +
 set checks persisted in localStorage, own template `wk_head.html`+`wk_tpl.js`, green theme).
-Also `hip-activation.html` — older layout, no figures, timer already timestamp-patched. Leave unless asked.
+Set checks are day-stamped (`wkChk.day`, LOCAL calendar date, pure `freshChecks` above
+the DOM marker): a different day clears them on load, and a FULLY-checked workout clears
+on its next same-day load (done = next visit is a new session); partial same-day checks
+survive phone lock. Manual reset button kept. Legacy unstamped data starts fresh.
+Also `hip-activation.html` — older layout, no figures, timer already timestamp-patched. Leave unless asked
+(exception: it shares the voice path rules below and got the 2026-09-24 speech-priming fix inline).
 Morning Movement RETIRED 2026-08-26: its movements were redistributed (5 → Flow's ground
 block, 3 → Daily 13); the rest are archived — NOTHING deleted — in `src/d_retired.js`
 (+ `data2.js`/`mm_extra.js` kept intact) and documented in docs/movement-reference.md
@@ -51,6 +56,17 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     swAL untouched; chest row −100/+80; wall slide (retired) −85/+100, dips ±150).
 - `app_tpl.js` — shared app body: renderer, timers, audio. Key facts:
   - Timer is wall-clock anchored (`segEnd`); survives backgrounding, catches up on return.
+  - Voice (fixed 2026-09-24, voice dead on a new iPhone): iOS Safari only honours
+    `speechSynthesis.speak()` rooted SYNCHRONOUSLY in a user gesture; every cue fires
+    from a setTimeout after a chime, which newer iOS drops silently (older iOS was
+    lenient). So the Start/Resume tap calls `primeSpeech()` (silent utterance) next to
+    the AudioContext resume, both inside try/catch — no audio API may ever block the
+    timer. `say()` re-picks the voice per utterance, leaves `u.voice` unset (system
+    default) when the list is empty or has no English match, and logs `[voice] …`
+    console warnings once instead of failing silently. Same rules inline in
+    hip-activation.html. qa/voice.js (fake DOM, empty voice list, absent API) +
+    qa/webkit-voice.js (Playwright WebKit — stubs Web Speech, which Windows WebKit
+    lacks — and Chromium) guard it. NOT a substitute for a real-iPhone check.
   - The timer walks `SEGS`, derived from MOVES at load: an 8s `{trans:true}` "GET SET UP"
     segment is inserted wherever consecutive movements' `pos` tags differ (a gap's `m` is
     the UPCOMING movement, so the figure previews it). Voice speaks the position phrase
@@ -113,7 +129,9 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
                        # movement + transition), flowshots (every Morning Flow movement +
                        # the 5s ground transition), catchup, trans (legacy gaps on
                        # prenatal-stretch + TR_ALL blocks for flow/daily-13),
-                       # breath tones, 2x toggle, auto-update freshness
+                       # breath tones, 2x toggle, auto-update freshness, voice
+                       # (gesture-primed speech, empty-voice fallback, all 5 apps,
+                       # fake DOM + WebKit + Chromium; needs `npx playwright install webkit`)
     node tools/dump.js && python3 tools/strips.py   # fallback PIL contact sheets (needs Pillow)
     python3 tools/ascii.py <app> "<movement>" 0,3    # text-mode pose render
 

@@ -39,6 +39,27 @@ const OUT=path.join(__dirname,'screenshots');
   await page.evaluate(()=>document.getElementById('reset-A').click());
   on=await page.evaluate(()=>document.querySelectorAll('#sets-A-0 .setbox.on').length);
   check('reset clears checks',on===0);
+  // auto-reset: yesterday's checks clear on load; a fully-checked workout clears on
+  // the next same-day load; the other workout's partial checks are untouched
+  await page.evaluate(()=>{const c=JSON.parse(localStorage.getItem('wkChk'));c.A={0:[true,true,true]};
+    c.day='2000-01-01';localStorage.setItem('wkChk',JSON.stringify(c));});
+  await page.reload(); await page.waitForTimeout(600);
+  on=await page.evaluate(()=>document.querySelectorAll('#listA .setbox.on').length);
+  check('checks from a previous day auto-clear on load',on===0);
+  await page.click('#tabB'); await page.click('#ck-B-0-0');
+  await page.click('#tabA');
+  const boxes=await page.evaluate(()=>[...document.querySelectorAll('#listA .setbox')].map(b=>b.id));
+  for(const id of boxes)await page.evaluate(i=>document.getElementById(i).click(),id);
+  on=await page.evaluate(()=>document.querySelectorAll('#listA .setbox.on').length);
+  check('all sets in A checked',on===boxes.length&&on>0);
+  await page.reload(); await page.waitForTimeout(600);
+  on=await page.evaluate(()=>document.querySelectorAll('#listA .setbox.on').length);
+  check('fully-checked workout clears on next same-day load',on===0);
+  on=await page.evaluate(()=>document.querySelectorAll('#listB .setbox.on').length);
+  check('other workout partial checks survive',on===1);
+  await page.evaluate(()=>document.getElementById('reset-B').click());
+  on=await page.evaluate(()=>document.querySelectorAll('#listB .setbox.on').length);
+  check('manual reset button still works',on===0);
   await page.click('#tabB'); await page.reload(); await page.waitForTimeout(600);
   const bShown=await page.evaluate(()=>document.getElementById('listB').style.display!=='none'
     &&document.getElementById('listA').style.display==='none');

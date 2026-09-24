@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Stick-figure exercise timers — QA tooling",
   "scripts": {
-    "gauntlet": "node tools/smoke.js && node tools/lint.js && node tools/geo.js && node qa/wk.js && node qa/daily.js && node qa/shots.js && node qa/wkshots.js && node qa/dailyshots.js && node qa/flowshots.js && node qa/catchup.js && node qa/trans.js && node qa/breath.js && node qa/x2.js && node qa/fresh.js",
+    "gauntlet": "node tools/smoke.js && node tools/lint.js && node tools/geo.js && node qa/wk.js && node qa/daily.js && node qa/shots.js && node qa/wkshots.js && node qa/dailyshots.js && node qa/flowshots.js && node qa/catchup.js && node qa/trans.js && node qa/breath.js && node qa/x2.js && node qa/fresh.js && node qa/voice.js && node qa/webkit-voice.js",
     "qa:shots": "node qa/shots.js",
     "qa:catchup": "node qa/catchup.js",
+    "qa:voice": "node qa/voice.js && node qa/webkit-voice.js",
     "qa:strips": "node tools/dump.js && python3 tools/strips.py"
   },
   "repository": {

@@ -156,7 +156,15 @@ function playChime(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state==='sus
 function transitionChime(){playChime(440,0.12,0.8);setTimeout(()=>playChime(554.37,0.1,0.6),120);setTimeout(()=>playChime(659.25,0.08,0.5),240);}
 function switchChime(){playChime(659.25,0.1,0.5);setTimeout(()=>playChime(659.25,0.1,0.5),280);}
 function completionChime(){playChime(523.25,0.12,1.0);setTimeout(()=>playChime(659.25,0.1,0.8),150);setTimeout(()=>playChime(783.99,0.1,0.8),300);setTimeout(()=>playChime(1046.5,0.08,1.5),450);}
-function speak(text){if(!voiceOn)return;try{const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=0.9;u.volume=0.8;speechSynthesis.speak(u);}catch(e){}}
+let voiceWarned=false;const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){}};
+// iOS Safari drops speak() that is not rooted synchronously in a user gesture (all cues
+// here fire from setTimeout) — the Start tap speaks a silent utterance to unlock it.
+function primeSpeech(){try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues silent, timer unaffected');}return;}
+  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;u.onerror=e=>vlog('prime utterance error: '+(e&&e.error));speechSynthesis.speak(u);}catch(e){vlog('prime threw: '+e.message);}}
+function speak(text){if(!voiceOn)return;try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+text);}return;}
+  const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=0.9;u.volume=0.8;
+  if(!voiceWarned){voiceWarned=true;const n=speechSynthesis.getVoices?speechSynthesis.getVoices().length:'?';vlog('using the system default voice ('+n+' voices listed)');}
+  u.onerror=e=>vlog('utterance error '+(e&&e.error)+' on “'+text+'”');speechSynthesis.speak(u);}catch(e){vlog('speak threw: '+e.message);}}
 
 function updateDisplay(){const m=movements[currentMove];const dur=m?m.duration:0;const mins=Math.floor(timeLeft/60);const secs=timeLeft%60;timeDisp.textContent=mins+':'+String(secs).padStart(2,'0');if(dur>0){const progress=1-(timeLeft/dur);ring.style.strokeDashoffset=circumference*(1-progress);}}
 
@@ -219,7 +227,7 @@ function completeSession(){
 function toggleTimer(){
   if(!running){
     running=true;mainBtn.textContent='Pause';resetBtn.style.display='';requestWakeLock();
-    getAudioCtx();if(audioCtx.state==='suspended')audioCtx.resume();
+    try{getAudioCtx();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}primeSpeech();
     if(currentMove===0&&timeLeft===0)startMovement(0);
     interval=setInterval(tick,1000);
   }else{

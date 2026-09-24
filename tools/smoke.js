@@ -33,13 +33,14 @@ function run(app){
       this.createGain=()=>({gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}});
       this.destination={};}},
     SpeechSynthesisUtterance:function(t){this.t=t;},
-    speechSynthesis:{speak(){}},
+    speechSynthesis:{speak(){},getVoices(){return [];},addEventListener(){}},
     performance:{now:()=>pnow},
     requestAnimationFrame:cb=>{frameCb=cb;},
     setInterval:(fn,ms)=>{intervals.push(fn);return intervals.length;},
     clearInterval:()=>{}, setTimeout:(fn,ms)=>{timeouts.push(fn);return 1;},
     Date, Math, JSON, String, Object, Array, console};
   env.AudioContext=env.window.AudioContext;
+  env.window.speechSynthesis=env.speechSynthesis;env.window.SpeechSynthesisUtterance=env.SpeechSynthesisUtterance;
   const intervals=[]; let pnow=0;
   const fn=new Function(...Object.keys(env), js);
   fn(...Object.values(env));                       // top-level execution
