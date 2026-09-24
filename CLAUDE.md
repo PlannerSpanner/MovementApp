@@ -92,6 +92,19 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     Diagnostic: chimes work but speech is silent → the AudioContext has gesture
     coverage and speech does not. Both silent → the ring/silent switch gating above
     (keep-alive element not playing) before anything else.
+    ON-DEVICE DIAGNOSTICS: append `?debug=1` to any speaking app's URL (all 5) for a
+    live panel on the page (no console on the phone): speechSynthesis presence,
+    getVoices() count + first names, speaking/pending/paused sampled every second,
+    AudioContext/audioSession/keep-alive state, userActivation, and a log of the prime
+    utterance + every cue's speak() call with START/END/ERROR events. Buttons: Speak
+    test (via say()), Speak raw default, Chime, cancel()+resume(), resume(). Off unless
+    asked; qa/voice.js + qa/webkit-voice.js assert both states.
+    OPEN 2026-09-24: chimes now play with silent mode ON, speech still silent on the
+    real iPhone (system TTS fine). Hypothesis under test: Web Speech does not route via
+    the page audio session. If utterances fire START/END with no sound → routing → drop
+    Web Speech for pre-generated cue audio through Web Audio. Priced by tools/cues.js:
+    90 distinct cue strings across the 5 apps (677 words, ~344 s of speech, ~3.8 s/clip),
+    ≈1.4 MB at 32 kbps AAC / ≈2.1 MB at 48 kbps MP3 total. qa/cue-strings.json lists them.
     RULE FOR FUTURE FEATURES: anything that plays a sound or speaks must be traceable
     back to a user gesture, or it needs a priming call added to the Start handler.
     Guards: qa/voice.js (fake DOM, empty voice list, absent API, all 5 speaking apps)

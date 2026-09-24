@@ -33,7 +33,8 @@ function run(app,opts){
   const js=scripts.join('\n');
   const els={}; const timeouts=[],intervals=[]; let frameCb=null,pnow=0;
   const spoken=[]; let inGesture=false; const warns=[];
-  const doc={getElementById(id){return els[id]||(els[id]=makeEl());},
+  const body=makeEl();
+  const doc={body,getElementById(id){return els[id]||(els[id]=makeEl());},
     createElement(tag){if(tag==='audio'&&opts.audio!==false){const a=makeEl();a.loop=false;a.paused=true;a.playCalls=[];
         a.play=()=>{a.playCalls.push(inGesture);a.paused=false;return Promise.resolve();};
         a.pause=()=>{a.paused=true;};a.load=()=>{};media.push(a);return a;}
@@ -52,13 +53,14 @@ function run(app,opts){
     clearInterval(){},setTimeout:(fn)=>{timeouts.push(fn);return 1;},
     console:{log(){},warn(...a){warns.push(a.join(' '));},error(...a){warns.push(a.join(' '));}},
     Date,Math,JSON,String,Object,Array,Number,Boolean,Promise,Error,RegExp};
+  if(opts.debug)env.location={search:'?debug=1'};
   if(opts.audio!==false){
     env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;}};
   }
   if(opts.speech!==false){
-    env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;};
+    env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;this.ev={};this.addEventListener=(k,f)=>{this.ev[k]=f;};};
     env.speechSynthesis={getVoices(){return [];},speaking:false,pending:false,
-      speak(u){spoken.push({text:u.text,voice:u.voice,gesture:inGesture});},
+      speak(u){spoken.push({text:u.text,voice:u.voice,gesture:inGesture});if(u.ev.start)u.ev.start();if(u.ev.end)u.ev.end();},
       cancel(){},addEventListener(){}};
     env.window.speechSynthesis=env.speechSynthesis;
     env.window.SpeechSynthesisUtterance=env.SpeechSynthesisUtterance;
@@ -77,7 +79,7 @@ function run(app,opts){
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   // tap again = Pause
   inGesture=true; start(); inGesture=false;
-  return {spoken,primed,warns,intervals,els,media,sessionType:()=>sessionType};
+  return {spoken,primed,warns,intervals,els,media,body,sessionType:()=>sessionType};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
 for(const app of APPS){
@@ -100,6 +102,15 @@ for(const app of APPS){
     check(`${app}: navigator.audioSession.type set to playback`,r.sessionType()==='playback');
     const r2=run(app,{speech:false});
     check(`${app}: timer still starts with speechSynthesis absent`,r2.intervals.length>=1);
+    // ?debug=1 on-device diagnostics panel: present only when asked, logs prime + cue lifecycle
+    check(`${app}: no debug panel without ?debug=1`,r.body.children.length===0);
+    const rd=run(app,{debug:true});
+    const panel=rd.body.children[0];const txt=panel?JSON.stringify(panel.children.map(c=>c.textContent)):'';
+    check(`${app}: ?debug=1 renders the panel`,!!panel);
+    check(`${app}: panel shows speechSynthesis presence + voices + speaking/pending/paused`,/'speechSynthesis' in window/.test(txt)&&/getVoices\(\)\.length/.test(txt)&&/speaking:.*pending:.*paused:/.test(txt));
+    check(`${app}: panel logs prime speak() and its START/END`,/prime: speak/.test(txt)&&/prime START/.test(txt)&&/prime END/.test(txt));
+    check(`${app}: panel logs each cue speak() with START/END`,/cue#1 speak\(\)/.test(txt)&&/cue#1 START/.test(txt)&&/cue#1 END/.test(txt));
+    check(`${app}: debug run still starts the timer`,rd.intervals.length>=1);
     const r3=run(app,{audio:false});
     check(`${app}: timer still starts with media/audioSession absent`,r3.intervals.length>=1);
   }catch(e){console.log(app,'RUNTIME ERROR:',e.message);fail=true;}

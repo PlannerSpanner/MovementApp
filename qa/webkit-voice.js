@@ -72,6 +72,19 @@ const APPS=[['morning-flow','#bMain'],['prenatal-stretch','#bMain'],['prenatal-m
   }
   await browser.close();
   }
+  // ?debug=1 diagnostics panel, rendered for real in Chromium, screenshot for the record
+  {const browser=await pw.chromium.launch();
+   const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true});
+   const page=await ctx.newPage();
+   await page.goto(`http://127.0.0.1:${srv.port}/daily-13.html?debug=1`);await page.waitForTimeout(600);
+   await page.tap('#bMain');await page.waitForTimeout(1800);
+   const txt=await page.evaluate(()=>{const d=[...document.querySelectorAll('div')].find(e=>e.style.position==='fixed'&&e.textContent.includes('speechSynthesis'));return d?d.textContent:'';});
+   require('fs').mkdirSync(require('path').join(__dirname,'screenshots'),{recursive:true});
+   await page.screenshot({path:require('path').join(__dirname,'screenshots','debug-panel.png')});
+   check('debug panel renders with status + prime + cue lines',/'speechSynthesis' in window: true/.test(txt)&&/prime: speak/.test(txt)&&/cue#1 speak\(\)/.test(txt));
+   const plain=await page.goto(`http://127.0.0.1:${srv.port}/daily-13.html`).then(()=>page.evaluate(()=>[...document.querySelectorAll('div')].some(e=>e.style.position==='fixed'&&e.textContent.includes('speechSynthesis'))));
+   check('no debug panel without ?debug=1',plain===false);
+   await browser.close();}
   srv.close();
   console.log(fail?'\nWEBKIT-VOICE FAIL':'\nWEBKIT-VOICE PASS');
   process.exit(fail?1:0);
