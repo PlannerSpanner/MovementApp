@@ -149,7 +149,7 @@ movements.forEach((_,i)=>{const d=document.createElement('div');d.className='dot
 
 async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}}catch(e){}}
 function releaseWakeLock(){if(wakeLock){wakeLock.release();wakeLock=null;}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){requestWakeLock();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){requestWakeLock();audioKeepAlive(true);}});
 
 function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
 function playChime(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state==='suspended')ctx.resume();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
@@ -161,6 +161,23 @@ let voiceWarned=false;const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){}}
 // here fire from setTimeout) — the Start tap speaks a silent utterance to unlock it.
 function primeSpeech(){try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues silent, timer unaffected');}return;}
   const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;u.onerror=e=>vlog('prime utterance error: '+(e&&e.error));speechSynthesis.speak(u);}catch(e){vlog('prime threw: '+e.message);}}
+// iOS ring/silent switch: Web Audio + Web Speech are muted by the mute switch unless an
+// HTMLMediaElement is active (or audioSession is 'playback', iOS 17+). Silent looping
+// data-URI WAV, started in the Start tap, paused when the timer stops. Never blocks the timer.
+const SILENT_WAV='data:audio/wav;base64,UklGRvQHAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YdAHAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+let keepAlive=null,keepAliveOn=false;
+function audioKeepAlive(on){
+  keepAliveOn=!!on;
+  try{if(on&&navigator.audioSession)navigator.audioSession.type='playback';}catch(e){vlog('audioSession: '+e.message);}
+  try{if(!on){if(keepAlive)keepAlive.pause();return;}
+    if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function')return;
+      [SILENT_WAV,'silent.wav'].forEach(src=>{const s=document.createElement('source');s.src=src;s.type='audio/wav';a.appendChild(s);});
+      a.loop=true;a.setAttribute('playsinline','');
+      const kick=()=>{if(!keepAliveOn)return;const q=a.play();if(q&&q.catch)q.catch(()=>{});};   // some WebKit builds pause at end instead of looping
+      a.addEventListener('pause',kick);a.addEventListener('ended',kick);a.load();keepAlive=a;}
+    const p=keepAlive.play();if(p&&p.catch)p.catch(e=>{if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
+  }catch(e){vlog('keep-alive media failed: '+e.message);}
+}
 function speak(text){if(!voiceOn)return;try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+text);}return;}
   const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=0.9;u.volume=0.8;
   if(!voiceWarned){voiceWarned=true;const n=speechSynthesis.getVoices?speechSynthesis.getVoices().length:'?';vlog('using the system default voice ('+n+' voices listed)');}
@@ -222,21 +239,22 @@ function completeSession(){
   navControls.classList.remove('visible');
   formCue.innerHTML='<strong>Ready to run.</strong> Glute medius is on. Keep HR at or below 147 bpm (Zone 2). Note your cadence. Go get it.';
   completionChime();setTimeout(()=>speak("Hip activation complete. You're ready to run."),600);
+  setTimeout(()=>{if(!running)audioKeepAlive(false);},6000);
 }
 
 function toggleTimer(){
   if(!running){
     running=true;mainBtn.textContent='Pause';resetBtn.style.display='';requestWakeLock();
-    try{getAudioCtx();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}primeSpeech();
+    try{getAudioCtx();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}audioKeepAlive(true);primeSpeech();
     if(currentMove===0&&timeLeft===0)startMovement(0);
     interval=setInterval(tick,1000);
   }else{
-    running=false;clearInterval(interval);interval=null;releaseWakeLock();mainBtn.textContent='Resume';
+    running=false;clearInterval(interval);interval=null;releaseWakeLock();audioKeepAlive(false);mainBtn.textContent='Resume';
   }
 }
 function toggleVoice(){voiceOn=!voiceOn;voiceBtn.textContent=voiceOn?'Voice On':'Voice Off';voiceBtn.classList.toggle('active-toggle',voiceOn);}
 function resetTimer(){
-  clearInterval(interval);interval=null;running=false;releaseWakeLock();currentMove=0;timeLeft=0;switchCalled=false;
+  clearInterval(interval);interval=null;running=false;releaseWakeLock();audioKeepAlive(false);currentMove=0;timeLeft=0;switchCalled=false;
   document.querySelector('.container').classList.remove('state-complete');
   movNum.textContent='READY';movName.textContent='Tap Start to begin';movTarget.textContent='';
   sideBadge.classList.remove('visible');

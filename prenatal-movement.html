@@ -104,7 +104,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='171c2e539b';
+const BUILDV='57962cff97';
 const MOVES=[
 {n:"Breath and pelvic floor release",pos:'chair',cue:"One hand on the belly, one on the chest — soften down",dur:90,bil:false,cyc:5.0,br:1,belly:1,pin:"LR",
  prop:[{l:[[-8,76,-4],[8,76,-4]]},{l:[[-7,76,-4],[-7,93,-4]]},{l:[[7,76,-4],[7,93,-4]]}],
@@ -550,7 +550,7 @@ MOVES.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.
 async function lockScreen(){try{if('wakeLock'in navigator){wl=await navigator.wakeLock.request('screen');
   wl.addEventListener('release',()=>{wl=null;});}}catch(e){}}
 function unlockScreen(){if(wl){wl.release();wl=null;}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){lockScreen();sync();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){lockScreen();audioKeepAlive(true);sync();}});
 
 function ac(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
 function chime(f,v,d){try{const c=ac();if(c.state==='suspended')c.resume();
@@ -607,6 +607,35 @@ function primeSpeech(){try{
   u.onerror=e=>vlog('prime utterance error: '+(e&&e.error));
   speechSynthesis.speak(u);pickVoice();
 }catch(e){vlog('prime threw: '+e.message);}}
+// iOS ring/silent switch: a page whose only audio output is Web Audio nodes gets the
+// 'ambient' audio session, which the hardware mute switch silences — Web Audio AND Web
+// Speech alike, with no error or state change (chimes and voice both dead on the new
+// iPhone, 2026-09-24). An active HTMLMediaElement moves the page's session to
+// 'playback', which the switch does not gate; iOS 17+ also lets us ask for it directly
+// via navigator.audioSession. Both are requested inside the Start/Resume tap and held
+// for the life of the session (paused on Pause/Reset, and a few seconds after the
+// finish cues). Silent 0.25 s WAV as a data URI — no network. Never blocks the timer.
+const SILENT_WAV='data:audio/wav;base64,UklGRvQHAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YdAHAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+let keepAlive=null,keepAliveOn=false;
+function audioKeepAlive(on){
+  keepAliveOn=!!on;
+  try{if(on&&navigator.audioSession)navigator.audioSession.type='playback';}catch(e){vlog('audioSession: '+e.message);}
+  try{
+    if(!on){if(keepAlive)keepAlive.pause();return;}
+    if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function')return;
+      // inline data URI first (no network); some WebKit ports reject data: media, so a
+      // tiny real file is the second <source> — only fetched if the inline one fails
+      [SILENT_WAV,'silent.wav'].forEach(src=>{const s=document.createElement('source');s.src=src;s.type='audio/wav';a.appendChild(s);});
+      a.loop=true;a.setAttribute('playsinline','');
+      // some WebKit builds pause at end-of-media instead of looping (verified in
+      // Playwright WebKit): restart whenever it stops while the session is on. An
+      // element already started by a gesture may be replayed without one.
+      const kick=()=>{if(!keepAliveOn)return;const q=a.play();if(q&&q.catch)q.catch(()=>{});};
+      a.addEventListener('pause',kick);a.addEventListener('ended',kick);
+      a.load();keepAlive=a;}
+    const p=keepAlive.play();if(p&&p.catch)p.catch(e=>{if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
+  }catch(e){vlog('keep-alive media failed: '+e.message);}
+}
 let sayRef=null;
 function say(t){if(!voiceOn)return;try{
   if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
@@ -689,19 +718,20 @@ function finish(){
   $('cue').innerHTML="<strong>Done.</strong> Clamshells opened, hips rocked and rolled. You’re on the ball.";
   $('bMain').style.display='none';$('tm').textContent='\u2713';$('fill').style.width='100%';
   cDone();setTimeout(()=>say('Movement complete.'),600);
+  setTimeout(()=>{if(!running)audioKeepAlive(false);},6000);   // after the finish cues
 }
 $('bMain').onclick=()=>{
   if(!running){
     running=true;$('bMain').textContent='Pause';lockScreen();
     // audio unlock inside the gesture — but no audio API may ever block the timer
     try{ac();if(actx.state==='suspended')actx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}
-    primeSpeech();
+    audioKeepAlive(true);primeSpeech();
     if(!started){started=true;go(0);}
     else{segEnd=Date.now()+pausedRem;}
     tick=setInterval(sync,300);
   } else {
     running=false;pausedRem=Math.max(0,segEnd-Date.now());
-    clearInterval(tick);tick=null;unlockScreen();$('bMain').textContent='Resume';
+    clearInterval(tick);tick=null;unlockScreen();audioKeepAlive(false);$('bMain').textContent='Resume';
   }
 };
 $('bVoice').onclick=()=>{voiceOn=!voiceOn;$('bVoice').classList.toggle('on',voiceOn);
@@ -709,7 +739,7 @@ $('bVoice').onclick=()=>{voiceOn=!voiceOn;$('bVoice').classList.toggle('on',voic
 $('bPrev').onclick=()=>{const t=SEGS[idx].mi-1;if(t>=0){started=true;go(segOfMove(t));}};
 $('bNext').onclick=()=>{const g=SEGS[idx],t=g.trans?g.mi:g.mi+1;if(t<=MOVES.length-1){started=true;go(segOfMove(t));}};
 $('bReset').onclick=()=>{
-  clearInterval(tick);tick=null;running=false;started=false;unlockScreen();
+  clearInterval(tick);tick=null;running=false;started=false;unlockScreen();audioKeepAlive(false);
   idx=0;timeLeft=MOVES[0].dur*dm;swAt=false;
   document.querySelector('.wrap').classList.remove('state-done','state-trans');
   $('bMain').style.display='';$('bMain').textContent='Start';

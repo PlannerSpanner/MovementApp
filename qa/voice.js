@@ -34,9 +34,13 @@ function run(app,opts){
   const els={}; const timeouts=[],intervals=[]; let frameCb=null,pnow=0;
   const spoken=[]; let inGesture=false; const warns=[];
   const doc={getElementById(id){return els[id]||(els[id]=makeEl());},
-    createElement(){return makeEl();},createElementNS(){return makeEl();},
+    createElement(tag){if(tag==='audio'&&opts.audio!==false){const a=makeEl();a.loop=false;a.paused=true;a.playCalls=[];
+        a.play=()=>{a.playCalls.push(inGesture);a.paused=false;return Promise.resolve();};
+        a.pause=()=>{a.paused=true;};a.load=()=>{};media.push(a);return a;}
+      return makeEl();},createElementNS(){return makeEl();},
     querySelector(){return makeEl();},querySelectorAll(){return [];},
     addEventListener(){},visibilityState:'visible'};
+  const media=[]; let sessionType=null;
   const AC=fakeAudio();
   const env={document:doc,
     navigator:{wakeLock:{request:async()=>({addEventListener(){},release(){}})}},
@@ -48,6 +52,9 @@ function run(app,opts){
     clearInterval(){},setTimeout:(fn)=>{timeouts.push(fn);return 1;},
     console:{log(){},warn(...a){warns.push(a.join(' '));},error(...a){warns.push(a.join(' '));}},
     Date,Math,JSON,String,Object,Array,Number,Boolean,Promise,Error,RegExp};
+  if(opts.audio!==false){
+    env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;}};
+  }
   if(opts.speech!==false){
     env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;};
     env.speechSynthesis={getVoices(){return [];},speaking:false,pending:false,
@@ -68,7 +75,9 @@ function run(app,opts){
   timeouts.splice(0).forEach(t=>t());          // deferred cue announcements
   intervals.forEach(t=>t());
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
-  return {spoken,primed,warns,intervals,els};
+  // tap again = Pause
+  inGesture=true; start(); inGesture=false;
+  return {spoken,primed,warns,intervals,els,media,sessionType:()=>sessionType};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
 for(const app of APPS){
@@ -80,8 +89,19 @@ for(const app of APPS){
     check(`${app}: no voice object attached when list is empty (system default)`,cues.every(s=>s.voice==null));
     check(`${app}: warns on console when no matching voice is available`,r.warns.some(w=>/voice/i.test(w)));
     check(`${app}: timer started (interval registered)`,r.intervals.length>=1);
+    // ring/silent switch: a bare AudioContext gets the 'ambient' session on iOS and is
+    // muted by the switch; an active media element (and audioSession 'playback') is not
+    const loop=r.media.find(a=>a.loop);
+    check(`${app}: silent looping media element started in the Start tap`,!!loop&&loop.playCalls[0]===true);
+    const srcs=loop?loop.children.map(c=>c.src):[];
+    check(`${app}: first <source> is an inline data URI (no network)`,/^data:audio\//.test(srcs[0]||''));
+    check(`${app}: second <source> is the silent.wav fallback file`,srcs[1]==='silent.wav');
+    check(`${app}: media element paused when the timer pauses`,!!loop&&loop.paused===true);
+    check(`${app}: navigator.audioSession.type set to playback`,r.sessionType()==='playback');
     const r2=run(app,{speech:false});
     check(`${app}: timer still starts with speechSynthesis absent`,r2.intervals.length>=1);
+    const r3=run(app,{audio:false});
+    check(`${app}: timer still starts with media/audioSession absent`,r3.intervals.length>=1);
   }catch(e){console.log(app,'RUNTIME ERROR:',e.message);fail=true;}
 }
 console.log(fail?'VOICE FAIL':'VOICE PASS');

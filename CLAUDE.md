@@ -70,9 +70,28 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     utterance, leaves `u.voice` unset (system default) when the list is empty or has
     no English match, and logs `[voice] …` console warnings once rather than failing
     silently. Same rules inline in hip-activation.html.
+    RING/SILENT SWITCH (the actual 2026-09-24 root cause, found by Will): Web Audio and
+    Web Speech are BOTH gated by the hardware ring/silent switch in iOS Safari unless an
+    HTMLMediaElement is active on the page — a bare AudioContext gets the 'ambient'
+    audio session, an active media element moves it to 'playback' (WebKit bug 237322,
+    engineer-confirmed; iOS 17+ can also ask directly via
+    `navigator.audioSession.type='playback'`). Chrome on iOS is exempt because it
+    configures its own app-level session. Fix in place: `audioKeepAlive(true)` in the
+    Start/Resume tap sets audioSession 'playback' AND starts a silent 0.25 s looping
+    WAV `<audio>` with two `<source>`s — inline data URI (`SILENT_WAV`, no network)
+    first, repo-root `silent.wav` second (only fetched if the inline one fails; some
+    WebKit ports reject data: media) — re-asserted on foreground return, paused on
+    Pause/Reset and 6 s after the finish cues; try/catch, never blocks the timer. The
+    element restarts itself from its own pause/ended events while the session is on
+    (some WebKit builds pause at end-of-media instead of looping — verified in
+    Playwright WebKit; an element a gesture already started may be replayed without
+    one). Same inline in hip-activation.html. Device check with silent mode ON is Will's (pending
+    as of this note). Playwright's Windows WebKit has no AudioContext and rejects
+    data: media (plays the http WAV), so qa/webkit-voice.js proves the fallback path;
+    Chromium plays the data URI.
     Diagnostic: chimes work but speech is silent → the AudioContext has gesture
-    coverage and speech does not. Both silent → suspect the hardware mute switch /
-    Action button before the code.
+    coverage and speech does not. Both silent → the ring/silent switch gating above
+    (keep-alive element not playing) before anything else.
     RULE FOR FUTURE FEATURES: anything that plays a sound or speaks must be traceable
     back to a user gesture, or it needs a priming call added to the Start handler.
     Guards: qa/voice.js (fake DOM, empty voice list, absent API, all 5 speaking apps)

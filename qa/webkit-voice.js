@@ -20,7 +20,11 @@ const APPS=[['morning-flow','#bMain'],['prenatal-stretch','#bMain'],['prenatal-m
   const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true,
     userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1'});
   await ctx.addInitScript(()=>{
-    window.__spk=[];
+    window.__spk=[];window.__media=[];
+    const mp=HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play=function(){const act=!!(navigator.userActivation&&navigator.userActivation.isActive);
+      const el=this;window.__media.push({act,el,err:null});
+      const p=mp.call(this);if(p&&p.catch)p.catch(e=>{window.__media.find(m=>m.el===el).err=String(e);});return p;};
     const rec=u=>window.__spk.push({t:u.text,v:u.voice&&u.voice.name,act:!!(navigator.userActivation&&navigator.userActivation.isActive)});
     const ss=window.speechSynthesis;
     if(ss){const orig=ss.speak.bind(ss);
@@ -51,6 +55,18 @@ const APPS=[['morning-flow','#bMain'],['prenatal-stretch','#bMain'],['prenatal-m
     check(`${app}: cue spoken after Start`,all.some(s=>s.t&&s.t.trim().length>1));
     check(`${app}: no page errors`,errs.length===0);
     check(`${app}: timer running`,t0!==t1);
+    const med=await page.evaluate(()=>window.__media.map(m=>({act:m.act,err:m.err,loop:m.el.loop,paused:m.el.paused,data:m.el.currentSrc.startsWith('data:'),src:m.el.currentSrc.slice(0,40)})));
+    const sess=await page.evaluate(()=>navigator.audioSession?navigator.audioSession.type:'n/a');
+    const last=med[med.length-1]||{};
+    // sample several times: ports with a broken loop pause for ~1 ms at end-of-media
+    // before the app's restart hook replays, so a single instant can read paused
+    let playing=0;for(let i=0;i<5;i++){if(await page.evaluate(()=>window.__media.length&&!window.__media[0].el.paused))playing++;await page.waitForTimeout(60);}
+    console.log(`  media: play() calls=${med.length} rejected=${med.filter(m=>m.err).length} playing=${playing}/5 samples loop=${last.loop} src=${last.src} audioSession=${sess}`);
+    check(`${app}: silent loop media element play() inside the tap`,med.length>=1&&med[0].act&&med[0].loop);
+    check(`${app}: media element playing 1.5 s after Start`,med.length>=1&&playing>=3&&med.some(m=>!m.err));
+    await page.tap(btn);   // Pause
+    const pausedNow=await page.evaluate(()=>window.__media.length&&window.__media[0].el.paused);
+    check(`${app}: media element paused on Pause`,pausedNow===true);
     if(errs.length)console.log('  errors:',errs);
     await page.close();
   }
