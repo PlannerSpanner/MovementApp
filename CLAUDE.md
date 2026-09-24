@@ -56,17 +56,28 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     swAL untouched; chest row −100/+80; wall slide (retired) −85/+100, dips ±150).
 - `app_tpl.js` — shared app body: renderer, timers, audio. Key facts:
   - Timer is wall-clock anchored (`segEnd`); survives backgrounding, catches up on return.
-  - Voice (fixed 2026-09-24, voice dead on a new iPhone): iOS Safari only honours
-    `speechSynthesis.speak()` rooted SYNCHRONOUSLY in a user gesture; every cue fires
-    from a setTimeout after a chime, which newer iOS drops silently (older iOS was
-    lenient). So the Start/Resume tap calls `primeSpeech()` (silent utterance) next to
-    the AudioContext resume, both inside try/catch — no audio API may ever block the
-    timer. `say()` re-picks the voice per utterance, leaves `u.voice` unset (system
-    default) when the list is empty or has no English match, and logs `[voice] …`
-    console warnings once instead of failing silently. Same rules inline in
-    hip-activation.html. qa/voice.js (fake DOM, empty voice list, absent API) +
-    qa/webkit-voice.js (Playwright WebKit — stubs Web Speech, which Windows WebKit
-    lacks — and Chromium) guard it. NOT a substitute for a real-iPhone check.
+  - iOS SAFARI AUDIO CONSTRAINT (platform gotcha, not a code bug): every Web Speech
+    (`speechSynthesis.speak`) and Web Audio (AudioContext creation, `resume()`) call
+    must be rooted in a user gesture. Calls made from a setTimeout, a rAF callback, or
+    any other deferred context are silently dropped: no error, no console warning,
+    nothing happens. Older iOS tolerated deferred speech, so this surfaces as a
+    regression on a device upgrade rather than as a bug in new code (voice went dead
+    on a new iPhone 2026-09-24 while chimes kept working).
+    The pattern that works: prime BOTH APIs inside the Start/Resume tap handler —
+    `primeSpeech()` (silent utterance) plus `ac()`/`resume()` — each wrapped in
+    try/catch so a missing or failing audio API can never block the timer. All later
+    cues then fire normally from their setTimeouts. `say()` re-picks the voice per
+    utterance, leaves `u.voice` unset (system default) when the list is empty or has
+    no English match, and logs `[voice] …` console warnings once rather than failing
+    silently. Same rules inline in hip-activation.html.
+    Diagnostic: chimes work but speech is silent → the AudioContext has gesture
+    coverage and speech does not. Both silent → suspect the hardware mute switch /
+    Action button before the code.
+    RULE FOR FUTURE FEATURES: anything that plays a sound or speaks must be traceable
+    back to a user gesture, or it needs a priming call added to the Start handler.
+    Guards: qa/voice.js (fake DOM, empty voice list, absent API, all 5 speaking apps)
+    + qa/webkit-voice.js (Playwright WebKit — stubs Web Speech, which Windows WebKit
+    lacks — and Chromium). Neither is a substitute for a real-iPhone check.
   - The timer walks `SEGS`, derived from MOVES at load: an 8s `{trans:true}` "GET SET UP"
     segment is inserted wherever consecutive movements' `pos` tags differ (a gap's `m` is
     the UPCOMING movement, so the figure previews it). Voice speaks the position phrase
