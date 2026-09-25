@@ -13,7 +13,7 @@ function makeEl(){
     attrs:{},_html:'',
     setAttribute(k,v){this.attrs[k]=String(v);},removeAttribute(k){delete this.attrs[k];},
     getAttribute(k){return this.attrs[k];},appendChild(c){this.children.push(c);return c;},
-    insertAdjacentHTML(){},addEventListener(){},querySelector(){return makeEl();},
+    insertAdjacentHTML(){},handlers:{},addEventListener(k,f){this.handlers[k]=f;},querySelector(){return makeEl();},
     querySelectorAll(){return [];}};
   Object.defineProperty(el,'innerHTML',{get(){return el._html;},set(v){el._html=v;}});
   Object.defineProperty(el,'textContent',{get(){return el._txt||'';},set(v){el._txt=v;}});
@@ -33,15 +33,15 @@ function run(app,opts){
   const js=scripts.join('\n');
   const els={}; const timeouts=[],intervals=[]; let frameCb=null,pnow=0;
   const spoken=[]; let inGesture=false; const warns=[];
-  const body=makeEl();
+  const body=makeEl(),h1=makeEl();
   const doc={body,getElementById(id){return els[id]||(els[id]=makeEl());},
     createElement(tag){if(tag==='audio'&&opts.audio!==false){const a=makeEl();a.loop=false;a.paused=true;a.playCalls=[];
         a.play=()=>{a.playCalls.push(inGesture);a.paused=false;return Promise.resolve();};
         a.pause=()=>{a.paused=true;};a.load=()=>{};media.push(a);return a;}
       return makeEl();},createElementNS(){return makeEl();},
-    querySelector(){return makeEl();},querySelectorAll(){return [];},
+    querySelector(sel){return sel==='h1'?h1:makeEl();},querySelectorAll(){return [];},
     addEventListener(){},visibilityState:'visible'};
-  const media=[]; let sessionType=null;
+  const media=[]; let sessionType=null; let getVoicesCalls=0;
   const AC=fakeAudio();
   const env={document:doc,
     navigator:{wakeLock:{request:async()=>({addEventListener(){},release(){}})}},
@@ -59,7 +59,7 @@ function run(app,opts){
   }
   if(opts.speech!==false){
     env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;this.ev={};this.addEventListener=(k,f)=>{this.ev[k]=f;};};
-    env.speechSynthesis={getVoices(){return [];},speaking:false,pending:false,
+    env.speechSynthesis={getVoices(){getVoicesCalls++;return [];},speaking:false,pending:false,
       speak(u){spoken.push({text:u.text,voice:u.voice,gesture:inGesture});if(u.ev.start)u.ev.start();if(u.ev.end)u.ev.end();},
       cancel(){},addEventListener(){}};
     env.window.speechSynthesis=env.speechSynthesis;
@@ -79,7 +79,7 @@ function run(app,opts){
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   // tap again = Pause
   inGesture=true; start(); inGesture=false;
-  return {spoken,primed,warns,intervals,els,media,body,sessionType:()=>sessionType};
+  return {spoken,primed,warns,intervals,els,media,body,h1,getVoicesCalls:()=>getVoicesCalls,sessionType:()=>sessionType};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
 for(const app of APPS){
@@ -107,10 +107,18 @@ for(const app of APPS){
     const rd=run(app,{debug:true});
     const panel=rd.body.children[0];const txt=panel?JSON.stringify(panel.children.map(c=>c.textContent)):'';
     check(`${app}: ?debug=1 renders the panel`,!!panel);
-    check(`${app}: panel shows speechSynthesis presence + voices + speaking/pending/paused`,/'speechSynthesis' in window/.test(txt)&&/getVoices\(\)\.length/.test(txt)&&/speaking:.*pending:.*paused:/.test(txt));
+    check(`${app}: panel shows speechSynthesis presence + voices + speaking/pending/paused`,/'speechSynthesis' in window/.test(txt)&&/voices \(last list/.test(txt)&&/speaking:.*pending:.*paused:/.test(txt));
     check(`${app}: panel logs prime speak() and its START/END`,/prime: speak/.test(txt)&&/prime START/.test(txt)&&/prime END/.test(txt));
     check(`${app}: panel logs each cue speak() with START/END`,/cue#1 speak\(\)/.test(txt)&&/cue#1 START/.test(txt)&&/cue#1 END/.test(txt));
     check(`${app}: debug run still starts the timer`,rd.intervals.length>=1);
+    // strictly passive: the panel adds no speech API calls, and the poll is read-only
+    check(`${app}: debug panel adds no getVoices()/speak() calls`,rd.getVoicesCalls()===r.getVoicesCalls()&&rd.spoken.length===r.spoken.length);
+    check(`${app}: cue lines carry AC/session/keepAlive snapshot`,/cue#1 speak\(\)[^\n]*AC\[[^\n]*session\[[^\n]*keepAlive\[/.test(txt)&&/cue#1 START[^\n]*AC\[/.test(txt));
+    // 5 quick taps on the title open the panel without the query string (home-screen build)
+    const rt=run(app,{});
+    for(let i=0;i<5;i++)rt.h1.handlers.click&&rt.h1.handlers.click();
+    const tpanel=rt.body.children[0];const ttxt=tpanel?JSON.stringify(tpanel.children.map(c=>c.textContent)):'';
+    check(`${app}: 5 title taps open the panel with buffered history`,!!tpanel&&/prime: speak/.test(ttxt)&&/debug view on \(5 taps\)/.test(ttxt));
     const r3=run(app,{audio:false});
     check(`${app}: timer still starts with media/audioSession absent`,r3.intervals.length>=1);
   }catch(e){console.log(app,'RUNTIME ERROR:',e.message);fail=true;}

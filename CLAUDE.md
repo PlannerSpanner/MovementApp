@@ -92,16 +92,33 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     Diagnostic: chimes work but speech is silent → the AudioContext has gesture
     coverage and speech does not. Both silent → the ring/silent switch gating above
     (keep-alive element not playing) before anything else.
-    ON-DEVICE DIAGNOSTICS: append `?debug=1` to any speaking app's URL (all 5) for a
-    live panel on the page (no console on the phone): speechSynthesis presence,
-    getVoices() count + first names, speaking/pending/paused sampled every second,
-    AudioContext/audioSession/keep-alive state, userActivation, and a log of the prime
-    utterance + every cue's speak() call with START/END/ERROR events. Buttons: Speak
-    test (via say()), Speak raw default, Chime, cancel()+resume(), resume(). Off unless
-    asked; qa/voice.js + qa/webkit-voice.js assert both states.
-    OPEN 2026-09-24: chimes now play with silent mode ON, speech still silent on the
-    real iPhone (system TTS fine). Hypothesis under test: Web Speech does not route via
-    the page audio session. If utterances fire START/END with no sound → routing → drop
+    ON-DEVICE DIAGNOSTICS PANEL (all 5 speaking apps; no console on the phone). Open
+    with `?debug=1`, or 5 quick taps on the title — the latter works inside the
+    home-screen build, which has no query string and runs as a separate web-app
+    process (a different audio context from a Safari tab — compare like with like).
+    STRICTLY PASSIVE (Will's requirement 2026-09-25, after a debug build behaved
+    differently from production): it only reads properties and listens to events —
+    never speak()/cancel()/resume()/getVoices() (voice list comes from the app's own
+    last pickVoice() via `lastVoices`), never creates an AudioContext, never touches
+    navigator.audioSession, nothing at load beyond DOM. The log is buffered from load
+    on every build (dbg() is on the production path — keep it and dbgWire() fail-safe;
+    a throw there once killed speech in the WebKit harness), rendered only when
+    enabled. Shows: speechSynthesis presence, standalone/visibility, last voice list,
+    speaking/pending/paused each second, and at the Start tap + every prime/cue
+    speak()/START/END/ERROR a `dbgAudio()` snapshot: AudioContext state + sampleRate +
+    base/outputLatency + maxChannelCount (route hints: Bluetooth shows far higher
+    output latency), audioSession type/state, keep-alive state. Passive listeners log
+    audioSession statechange, AudioContext statechange, keep-alive `playing`,
+    visibilitychange, voiceschanged. Web APIs expose no direct output route in
+    Safari. PROBE buttons (active, tap-only): Speak test (say), Speak raw default,
+    Chime, cancel()+resume(), resume(), List devices (enumerateDevices), Clear.
+    qa/voice.js asserts: off without the flag, on with it, no extra speech API calls,
+    snapshot on cue lines, 5-tap toggle; qa/webkit-voice.js screenshots it.
+    OPEN 2026-09-25: on the deployed build chimes play (speaker, or AirPods when
+    connected) while speech produces NO output on any route; system TTS is fine. A
+    first debug build additionally sent everything to AirPods — separate issue, and
+    that run also differed by launch context (Safari tab vs home-screen). Hypothesis
+    under test: Web Speech does not route via the page audio session. If utterances fire START/END with no sound → routing → drop
     Web Speech for pre-generated cue audio through Web Audio. Priced by tools/cues.js:
     90 distinct cue strings across the 5 apps (677 words, ~344 s of speech, ~3.8 s/clip),
     ≈1.4 MB at 32 kbps AAC / ≈2.1 MB at 48 kbps MP3 total. qa/cue-strings.json lists them.

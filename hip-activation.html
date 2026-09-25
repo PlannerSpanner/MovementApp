@@ -151,17 +151,17 @@ async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await n
 function releaseWakeLock(){if(wakeLock){wakeLock.release();wakeLock=null;}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){requestWakeLock();audioKeepAlive(true);}});
 
-function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function getAudioCtx(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();try{if(audioCtx.addEventListener)audioCtx.addEventListener('statechange',()=>dbg('AudioContext statechange → '+audioCtx.state+' '+dbgAudio()));}catch(e){}dbg('AudioContext created '+dbgAudio());}return audioCtx;}
 function playChime(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state==='suspended')ctx.resume();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
 function transitionChime(){playChime(440,0.12,0.8);setTimeout(()=>playChime(554.37,0.1,0.6),120);setTimeout(()=>playChime(659.25,0.08,0.5),240);}
 function switchChime(){playChime(659.25,0.1,0.5);setTimeout(()=>playChime(659.25,0.1,0.5),280);}
 function completionChime(){playChime(523.25,0.12,1.0);setTimeout(()=>playChime(659.25,0.1,0.8),150);setTimeout(()=>playChime(783.99,0.1,0.8),300);setTimeout(()=>playChime(1046.5,0.08,1.5),450);}
-let voiceWarned=false;const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){} try{dbg('warn: '+m);}catch(e){}};
+let voiceWarned=false,lastVoices=null;const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){} try{dbg('warn: '+m);}catch(e){}};
 // iOS Safari drops speak() that is not rooted synchronously in a user gesture (all cues
 // here fire from setTimeout) — the Start tap speaks a silent utterance to unlock it.
 function primeSpeech(){try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues silent, timer unaffected');}return;}
   const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;u.onerror=e=>vlog('prime utterance error: '+(e&&e.error));dbgWire(u,'prime');const r=speechSynthesis.speak(u);
-  dbg('prime: speak(" ", vol 0) called, returned '+r+', act='+dbgAct()+', speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused);}catch(e){vlog('prime threw: '+e.message);}}
+  dbg('prime: speak(" ", vol 0) called, returned '+r+', act='+dbgAct()+', speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());}catch(e){vlog('prime threw: '+e.message);}}
 // iOS ring/silent switch: Web Audio + Web Speech are muted by the mute switch unless an
 // HTMLMediaElement is active (or audioSession is 'playback', iOS 17+). Silent looping
 // data-URI WAV, started in the Start tap, paused when the timer stops. Never blocks the timer.
@@ -175,53 +175,74 @@ function audioKeepAlive(on){
       [SILENT_WAV,'silent.wav'].forEach(src=>{const s=document.createElement('source');s.src=src;s.type='audio/wav';a.appendChild(s);});
       a.loop=true;a.setAttribute('playsinline','');
       const kick=()=>{if(!keepAliveOn)return;const q=a.play();if(q&&q.catch)q.catch(()=>{});};   // some WebKit builds pause at end instead of looping
-      a.addEventListener('pause',kick);a.addEventListener('ended',kick);a.load();keepAlive=a;}
-    const p=keepAlive.play();if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved; src='+(keepAlive.currentSrc||'').slice(0,12)+' audioSession='+(navigator.audioSession?navigator.audioSession.type:'n/a')));if(p&&p.catch)p.catch(e=>{if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
+      a.addEventListener('pause',kick);a.addEventListener('ended',kick);a.addEventListener('playing',()=>dbg('keepAlive playing src='+(a.currentSrc||'').slice(0,12)+' '+dbgAudio()));a.load();keepAlive=a;}
+    const p=keepAlive.play();if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()));if(p&&p.catch)p.catch(e=>{if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
   }catch(e){vlog('keep-alive media failed: '+e.message);}
 }
 function speak(text){if(!voiceOn){dbg('speak skipped (voice off): '+text);return;}try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+text);}return;}
   const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=0.9;u.volume=0.8;
-  if(!voiceWarned){voiceWarned=true;const n=speechSynthesis.getVoices?speechSynthesis.getVoices().length:'?';vlog('using the system default voice ('+n+' voices listed)');}
+  if(!voiceWarned){voiceWarned=true;lastVoices=speechSynthesis.getVoices?(speechSynthesis.getVoices()||[]):[];vlog('using the system default voice ('+lastVoices.length+' voices listed)');}
   u.onerror=e=>vlog('utterance error '+(e&&e.error)+' on “'+text+'”');const tag='cue#'+(++dbgN);dbgWire(u,tag);speechSynthesis.speak(u);
-  dbg(tag+' speak() "'+text+'" voice=default act='+dbgAct()+' speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused);}catch(e){vlog('speak threw: '+e.message);}}
-// ---- on-device diagnostics: ?debug=1 renders a live panel on the page (no console on
-// the phone). Off by default; every hook below is a no-op unless DEBUG is true. ----
-const DEBUG=(()=>{try{return /[?&]debug=1/.test(location.search);}catch(e){return false;}})();
-const dbgLog=[],dbgT0=Date.now();let dbgEl=null,dbgBody=null,dbgN=0;
+  dbg(tag+' speak() "'+text+'" voice=default act='+dbgAct()+' speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());}catch(e){vlog('speak threw: '+e.message);}}
+// ---- on-device diagnostics panel. STRICTLY PASSIVE: it only reads properties and
+// listens to events; it never calls speak()/cancel()/resume()/getVoices(), never
+// creates an AudioContext and never touches navigator.audioSession — the probe
+// buttons do, and only on a tap. Enable with ?debug=1, or 5 quick taps on the
+// title (works inside the home-screen build, which has no query string). The log
+// is buffered from load either way, so a late enable still shows history. ----
+let DEBUG=(()=>{try{return /[?&]debug=1/.test(location.search);}catch(e){return false;}})();
+const dbgLog=[],dbgT0=Date.now();let dbgEl=null,dbgBody=null,dbgN=0,dbgPoll=null;
 const dbgAct=()=>{try{return navigator.userActivation?String(navigator.userActivation.isActive):'n/a';}catch(e){return '?';}};
-function dbg(m){if(!DEBUG)return;dbgLog.push(((Date.now()-dbgT0)/1000).toFixed(1)+'s '+m);if(dbgLog.length>80)dbgLog.shift();dbgRender();}
+// one-line audio snapshot: AudioContext state + hardware hints, page audio session, keep-alive
+function dbgAudio(){try{
+  const ac=audioCtx?audioCtx.state+' sr='+audioCtx.sampleRate+(audioCtx.baseLatency!=null?' base='+Math.round(audioCtx.baseLatency*1000)+'ms':'')+(audioCtx.outputLatency!=null?' out='+Math.round(audioCtx.outputLatency*1000)+'ms':'')+(audioCtx.destination?' ch='+audioCtx.destination.maxChannelCount:''):'none';
+  const se=navigator.audioSession?navigator.audioSession.type+'/'+(navigator.audioSession.state||'?'):'n/a';
+  const ka=keepAlive?(keepAlive.paused?'paused':'playing'):'none';
+  return 'AC['+ac+'] session['+se+'] keepAlive['+ka+']';}catch(e){return 'audio? '+e.message;}}
+function dbg(m){dbgLog.push(((Date.now()-dbgT0)/1000).toFixed(1)+'s '+m);if(dbgLog.length>120)dbgLog.shift();if(DEBUG)dbgRender();}
 function dbgStatus(){const L=[];try{
-  L.push("'speechSynthesis' in window: "+('speechSynthesis' in window)+"  'SpeechSynthesisUtterance': "+('SpeechSynthesisUtterance' in window));
-  if(window.speechSynthesis){const vs=speechSynthesis.getVoices()||[];
-    L.push('getVoices().length: '+vs.length+(vs.length?'  first: '+vs.slice(0,4).map(v=>v.name+' ('+v.lang+(v.default?', default':'')+(v.localService?', local':'')+')').join(' | '):''));
-    L.push('speaking: '+speechSynthesis.speaking+'  pending: '+speechSynthesis.pending+'  paused: '+speechSynthesis.paused+'  picked: system default');}
-  L.push('AudioContext: '+(audioCtx?audioCtx.state:'not created')+'  audioSession: '+(navigator.audioSession?navigator.audioSession.type:'n/a')
-    +'  keepAlive: '+(keepAlive?(keepAlive.paused?'paused':'playing')+' '+(keepAlive.currentSrc||'').slice(0,12):'none'));
+  L.push("'speechSynthesis' in window: "+('speechSynthesis' in window)+"  'SpeechSynthesisUtterance': "+('SpeechSynthesisUtterance' in window)+"  standalone: "+(navigator.standalone===true)+"  visible: "+document.visibilityState);
+  const vs=lastVoices||[];
+  L.push('voices (last list the app fetched): '+vs.length+(vs.length?'  first: '+vs.slice(0,4).map(v=>v.name+' ('+v.lang+(v.default?', default':'')+(v.localService?', local':'')+')').join(' | '):'')+'  picked: system default');
+  if(window.speechSynthesis)L.push('speaking: '+speechSynthesis.speaking+'  pending: '+speechSynthesis.pending+'  paused: '+speechSynthesis.paused);
+  L.push(dbgAudio());
   L.push('userActivation.isActive: '+dbgAct()+'  voiceOn: '+voiceOn+'  running: '+running+'  move: '+currentMove+'  UA: '+navigator.userAgent.replace(/^.*?(iPhone|iPad|CPU) ?/,'').slice(0,60));
 }catch(e){L.push('status error: '+e.message);}return L;}
+function dbgEnable(how){if(DEBUG&&dbgEl){return;}DEBUG=true;dbg('debug view on ('+how+'); BUILDV '+(typeof BUILDV!=='undefined'?BUILDV:'(unstamped page)'));
+  if(!dbgPoll)dbgPoll=setInterval(dbgRender,1000);dbgRender();}
 function dbgRender(){if(!DEBUG)return;try{
   if(!dbgEl){if(!document.body)return;dbgEl=document.createElement('div');
     dbgEl.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:48vh;overflow:auto;z-index:9999;background:rgba(0,0,0,.88);color:#b6f2b6;font:11px/1.35 ui-monospace,Menlo,monospace;padding:6px 8px 12px;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text';
     const bar=document.createElement('div');bar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px';
     const mk=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.style.cssText='font:11px ui-monospace,monospace;padding:4px 7px;border-radius:6px;border:1px solid #6c6;background:#123;color:#dfd';b.onclick=()=>{try{f();}catch(e){dbg('button error: '+e.message);}};bar.appendChild(b);};
-    mk('Speak test',()=>{dbg('button: speak() in gesture act='+dbgAct());speak('Testing, one two three.');});
-    mk('Speak raw default',()=>{const u=new SpeechSynthesisUtterance('Raw default voice test.');dbgWire(u,'raw');dbg('button: raw speak() act='+dbgAct());speechSynthesis.speak(u);});
-    mk('Chime',()=>{dbg('button: chime');playChime(660,0.15,0.6);});
-    mk('cancel()+resume()',()=>{speechSynthesis.cancel();speechSynthesis.resume();dbg('button: cancel()+resume() done; speaking='+speechSynthesis.speaking+' paused='+speechSynthesis.paused);});
-    mk('resume()',()=>{speechSynthesis.resume();dbg('button: resume(); paused='+speechSynthesis.paused);});
+    // PROBES — active calls, tap-only
+    mk('Speak test',()=>{dbg('PROBE speak() act='+dbgAct()+' '+dbgAudio());speak('Testing, one two three.');});
+    mk('Speak raw default',()=>{const u=new SpeechSynthesisUtterance('Raw default voice test.');dbgWire(u,'raw');dbg('PROBE raw speak() act='+dbgAct()+' '+dbgAudio());speechSynthesis.speak(u);});
+    mk('Chime',()=>{dbg('PROBE chime '+dbgAudio());playChime(660,0.15,0.6);});
+    mk('cancel()+resume()',()=>{speechSynthesis.cancel();speechSynthesis.resume();dbg('PROBE cancel()+resume(); speaking='+speechSynthesis.speaking+' paused='+speechSynthesis.paused);});
+    mk('resume()',()=>{speechSynthesis.resume();dbg('PROBE resume(); paused='+speechSynthesis.paused);});
+    mk('List devices',()=>{if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){dbg('PROBE enumerateDevices: unavailable');return;}
+      navigator.mediaDevices.enumerateDevices().then(ds=>dbg('PROBE devices: '+(ds.length?ds.map(d=>d.kind+(d.label?':'+d.label:'')+(d.deviceId==='default'?'(default)':'')).join(', '):'none listed'))).catch(e=>dbg('PROBE enumerateDevices error: '+e.message));});
     mk('Clear',()=>{dbgLog.length=0;dbgRender();});
     dbgEl.appendChild(bar);dbgBody=document.createElement('div');dbgEl.appendChild(dbgBody);document.body.appendChild(dbgEl);
     document.body.style.paddingBottom='50vh';}
   dbgBody.textContent=dbgStatus().join('\n')+'\n— log —\n'+dbgLog.join('\n');
 }catch(e){}}
-// wire an utterance's lifecycle events into the log (tag = 'prime' | 'cue#N' | 'raw')
-function dbgWire(u,tag){if(!DEBUG)return;
+// utterance lifecycle → log, with the audio snapshot at START and END (tag = 'prime' | 'cue#N' | 'raw')
+function dbgWire(u,tag){try{
   const t0=Date.now();const el=()=>'+'+((Date.now()-t0)/1000).toFixed(1)+'s';
-  u.addEventListener('start',()=>dbg(tag+' START '+el()));
-  u.addEventListener('end',()=>dbg(tag+' END '+el()+' (elapsed '+(u.elapsedTime|0)+')'));
-  u.addEventListener('error',e=>dbg(tag+' ERROR '+el()+' code='+(e&&e.error)));
-  u.addEventListener('pause',()=>dbg(tag+' pause event'));u.addEventListener('resume',()=>dbg(tag+' resume event'));}
-if(DEBUG){dbg('debug view on; BUILDV '+(typeof BUILDV!=='undefined'?BUILDV:'(unstamped page)'));setInterval(dbgRender,1000);}
+  u.addEventListener('start',()=>dbg(tag+' START '+el()+' '+dbgAudio()));
+  u.addEventListener('end',()=>dbg(tag+' END '+el()+' (elapsed '+(u.elapsedTime|0)+') '+dbgAudio()));
+  u.addEventListener('error',e=>dbg(tag+' ERROR '+el()+' code='+(e&&e.error)+' '+dbgAudio()));
+  u.addEventListener('pause',()=>dbg(tag+' pause event'));u.addEventListener('resume',()=>dbg(tag+' resume event'));
+}catch(e){dbg(tag+' (no utterance events available: '+e.message+')');}}
+// passive listeners: session / context / media / visibility / voice-list changes
+try{if(navigator.audioSession&&navigator.audioSession.addEventListener)navigator.audioSession.addEventListener('statechange',()=>dbg('audioSession statechange → '+navigator.audioSession.type+'/'+navigator.audioSession.state));}catch(e){}
+try{document.addEventListener('visibilitychange',()=>dbg('visibility → '+document.visibilityState+' '+dbgAudio()));}catch(e){}
+try{if(window.speechSynthesis&&speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',()=>dbg('voiceschanged → '+(speechSynthesis.getVoices()||[]).length+' voices'));}catch(e){}
+// 5 quick taps on the title toggle the panel (for the home-screen build)
+try{const h=document.querySelector('h1');let taps=[];if(h&&h.addEventListener)h.addEventListener('click',()=>{const now=Date.now();taps=taps.filter(t=>now-t<3000);taps.push(now);if(taps.length>=5){taps=[];dbgEnable('5 taps');}});}catch(e){}
+if(DEBUG)dbgEnable('?debug=1');
 
 
 function updateDisplay(){const m=movements[currentMove];const dur=m?m.duration:0;const mins=Math.floor(timeLeft/60);const secs=timeLeft%60;timeDisp.textContent=mins+':'+String(secs).padStart(2,'0');if(dur>0){const progress=1-(timeLeft/dur);ring.style.strokeDashoffset=circumference*(1-progress);}}
@@ -285,7 +306,7 @@ function completeSession(){
 
 function toggleTimer(){
   if(!running){
-    running=true;mainBtn.textContent='Pause';resetBtn.style.display='';requestWakeLock();
+    running=true;mainBtn.textContent='Pause';resetBtn.style.display='';requestWakeLock();dbg('START tap act='+dbgAct()+' '+dbgAudio());
     try{getAudioCtx();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}audioKeepAlive(true);primeSpeech();
     if(currentMove===0&&timeLeft===0)startMovement(0);
     interval=setInterval(tick,1000);

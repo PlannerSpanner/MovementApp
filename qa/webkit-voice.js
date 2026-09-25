@@ -31,7 +31,7 @@ const APPS=[['morning-flow','#bMain'],['prenatal-stretch','#bMain'],['prenatal-m
       ss.speak=u=>{rec(u);try{return orig(u);}catch(e){window.__spk.push({err:String(e)});}};}
     else{ // engine has no Web Speech (Windows WebKit): stub it so the app's speak path still runs here
       window.__stub=true;
-      window.SpeechSynthesisUtterance=function(t){this.text=t;this.volume=1;this.rate=1;this.pitch=1;};
+      window.SpeechSynthesisUtterance=function(t){this.text=t;this.volume=1;this.rate=1;this.pitch=1;this.addEventListener=function(){};};
       window.speechSynthesis={speak:rec,cancel(){},getVoices(){return [];},addEventListener(){},speaking:false,pending:false};}
   });
   for(const [app,btn] of APPS){
