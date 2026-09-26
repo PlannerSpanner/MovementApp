@@ -21,8 +21,9 @@ function makeEl(){
 }
 let fail=false;
 const check=(name,ok)=>{console.log(`${name.padEnd(64)} ${ok?'ok':'FAIL'}`);if(!ok)fail=true;};
-function fakeAudio(){return function(){this.state='suspended';this.currentTime=0;
-  this.resume=()=>{this.state='running';};
+let bornState='suspended';
+function fakeAudio(){return function(){this.state=bornState;this.currentTime=0;this.resumeCalls=0;
+  this.resume=()=>{this.resumeCalls++;this.state='running';return Promise.resolve();};this.close=()=>Promise.resolve();
   this.createOscillator=()=>({type:'',frequency:{setValueAtTime(){},linearRampToValueAtTime(){}},connect(){},start(){},stop(){}});
   this.createGain=()=>({gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}});
   this.destination={};};}
@@ -41,12 +42,12 @@ function run(app,opts){
       return makeEl();},createElementNS(){return makeEl();},
     querySelector(sel){return sel==='h1'?h1:makeEl();},querySelectorAll(){return [];},
     addEventListener(){},visibilityState:'visible'};
-  const media=[]; let sessionType=null; let getVoicesCalls=0;
-  const AC=fakeAudio();
+  const media=[]; let sessionType=null; let getVoicesCalls=0; const sessionOrder=[];
+  const AC=fakeAudio();const acs=[];const ACrec=function(){AC.call(this);acs.push(this);};
   const env={document:doc,
     navigator:{wakeLock:{request:async()=>({addEventListener(){},release(){}})}},
-    window:{AudioContext:AC,addEventListener(){}},
-    AudioContext:AC,
+    window:{AudioContext:ACrec,addEventListener(){}},
+    AudioContext:ACrec,
     performance:{now:()=>pnow},
     requestAnimationFrame:cb=>{frameCb=cb;},
     setInterval:(fn)=>{intervals.push(fn);return intervals.length;},
@@ -55,7 +56,7 @@ function run(app,opts){
     Date,Math,JSON,String,Object,Array,Number,Boolean,Promise,Error,RegExp};
   if(opts.debug)env.location={search:'?debug=1'};
   if(opts.audio!==false){
-    env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;}};
+    env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;sessionOrder.push('session:'+acs.length);}};
   }
   if(opts.speech!==false){
     env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;this.ev={};this.addEventListener=(k,f)=>{this.ev[k]=f;};};
@@ -79,7 +80,7 @@ function run(app,opts){
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   // tap again = Pause
   inGesture=true; start(); inGesture=false;
-  return {spoken,primed,warns,intervals,els,media,body,h1,getVoicesCalls:()=>getVoicesCalls,sessionType:()=>sessionType};
+  return {spoken,primed,warns,intervals,els,media,body,h1,acs,sessionOrder,getVoicesCalls:()=>getVoicesCalls,sessionType:()=>sessionType};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
 for(const app of APPS){
@@ -100,6 +101,11 @@ for(const app of APPS){
     check(`${app}: second <source> is the silent.wav fallback file`,srcs[1]==='silent.wav');
     check(`${app}: media element paused when the timer pauses`,!!loop&&loop.paused===true);
     check(`${app}: navigator.audioSession.type set to playback`,r.sessionType()==='playback');
+    check(`${app}: audioSession type set BEFORE the AudioContext is created`,r.sessionOrder[0]==='session:0');
+    // iOS can hand the page an AudioContext already 'interrupted'; resume() is WebKit's only
+    // lever to end that, and must be called from the Start tap (old code only resumed 'suspended')
+    bornState='interrupted';const ri=run(app,{});bornState='suspended';
+    check(`${app}: Start tap calls resume() on an 'interrupted' AudioContext`,ri.acs.length>=1&&ri.acs[0].resumeCalls>=1&&ri.acs[0].state==='running');
     const r2=run(app,{speech:false});
     check(`${app}: timer still starts with speechSynthesis absent`,r2.intervals.length>=1);
     // ?debug=1 on-device diagnostics panel: present only when asked, logs prime + cue lifecycle

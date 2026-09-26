@@ -249,19 +249,29 @@ MOVES.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.
 async function lockScreen(){try{if('wakeLock'in navigator){wl=await navigator.wakeLock.request('screen');
   wl.addEventListener('release',()=>{wl=null;});}}catch(e){}}
 function unlockScreen(){if(wl){wl.release();wl=null;}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){lockScreen();audioKeepAlive(true);sync();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){lockScreen();audioSessionPlayback('foreground');acResume('foreground');audioKeepAlive(true);sync();}});
 
 function ac(){if(!actx){actx=new(window.AudioContext||window.webkitAudioContext)();
   try{if(actx.addEventListener)actx.addEventListener('statechange',()=>dbg('AudioContext statechange → '+actx.state+' '+dbgAudio()));}catch(e){}
   dbg('AudioContext created '+dbgAudio());}return actx;}
-function chime(f,v,d){try{const c=ac();if(c.state==='suspended')c.resume();
+// Ask WebKit to end whatever is holding the context: resume() is the documented lever
+// for BOTH 'suspended' and 'interrupted' (WebKit's AudioContext::resume() calls
+// mediaSession->endInterruption(MayResumePlaying)). The old code only resumed when
+// 'suspended', so an 'interrupted' context — born that way on iOS when the WebContent
+// process still holds a system interruption — was never asked to recover.
+function acResume(why){try{const c=ac();if(c.state==='running')return;
+  const before=c.state;const p=c.resume();
+  dbg('AC resume() ['+why+'] from '+before+' → now '+c.state+(p&&p.then?' (promise pending)':''));
+  if(p&&p.then)p.then(()=>dbg('AC resume() ['+why+'] resolved; state='+c.state),e=>dbg('AC resume() ['+why+'] REJECTED '+(e&&e.name)+': '+(e&&e.message)+'; state='+c.state));
+}catch(e){vlog('AC resume threw: '+e.message);}}
+function chime(f,v,d){try{const c=ac();if(c.state!=='running')acResume('chime');
   const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime);
   g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(v,c.currentTime+0.05);
   g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
   o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+d);}catch(e){}}
 // breath-tempo tone: gentle sine glide, quieter than the chimes. Rising = inhale,
 // falling = exhale, fired from the animation loop so it stays locked to the figure.
-function breathTone(f0,f1,d){try{const c=ac();if(c.state==='suspended')c.resume();
+function breathTone(f0,f1,d){try{const c=ac();if(c.state!=='running')acResume('breath');
   const o=c.createOscillator(),g=c.createGain();o.type='sine';
   o.frequency.setValueAtTime(f0,c.currentTime);
   o.frequency.linearRampToValueAtTime(f1,c.currentTime+d);
@@ -319,13 +329,22 @@ function primeSpeech(){try{
 // for the life of the session (paused on Pause/Reset, and a few seconds after the
 // finish cues). Silent 0.25 s WAV as a data URI — no network. Never blocks the timer.
 const SILENT_WAV='data:audio/wav;base64,UklGRvQHAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YdAHAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+// navigator.audioSession (Safari 16.4+; .state is NOT implemented in Safari, so the panel's
+// 'auto/?' is expected). Set BEFORE the AudioContext is created — WebKit picks the AVAudioSession
+// category when sessions begin, and three independent iOS writeups report the type only sticks
+// when applied before creation. Logs the read-back value and any exception.
+function audioSessionPlayback(why){try{
+  if(!navigator.audioSession){dbg('audioSession ['+why+']: navigator.audioSession absent');return;}
+  const before=navigator.audioSession.type;navigator.audioSession.type='playback';
+  dbg('audioSession ['+why+']: set playback; was '+before+' → reads '+navigator.audioSession.type);
+}catch(e){vlog('audioSession ['+why+'] threw: '+e.message);}}
 let keepAlive=null,keepAliveOn=false;
 function audioKeepAlive(on){
   keepAliveOn=!!on;
-  try{if(on&&navigator.audioSession)navigator.audioSession.type='playback';}catch(e){vlog('audioSession: '+e.message);}
+  dbg('audioKeepAlive('+on+') enter; element='+(keepAlive?'exists':'none'));
   try{
     if(!on){if(keepAlive)keepAlive.pause();return;}
-    if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function')return;
+    if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function'){dbg('keepAlive: no <audio>.play — abort');return;}
       // inline data URI first (no network); some WebKit ports reject data: media, so a
       // tiny real file is the second <source> — only fetched if the inline one fails
       [SILENT_WAV,'silent.wav'].forEach(src=>{const s=document.createElement('source');s.src=src;s.type='audio/wav';a.appendChild(s);});
@@ -336,9 +355,11 @@ function audioKeepAlive(on){
       const kick=()=>{if(!keepAliveOn)return;const q=a.play();if(q&&q.catch)q.catch(()=>{});};
       a.addEventListener('pause',kick);a.addEventListener('ended',kick);
       a.addEventListener('playing',()=>dbg('keepAlive playing src='+(a.currentSrc||'').slice(0,12)+' '+dbgAudio()));
-      a.load();keepAlive=a;}
-    const p=keepAlive.play();if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()));if(p&&p.catch)p.catch(e=>{if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
-  }catch(e){vlog('keep-alive media failed: '+e.message);}
+      a.addEventListener('error',()=>dbg('keepAlive element ERROR code='+(a.error&&a.error.code)+' '+(a.error&&a.error.message||'')+' src='+(a.currentSrc||'').slice(0,12)));
+      a.load();keepAlive=a;dbg('keepAlive: element created, sources='+a.children.length+', networkState='+a.networkState);}
+    const p=keepAlive.play();dbg('keepAlive: play() called, returned '+(p&&p.then?'promise':String(p)));
+    if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
+  }catch(e){vlog('keep-alive media failed: '+e.message+' @ '+(e&&e.stack||'').split('\n')[1]);}
 }
 let sayRef=null;
 function say(t){if(!voiceOn){dbg('say skipped (voice off): '+t);return;}try{
@@ -399,6 +420,10 @@ function dbgRender(){if(!DEBUG)return;try{
     mk('Chime',()=>{dbg('PROBE chime '+dbgAudio());chime(660,.15,.6);});
     mk('cancel()+resume()',()=>{speechSynthesis.cancel();speechSynthesis.resume();dbg('PROBE cancel()+resume(); speaking='+speechSynthesis.speaking+' paused='+speechSynthesis.paused);});
     mk('resume()',()=>{speechSynthesis.resume();dbg('PROBE resume(); paused='+speechSynthesis.paused);});
+    mk('AC resume()',()=>{acResume('probe');});
+    mk('AC close()+new',()=>{const old=actx;actx=null;dbg('PROBE close old AC ('+(old?old.state:'none')+')');if(old&&old.close)old.close().then(()=>dbg('old AC closed'),e=>dbg('old AC close rejected '+e.message));audioSessionPlayback('probe recreate');ac();acResume('probe recreate');});
+    mk('Set session playback',()=>{audioSessionPlayback('probe');});
+    mk('Play keep-alive',()=>{audioKeepAlive(true);});
     mk('List devices',()=>{if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){dbg('PROBE enumerateDevices: unavailable');return;}
       navigator.mediaDevices.enumerateDevices().then(ds=>dbg('PROBE devices: '+(ds.length?ds.map(d=>d.kind+(d.label?':'+d.label:'')+(d.deviceId==='default'?'(default)':'')).join(', '):'none listed'))).catch(e=>dbg('PROBE enumerateDevices error: '+e.message));});
     mk('Clear',()=>{dbgLog.length=0;dbgRender();});
@@ -490,8 +515,11 @@ function finish(){
 $('bMain').onclick=()=>{
   if(!running){
     running=true;$('bMain').textContent='Pause';lockScreen();dbg('START tap act='+dbgAct()+' '+dbgAudio());
-    // audio unlock inside the gesture — but no audio API may ever block the timer
-    try{ac();if(actx.state==='suspended')actx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}
+    // audio unlock inside the gesture — but no audio API may ever block the timer.
+    // Order matters on iOS: session type → context (resume if suspended OR interrupted)
+    // → keep-alive media element → speech priming.
+    audioSessionPlayback('start tap');
+    try{ac();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}
     audioKeepAlive(true);primeSpeech();
     if(!started){started=true;go(0);}
     else{segEnd=Date.now()+pausedRem;}

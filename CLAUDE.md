@@ -89,9 +89,9 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     as of this note). Playwright's Windows WebKit has no AudioContext and rejects
     data: media (plays the http WAV), so qa/webkit-voice.js proves the fallback path;
     Chromium plays the data URI.
-    Diagnostic: chimes work but speech is silent → the AudioContext has gesture
-    coverage and speech does not. Both silent → the ring/silent switch gating above
-    (keep-alive element not playing) before anything else.
+    Diagnostic: open the panel and read AC[...] first. 'interrupted' → the session
+    holder, see above. 'running' + speech START/END but no sound → routing. Chimes
+    but no speech → speech lacks gesture coverage.
     ON-DEVICE DIAGNOSTICS PANEL (all 5 speaking apps; no console on the phone). Open
     with `?debug=1`, or 5 quick taps on the title — the latter works inside the
     home-screen build, which has no query string and runs as a separate web-app
@@ -122,6 +122,27 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     Web Speech for pre-generated cue audio through Web Audio. Priced by tools/cues.js:
     90 distinct cue strings across the 5 apps (677 words, ~344 s of speech, ~3.8 s/clip),
     ≈1.4 MB at 32 kbps AAC / ≈2.1 MB at 48 kbps MP3 total. qa/cue-strings.json lists them.
+    AUDIOCONTEXT 'interrupted' (found on-device 2026-09-26, iOS 18.7 home-screen app):
+    WebKit's non-standard third state — the WebContent process holds a system audio
+    interruption, and iOS hands the page a context BORN interrupted; out=0 ms latency,
+    nothing routed, chimes AND speech silent even though utterances fire START/END.
+    resume() is the ONLY lever: WebKit's AudioContext::resume() calls
+    mediaSession->endInterruption(MayResumePlaying) (verified in WebKit source). Our
+    code used to resume only when state==='suspended', so an interrupted context was
+    never asked to recover — `acResume()` now resumes whenever state!=='running'
+    (Start/Resume tap, foreground return, every chime/breath tone) and logs before/
+    after state + promise outcome to the panel. Order in the tap: audioSession type
+    → AudioContext (create/resume) → keep-alive media element → speech prime.
+    WebKit category rule (MediaSessionManagerCocoa.mm): WebAudio-only → AmbientSound
+    (mute-switch gated); an audible HTMLMediaElement → MediaPlayback; the page's
+    navigator.audioSession type override wins over both. `audioSession.state` is NOT
+    implemented in Safari (BCD: version_added false) — the panel's 'auto/?' is expected.
+    Unexplained as of this note: keepAlive[none] and session[auto] on-device, i.e.
+    audioKeepAlive() never completing — now step-logged (enter, element created,
+    play() called/resolved/REJECTED, element error code, exception + stack line).
+    PROBE buttons for the levers: AC resume(), AC close()+new, Set session playback,
+    Play keep-alive. Related open WebKit bugs: 273511 (stuck interrupted), 263627
+    (not resumed on foreground), 281566 (resume() never resolves after background).
     RULE FOR FUTURE FEATURES: anything that plays a sound or speaks must be traceable
     back to a user gesture, or it needs a priming call added to the Start handler.
     Guards: qa/voice.js (fake DOM, empty voice list, absent API, all 5 speaking apps)

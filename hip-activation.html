@@ -149,10 +149,16 @@ movements.forEach((_,i)=>{const d=document.createElement('div');d.className='dot
 
 async function requestWakeLock(){try{if('wakeLock'in navigator){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}}catch(e){}}
 function releaseWakeLock(){if(wakeLock){wakeLock.release();wakeLock=null;}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){requestWakeLock();audioKeepAlive(true);}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){requestWakeLock();audioSessionPlayback('foreground');acResume('foreground');audioKeepAlive(true);}});
 
 function getAudioCtx(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();try{if(audioCtx.addEventListener)audioCtx.addEventListener('statechange',()=>dbg('AudioContext statechange → '+audioCtx.state+' '+dbgAudio()));}catch(e){}dbg('AudioContext created '+dbgAudio());}return audioCtx;}
-function playChime(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state==='suspended')ctx.resume();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
+// resume() is WebKit's lever for BOTH 'suspended' and 'interrupted' (it ends the platform interruption); log result
+function acResume(why){try{const c=getAudioCtx();if(c.state==='running')return;const before=c.state;const p=c.resume();
+  dbg('AC resume() ['+why+'] from '+before+' → now '+c.state+(p&&p.then?' (promise pending)':''));
+  if(p&&p.then)p.then(()=>dbg('AC resume() ['+why+'] resolved; state='+c.state),e=>dbg('AC resume() ['+why+'] REJECTED '+(e&&e.name)+': '+(e&&e.message)+'; state='+c.state));}catch(e){vlog('AC resume threw: '+e.message);}}
+function audioSessionPlayback(why){try{if(!navigator.audioSession){dbg('audioSession ['+why+']: navigator.audioSession absent');return;}
+  const before=navigator.audioSession.type;navigator.audioSession.type='playback';dbg('audioSession ['+why+']: set playback; was '+before+' → reads '+navigator.audioSession.type);}catch(e){vlog('audioSession ['+why+'] threw: '+e.message);}}
+function playChime(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state!=='running')acResume('chime');const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
 function transitionChime(){playChime(440,0.12,0.8);setTimeout(()=>playChime(554.37,0.1,0.6),120);setTimeout(()=>playChime(659.25,0.08,0.5),240);}
 function switchChime(){playChime(659.25,0.1,0.5);setTimeout(()=>playChime(659.25,0.1,0.5),280);}
 function completionChime(){playChime(523.25,0.12,1.0);setTimeout(()=>playChime(659.25,0.1,0.8),150);setTimeout(()=>playChime(783.99,0.1,0.8),300);setTimeout(()=>playChime(1046.5,0.08,1.5),450);}
@@ -168,16 +174,18 @@ function primeSpeech(){try{if(!window.speechSynthesis||!window.SpeechSynthesisUt
 const SILENT_WAV='data:audio/wav;base64,UklGRvQHAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YdAHAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
 let keepAlive=null,keepAliveOn=false;
 function audioKeepAlive(on){
-  keepAliveOn=!!on;
-  try{if(on&&navigator.audioSession)navigator.audioSession.type='playback';}catch(e){vlog('audioSession: '+e.message);}
+  keepAliveOn=!!on;dbg('audioKeepAlive('+on+') enter; element='+(keepAlive?'exists':'none'));
   try{if(!on){if(keepAlive)keepAlive.pause();return;}
-    if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function')return;
+    if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function'){dbg('keepAlive: no <audio>.play — abort');return;}
       [SILENT_WAV,'silent.wav'].forEach(src=>{const s=document.createElement('source');s.src=src;s.type='audio/wav';a.appendChild(s);});
       a.loop=true;a.setAttribute('playsinline','');
       const kick=()=>{if(!keepAliveOn)return;const q=a.play();if(q&&q.catch)q.catch(()=>{});};   // some WebKit builds pause at end instead of looping
-      a.addEventListener('pause',kick);a.addEventListener('ended',kick);a.addEventListener('playing',()=>dbg('keepAlive playing src='+(a.currentSrc||'').slice(0,12)+' '+dbgAudio()));a.load();keepAlive=a;}
-    const p=keepAlive.play();if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()));if(p&&p.catch)p.catch(e=>{if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
-  }catch(e){vlog('keep-alive media failed: '+e.message);}
+      a.addEventListener('pause',kick);a.addEventListener('ended',kick);a.addEventListener('playing',()=>dbg('keepAlive playing src='+(a.currentSrc||'').slice(0,12)+' '+dbgAudio()));
+      a.addEventListener('error',()=>dbg('keepAlive element ERROR code='+(a.error&&a.error.code)+' src='+(a.currentSrc||'').slice(0,12)));
+      a.load();keepAlive=a;dbg('keepAlive: element created, sources='+a.children.length+', networkState='+a.networkState);}
+    const p=keepAlive.play();dbg('keepAlive: play() called, returned '+(p&&p.then?'promise':String(p)));
+    if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
+  }catch(e){vlog('keep-alive media failed: '+e.message+' @ '+(e&&e.stack||'').split('\n')[1]);}
 }
 function speak(text){if(!voiceOn){dbg('speak skipped (voice off): '+text);return;}try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+text);}return;}
   const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=0.9;u.volume=0.8;
@@ -221,6 +229,10 @@ function dbgRender(){if(!DEBUG)return;try{
     mk('Chime',()=>{dbg('PROBE chime '+dbgAudio());playChime(660,0.15,0.6);});
     mk('cancel()+resume()',()=>{speechSynthesis.cancel();speechSynthesis.resume();dbg('PROBE cancel()+resume(); speaking='+speechSynthesis.speaking+' paused='+speechSynthesis.paused);});
     mk('resume()',()=>{speechSynthesis.resume();dbg('PROBE resume(); paused='+speechSynthesis.paused);});
+    mk('AC resume()',()=>{acResume('probe');});
+    mk('AC close()+new',()=>{const old=audioCtx;audioCtx=null;dbg('PROBE close old AC ('+(old?old.state:'none')+')');if(old&&old.close)old.close().then(()=>dbg('old AC closed'),e=>dbg('old AC close rejected '+e.message));audioSessionPlayback('probe recreate');getAudioCtx();acResume('probe recreate');});
+    mk('Set session playback',()=>{audioSessionPlayback('probe');});
+    mk('Play keep-alive',()=>{audioKeepAlive(true);});
     mk('List devices',()=>{if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){dbg('PROBE enumerateDevices: unavailable');return;}
       navigator.mediaDevices.enumerateDevices().then(ds=>dbg('PROBE devices: '+(ds.length?ds.map(d=>d.kind+(d.label?':'+d.label:'')+(d.deviceId==='default'?'(default)':'')).join(', '):'none listed'))).catch(e=>dbg('PROBE enumerateDevices error: '+e.message));});
     mk('Clear',()=>{dbgLog.length=0;dbgRender();});
@@ -307,7 +319,7 @@ function completeSession(){
 function toggleTimer(){
   if(!running){
     running=true;mainBtn.textContent='Pause';resetBtn.style.display='';requestWakeLock();dbg('START tap act='+dbgAct()+' '+dbgAudio());
-    try{getAudioCtx();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){vlog('AudioContext unavailable: '+e.message);}audioKeepAlive(true);primeSpeech();
+    audioSessionPlayback('start tap');try{getAudioCtx();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}audioKeepAlive(true);primeSpeech();
     if(currentMove===0&&timeLeft===0)startMovement(0);
     interval=setInterval(tick,1000);
   }else{
