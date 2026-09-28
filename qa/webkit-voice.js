@@ -32,7 +32,7 @@ const APPS=[['morning-flow','#bMain'],['prenatal-stretch','#bMain'],['prenatal-m
     else{ // engine has no Web Speech (Windows WebKit): stub it so the app's speak path still runs here
       window.__stub=true;
       window.SpeechSynthesisUtterance=function(t){this.text=t;this.volume=1;this.rate=1;this.pitch=1;this.addEventListener=function(){};};
-      window.speechSynthesis={speak:rec,cancel(){},getVoices(){return [];},addEventListener(){},speaking:false,pending:false};}
+      window.speechSynthesis={speak(u){rec(u);setTimeout(()=>{if(u.onend)u.onend();},60);},cancel(){},getVoices(){return [];},addEventListener(){},speaking:false,pending:false};}
   });
   for(const [app,btn] of APPS){
     const page=await ctx.newPage();

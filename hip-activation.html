@@ -158,7 +158,27 @@ function acResume(why){try{const c=getAudioCtx();if(c.state==='running')return;c
   if(p&&p.then)p.then(()=>dbg('AC resume() ['+why+'] resolved; state='+c.state),e=>dbg('AC resume() ['+why+'] REJECTED '+(e&&e.name)+': '+(e&&e.message)+'; state='+c.state));}catch(e){vlog('AC resume threw: '+e.message);}}
 function audioSessionPlayback(why){try{if(!navigator.audioSession){dbg('audioSession ['+why+']: navigator.audioSession absent');return;}
   const before=navigator.audioSession.type;navigator.audioSession.type='playback';dbg('audioSession ['+why+']: set playback; was '+before+' → reads '+navigator.audioSession.type);}catch(e){vlog('audioSession ['+why+'] threw: '+e.message);}}
-function playChime(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state!=='running')acResume('chime');const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
+// ---- audio sequencing (on-device finding 2026-09-28, iOS 18.7): speechSynthesis.speak()
+// takes the audio session and WebKit drops the page's AudioContext to 'interrupted' for
+// the whole utterance and beyond — until a resume(). So: resume() at every utterance
+// END/ERROR (plus a 250 ms re-check), chimes requested while speech is active are
+// deferred to END (dropped if that would make them >2 s late — a countdown tick that
+// late is wrong), and say() waits until the current chime has finished sounding so
+// speech never cuts a chime's tail. Both APIs stay; they just never overlap.
+let speechActive=false,speechAt=0,speechMax=12000,chimeUntil=0,deferred=[],deferT0=0;
+// watchdog: iOS can drop END entirely — expire, and release anything waiting on it
+const speaking=()=>{if(speechActive&&Date.now()-speechAt>speechMax){speechActive=false;dbg('speech watchdog expired after '+speechMax+' ms');flushChimes();}return speechActive;};
+function speechBegan(max){speechActive=true;speechAt=Date.now();speechMax=max||12000;}
+function speechEnded(why){speechActive=false;acResume('speech '+why);
+  setTimeout(()=>{if(audioCtx&&audioCtx.state!=='running')acResume('speech '+why+' +250ms');},250);
+  flushChimes();}
+function flushChimes(){const q=deferred;deferred=[];if(!q.length)return;const late=Date.now()-deferT0;
+  q.forEach(c=>{const wait=Math.max(0,c.at-deferT0);
+    if(late+wait>2000){dbg('chime DROPPED '+c.f+'Hz (would be '+(late+wait)+' ms late)');return;}
+    chimeUntil=Math.max(chimeUntil,Date.now()+wait+c.d*1000);   // so say() waits for the flushed chimes too
+    setTimeout(()=>chimeNow(c.f,c.v,c.d),wait);});}
+function playChime(f,v,d){if(speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
+function chimeNow(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state!=='running')acResume('chime');chimeUntil=Math.max(chimeUntil,Date.now()+dur*1000);const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
 function transitionChime(){playChime(440,0.12,0.8);setTimeout(()=>playChime(554.37,0.1,0.6),120);setTimeout(()=>playChime(659.25,0.08,0.5),240);}
 function switchChime(){playChime(659.25,0.1,0.5);setTimeout(()=>playChime(659.25,0.1,0.5),280);}
 function completionChime(){playChime(523.25,0.12,1.0);setTimeout(()=>playChime(659.25,0.1,0.8),150);setTimeout(()=>playChime(783.99,0.1,0.8),300);setTimeout(()=>playChime(1046.5,0.08,1.5),450);}
@@ -166,7 +186,7 @@ let voiceWarned=false,lastVoices=null;const vlog=m=>{try{console.warn('[voice] '
 // iOS Safari drops speak() that is not rooted synchronously in a user gesture (all cues
 // here fire from setTimeout) — the Start tap speaks a silent utterance to unlock it.
 function primeSpeech(){try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues silent, timer unaffected');}return;}
-  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;u.onerror=e=>vlog('prime utterance error: '+(e&&e.error));dbgWire(u,'prime');const r=speechSynthesis.speak(u);
+  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;u.onerror=e=>{vlog('prime utterance error: '+(e&&e.error));speechEnded('prime error');};u.onend=()=>speechEnded('prime end');dbgWire(u,'prime');speechBegan(1500);const r=speechSynthesis.speak(u);
   dbg('prime: speak(" ", vol 0) called, returned '+r+', act='+dbgAct()+', speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());}catch(e){vlog('prime threw: '+e.message);}}
 // iOS ring/silent switch: Web Audio + Web Speech are muted by the mute switch unless an
 // HTMLMediaElement is active (or audioSession is 'playback', iOS 17+). Silent looping
@@ -184,13 +204,17 @@ function audioKeepAlive(on){
       a.addEventListener('error',()=>dbg('keepAlive element ERROR code='+(a.error&&a.error.code)+' src='+(a.currentSrc||'').slice(0,12)));
       a.load();keepAlive=a;dbg('keepAlive: element created, sources='+a.children.length+', networkState='+a.networkState);}
     const p=keepAlive.play();dbg('keepAlive: play() called, returned '+(p&&p.then?'promise':String(p)));
-    if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keep-alive media play rejected: '+(e&&e.message));});
-  }catch(e){vlog('keep-alive media failed: '+e.message+' @ '+(e&&e.stack||'').split('\n')[1]);}
+    if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keepAlive play rejected: '+(e&&e.message));});
+  }catch(e){vlog('keepAlive FAILED: '+e.name+': '+e.message+' @ '+(e&&e.stack||'').split('\n').slice(0,2).join(' | '));}
 }
-function speak(text){if(!voiceOn){dbg('speak skipped (voice off): '+text);return;}try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+text);}return;}
+function speak(text,n){if(!voiceOn){dbg('speak skipped (voice off): '+text);return;}try{
+  if(deferred.length&&!speaking())flushChimes();
+  const wait=chimeUntil-Date.now();n=n||0;
+  if((wait>0||deferred.length)&&n<25){if(!n)dbg('speak waits '+(deferred.length?'for deferred chimes':wait+' ms for chime')+': '+text);setTimeout(()=>speak(text,n+1),wait>0?wait+30:150);return;}
+  if(n>=25)dbg('speak waited long enough — speaking anyway: '+text);if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+text);}return;}
   const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=0.9;u.volume=0.8;
   if(!voiceWarned){voiceWarned=true;lastVoices=speechSynthesis.getVoices?(speechSynthesis.getVoices()||[]):[];vlog('using the system default voice ('+lastVoices.length+' voices listed)');}
-  u.onerror=e=>vlog('utterance error '+(e&&e.error)+' on “'+text+'”');const tag='cue#'+(++dbgN);dbgWire(u,tag);speechSynthesis.speak(u);
+  u.onerror=e=>{vlog('utterance error '+(e&&e.error)+' on “'+text+'”');speechEnded('error');};u.onend=()=>speechEnded('end');const tag='cue#'+(++dbgN);dbgWire(u,tag);speechBegan();speechSynthesis.speak(u);
   dbg(tag+' speak() "'+text+'" voice=default act='+dbgAct()+' speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());}catch(e){vlog('speak threw: '+e.message);}}
 // ---- on-device diagnostics panel. STRICTLY PASSIVE: it only reads properties and
 // listens to events; it never calls speak()/cancel()/resume()/getVoices(), never
@@ -235,6 +259,10 @@ function dbgRender(){if(!DEBUG)return;try{
     mk('Play keep-alive',()=>{audioKeepAlive(true);});
     mk('List devices',()=>{if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){dbg('PROBE enumerateDevices: unavailable');return;}
       navigator.mediaDevices.enumerateDevices().then(ds=>dbg('PROBE devices: '+(ds.length?ds.map(d=>d.kind+(d.label?':'+d.label:'')+(d.deviceId==='default'?'(default)':'')).join(', '):'none listed'))).catch(e=>dbg('PROBE enumerateDevices error: '+e.message));});
+    const logText=()=>dbgStatus().join('\n')+'\n— log —\n'+dbgLog.join('\n');
+    const copyFallback=(t,why)=>{try{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;left:0;top:0;opacity:0';document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,t.length);const ok=document.execCommand('copy');document.body.removeChild(ta);dbg(ok?'copied '+t.length+' chars (fallback)':'copy FAILED'+(why?' ('+why+')':''));}catch(x){dbg('copy FAILED: '+x.message);}};
+    mk('Copy log',()=>{const t=logText();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>dbg('copied '+t.length+' chars'),e=>copyFallback(t,e&&e.message));else copyFallback(t);});
+    mk('Share log',()=>{const t=logText();if(navigator.share)navigator.share({title:'Movement debug log',text:t}).then(()=>dbg('shared'),e=>dbg('share cancelled/failed: '+(e&&e.message)));else dbg('navigator.share unavailable');});
     mk('Clear',()=>{dbgLog.length=0;dbgRender();});
     dbgEl.appendChild(bar);dbgBody=document.createElement('div');dbgEl.appendChild(dbgBody);document.body.appendChild(dbgEl);
     document.body.style.paddingBottom='50vh';}
@@ -319,7 +347,8 @@ function completeSession(){
 function toggleTimer(){
   if(!running){
     running=true;mainBtn.textContent='Pause';resetBtn.style.display='';requestWakeLock();dbg('START tap act='+dbgAct()+' '+dbgAudio());
-    audioSessionPlayback('start tap');try{getAudioCtx();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}audioKeepAlive(true);primeSpeech();
+    audioSessionPlayback('start tap');try{getAudioCtx();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}
+    dbg('start step 2 done (context); calling audioKeepAlive');try{audioKeepAlive(true);}catch(e){dbg('keepAlive THREW OUTSIDE its guards: '+e.message);}dbg('start step 3 done (keepAlive); calling primeSpeech');primeSpeech();
     if(currentMove===0&&timeLeft===0)startMovement(0);
     interval=setInterval(tick,1000);
   }else{

@@ -137,12 +137,29 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     (mute-switch gated); an audible HTMLMediaElement → MediaPlayback; the page's
     navigator.audioSession type override wins over both. `audioSession.state` is NOT
     implemented in Safari (BCD: version_added false) — the panel's 'auto/?' is expected.
-    Unexplained as of this note: keepAlive[none] and session[auto] on-device, i.e.
-    audioKeepAlive() never completing — now step-logged (enter, element created,
-    play() called/resolved/REJECTED, element error code, exception + stack line).
+    Still unexplained (2026-09-28): keepAlive[none] on-device with no 'keepAlive'
+    lines — but the failure line used to read 'warn: keep-alive media failed' (hyphen)
+    and the entry line 'audioKeepAlive(true) enter' (capital K), easy to miss in a
+    'keepAlive' scan. Now every line says 'keepAlive …' and the Start tap logs
+    'start step 2/3 done' around the call. session[playback] IS set on-device now.
     PROBE buttons for the levers: AC resume(), AC close()+new, Set session playback,
     Play keep-alive. Related open WebKit bugs: 273511 (stuck interrupted), 263627
     (not resumed on foreground), 281566 (resume() never resolves after background).
+    SPEECH INTERRUPTS WEB AUDIO (on-device, iOS 18.7, 2026-09-28 — THE mechanism behind
+    the whole saga): speechSynthesis.speak() activates the system synthesizer's
+    AVAudioSession; WebKit drops the page's AudioContext to 'interrupted' mid-utterance
+    and it stays there past END (Apple forums FB14444620: AVSpeechSynthesizer activates
+    the session and never deactivates/notifies — so no "interruption ended" ever
+    arrives). Whichever API fires first wins, the other is silent. No page-level
+    control exists (usesApplicationAudioSession / mixWithOthers are native-only), so
+    the two can only coexist SEQUENTIALLY. Sequencer in app_tpl.js + hip-activation:
+    resume() at every utterance END/ERROR (+250 ms re-check), chimes requested while
+    speech is active are deferred to END (dropped if >2 s late), say() waits for the
+    current/deferred chimes to finish, 12 s speech watchdog (1.5 s for the prime)
+    releases everything if iOS drops END, say() gives up waiting after ~4 s. Chimes
+    keep the pre-chime resume backstop. If a full-session device run is clean, Web
+    Speech stays; otherwise the priced 90-clip pre-generated audio replaces it
+    (single audio path). Panel: Copy log / Share log buttons.
     RULE FOR FUTURE FEATURES: anything that plays a sound or speaks must be traceable
     back to a user gesture, or it needs a priming call added to the Start handler.
     Guards: qa/voice.js (fake DOM, empty voice list, absent API, all 5 speaking apps)

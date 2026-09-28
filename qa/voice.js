@@ -22,9 +22,9 @@ function makeEl(){
 let fail=false;
 const check=(name,ok)=>{console.log(`${name.padEnd(64)} ${ok?'ok':'FAIL'}`);if(!ok)fail=true;};
 let bornState='suspended';
-function fakeAudio(){return function(){this.state=bornState;this.currentTime=0;this.resumeCalls=0;
+function fakeAudio(){return function(){this.state=bornState;this.currentTime=0;this.resumeCalls=0;this.osc=0;
   this.resume=()=>{this.resumeCalls++;this.state='running';return Promise.resolve();};this.close=()=>Promise.resolve();
-  this.createOscillator=()=>({type:'',frequency:{setValueAtTime(){},linearRampToValueAtTime(){}},connect(){},start(){},stop(){}});
+  this.createOscillator=()=>{this.osc++;return {type:'',frequency:{setValueAtTime(){},linearRampToValueAtTime(){}},connect(){},start(){},stop(){}};};
   this.createGain=()=>({gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}});
   this.destination={};};}
 // run one app; opts.speech=false removes speechSynthesis entirely
@@ -33,6 +33,9 @@ function run(app,opts){
   const scripts=[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
   const js=scripts.join('\n');
   const els={}; const timeouts=[],intervals=[]; let frameCb=null,pnow=0;
+  let now=1700000000000;const FakeDate=function(...a){return a.length?new Date(...a):new Date(now);};FakeDate.now=()=>now;
+  const live=[];   // utterances spoken but not yet ENDed (the test ends them, like iOS would)
+  const endSpeech=()=>{live.splice(0).forEach(u=>{if(u.ev.end)u.ev.end();if(u.onend)u.onend();});};
   const spoken=[]; let inGesture=false; const warns=[];
   const body=makeEl(),h1=makeEl();
   const doc={body,getElementById(id){return els[id]||(els[id]=makeEl());},
@@ -53,7 +56,7 @@ function run(app,opts){
     setInterval:(fn)=>{intervals.push(fn);return intervals.length;},
     clearInterval(){},setTimeout:(fn)=>{timeouts.push(fn);return 1;},
     console:{log(){},warn(...a){warns.push(a.join(' '));},error(...a){warns.push(a.join(' '));}},
-    Date,Math,JSON,String,Object,Array,Number,Boolean,Promise,Error,RegExp};
+    Date:FakeDate,Math,JSON,String,Object,Array,Number,Boolean,Promise,Error,RegExp};
   if(opts.debug)env.location={search:'?debug=1'};
   if(opts.audio!==false){
     env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;sessionOrder.push('session:'+acs.length);}};
@@ -61,7 +64,9 @@ function run(app,opts){
   if(opts.speech!==false){
     env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;this.ev={};this.addEventListener=(k,f)=>{this.ev[k]=f;};};
     env.speechSynthesis={getVoices(){getVoicesCalls++;return [];},speaking:false,pending:false,
-      speak(u){spoken.push({text:u.text,voice:u.voice,gesture:inGesture});if(u.ev.start)u.ev.start();if(u.ev.end)u.ev.end();},
+      speak(u){spoken.push({text:u.text,voice:u.voice,gesture:inGesture});
+        if(acs.length)acs[acs.length-1].state='interrupted';      // iOS: speaking takes the session
+        if(u.ev.start)u.ev.start();live.push(u);},
       cancel(){},addEventListener(){}};
     env.window.speechSynthesis=env.speechSynthesis;
     env.window.SpeechSynthesisUtterance=env.SpeechSynthesisUtterance;
@@ -75,12 +80,14 @@ function run(app,opts){
   if(!start)throw new Error('no Start handler found');
   inGesture=true; start(); inGesture=false;
   const primed=spoken.filter(s=>s.gesture);
-  timeouts.splice(0).forEach(t=>t());          // deferred cue announcements
-  intervals.forEach(t=>t());
+  const oscDuringPrime=acs.length?acs[0].osc:0;         // chimes must NOT sound while the prime speaks
+  const resumesBeforeEnd=acs.length?acs[0].resumeCalls:0;
+  // run the sequence like iOS would: END the live utterance(s), let time pass, flush timers
+  for(let round=0;round<6;round++){endSpeech();now+=1500;timeouts.splice(0).forEach(t=>t());intervals.forEach(t=>t());}
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   // tap again = Pause
   inGesture=true; start(); inGesture=false;
-  return {spoken,primed,warns,intervals,els,media,body,h1,acs,sessionOrder,getVoicesCalls:()=>getVoicesCalls,sessionType:()=>sessionType};
+  return {spoken,primed,warns,intervals,els,media,body,h1,acs,sessionOrder,oscDuringPrime,resumesBeforeEnd,getVoicesCalls:()=>getVoicesCalls,sessionType:()=>sessionType};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
 for(const app of APPS){
@@ -106,6 +113,12 @@ for(const app of APPS){
     // lever to end that, and must be called from the Start tap (old code only resumed 'suspended')
     bornState='interrupted';const ri=run(app,{});bornState='suspended';
     check(`${app}: Start tap calls resume() on an 'interrupted' AudioContext`,ri.acs.length>=1&&ri.acs[0].resumeCalls>=1&&ri.acs[0].state==='running');
+    // speech interrupts the context (iOS): END must resume it; chimes never sound during speech,
+    // but do sound once speech has ended; the context ends the run 'running'
+    check(`${app}: no chime rendered while speech is active`,r.oscDuringPrime===0);
+    check(`${app}: utterance END triggers AudioContext.resume()`,r.acs[0].resumeCalls>r.resumesBeforeEnd);
+    check(`${app}: deferred chimes sound after speech ends`,r.acs[0].osc>0);
+    check(`${app}: context is running after the sequence`,r.acs[0].state==='running');
     const r2=run(app,{speech:false});
     check(`${app}: timer still starts with speechSynthesis absent`,r2.intervals.length>=1);
     // ?debug=1 on-device diagnostics panel: present only when asked, logs prime + cue lifecycle
