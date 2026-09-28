@@ -165,6 +165,7 @@ function audioSessionPlayback(why){try{if(!navigator.audioSession){dbg('audioSes
 // deferred to END (dropped if that would make them >2 s late — a countdown tick that
 // late is wrong), and say() waits until the current chime has finished sounding so
 // speech never cuts a chime's tail. Both APIs stay; they just never overlap.
+const SEQ_DEFER=false;   // deferral disabled 2026-09-28 (deadlocked on-device); see app_tpl.js
 let speechActive=false,speechAt=0,speechMax=12000,chimeUntil=0,deferred=[],deferT0=0;
 // watchdog: iOS can drop END entirely — expire, and release anything waiting on it
 const speaking=()=>{if(speechActive&&Date.now()-speechAt>speechMax){speechActive=false;dbg('speech watchdog expired after '+speechMax+' ms');flushChimes();}return speechActive;};
@@ -177,7 +178,7 @@ function flushChimes(){const q=deferred;deferred=[];if(!q.length)return;const la
     if(late+wait>2000){dbg('chime DROPPED '+c.f+'Hz (would be '+(late+wait)+' ms late)');return;}
     chimeUntil=Math.max(chimeUntil,Date.now()+wait+c.d*1000);   // so say() waits for the flushed chimes too
     setTimeout(()=>chimeNow(c.f,c.v,c.d),wait);});}
-function playChime(f,v,d){if(speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
+function playChime(f,v,d){if(SEQ_DEFER&&speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
 function chimeNow(freq,vol,dur){try{const ctx=getAudioCtx();if(ctx.state!=='running')acResume('chime');chimeUntil=Math.max(chimeUntil,Date.now()+dur*1000);const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,ctx.currentTime);gain.gain.setValueAtTime(0,ctx.currentTime);gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+0.05);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+dur);}catch(e){}}
 function transitionChime(){playChime(440,0.12,0.8);setTimeout(()=>playChime(554.37,0.1,0.6),120);setTimeout(()=>playChime(659.25,0.08,0.5),240);}
 function switchChime(){playChime(659.25,0.1,0.5);setTimeout(()=>playChime(659.25,0.1,0.5),280);}

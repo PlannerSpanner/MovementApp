@@ -104,7 +104,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='5a72926ead';
+const BUILDV='6fcb97aaf9';
 const MOVES=[
 {n:"Seated breathing",pos:'chair',cue:"Sit tall, breathe wide into the ribs",dur:60,bil:false,cyc:4.0,belly:1,pin:"LR", prop:[{l:[[-8,76,-4],[8,76,-4]]},{l:[[-7,76,-4],[-7,93,-4]]},{l:[[7,76,-4],[7,93,-4]]}],
  A:{p:[0,74,0],yaw:-18,tw:0,s:[6,2],hf:0,ikL:{w:[-8,72.5,10]},ikR:{w:[8,72.5,10]},
@@ -551,6 +551,10 @@ function acResume(why){try{const c=ac();if(c.state==='running')return;
 // deferred to END (dropped if that would make them >2 s late — a countdown tick that
 // late is wrong), and say() waits until the current chime has finished sounding so
 // speech never cuts a chime's tail. Both APIs stay; they just never overlap.
+// DEFERRAL DISABLED 2026-09-28: on-device it deadlocked (speech stalls under the keep-alive
+// session, never ENDs, chimes wait forever). Degraded-but-audible beats silent while Web
+// Speech is replaced by pre-generated clips. resume()-at-END and the pre-chime resume stay.
+const SEQ_DEFER=false;
 let speechActive=false,speechAt=0,speechMax=12000,chimeUntil=0,deferred=[],deferT0=0;
 // watchdog: iOS can drop END entirely — expire, and release anything waiting on it
 const speaking=()=>{if(speechActive&&Date.now()-speechAt>speechMax){speechActive=false;dbg('speech watchdog expired after '+speechMax+' ms');flushChimes();}return speechActive;};
@@ -563,7 +567,7 @@ function flushChimes(){const q=deferred;deferred=[];if(!q.length)return;const la
     if(late+wait>2000){dbg('chime DROPPED '+c.f+'Hz (would be '+(late+wait)+' ms late)');return;}
     chimeUntil=Math.max(chimeUntil,Date.now()+wait+c.d*1000);   // so say() waits for the flushed chimes too
     setTimeout(()=>chimeNow(c.f,c.v,c.d),wait);});}
-function chime(f,v,d){if(speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
+function chime(f,v,d){if(SEQ_DEFER&&speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
 function chimeNow(f,v,d){try{const c=ac();if(c.state!=='running')acResume('chime');
   chimeUntil=Math.max(chimeUntil,Date.now()+d*1000);
   const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime);

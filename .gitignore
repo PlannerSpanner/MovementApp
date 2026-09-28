@@ -12,3 +12,6 @@ movement-app-src.zip
 # Playwright QA outputs
 qa/screenshots/
 node_modules/
+
+# local voice audition page + clips (never deployed)
+audition/

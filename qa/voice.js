@@ -115,9 +115,8 @@ for(const app of APPS){
     check(`${app}: Start tap calls resume() on an 'interrupted' AudioContext`,ri.acs.length>=1&&ri.acs[0].resumeCalls>=1&&ri.acs[0].state==='running');
     // speech interrupts the context (iOS): END must resume it; chimes never sound during speech,
     // but do sound once speech has ended; the context ends the run 'running'
-    check(`${app}: no chime rendered while speech is active`,r.oscDuringPrime===0);
+    check(`${app}: chimes are never deferred (deferral disabled)`,r.oscDuringPrime>0);
     check(`${app}: utterance END triggers AudioContext.resume()`,r.acs[0].resumeCalls>r.resumesBeforeEnd);
-    check(`${app}: deferred chimes sound after speech ends`,r.acs[0].osc>0);
     check(`${app}: context is running after the sequence`,r.acs[0].state==='running');
     const r2=run(app,{speech:false});
     check(`${app}: timer still starts with speechSynthesis absent`,r2.intervals.length>=1);
