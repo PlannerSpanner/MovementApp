@@ -15,3 +15,6 @@ node_modules/
 
 # local voice audition page + clips (never deployed)
 audition/
+
+# local TTS virtualenv for tools/gen_cues.py (model files cache in %LOCALAPPDATA%/kokoro)
+tools/tts-venv/

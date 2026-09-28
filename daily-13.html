@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='0d6498b809';
+const BUILDV='4d7678efc1';
 // Daily 13 — postural maintenance (renamed from Daily 10, 2026-08-26). tdur = length
 // of the GET SET UP gap BEFORE the movement (TR_ALL builds); setup = authored
 // transition script, spoken as "Next: <name>. <setup>". Position flow: standing (1-2)
@@ -618,32 +618,13 @@ function acResume(why){try{const c=ac();if(c.state==='running')return;
   dbg('AC resume() ['+why+'] from '+before+' → now '+c.state+(p&&p.then?' (promise pending)':''));
   if(p&&p.then)p.then(()=>dbg('AC resume() ['+why+'] resolved; state='+c.state),e=>dbg('AC resume() ['+why+'] REJECTED '+(e&&e.name)+': '+(e&&e.message)+'; state='+c.state));
 }catch(e){vlog('AC resume threw: '+e.message);}}
-// ---- audio sequencing (on-device finding 2026-09-28, iOS 18.7): speechSynthesis.speak()
-// takes the audio session and WebKit drops the page's AudioContext to 'interrupted' for
-// the whole utterance and beyond — until a resume(). So: resume() at every utterance
-// END/ERROR (plus a 250 ms re-check), chimes requested while speech is active are
-// deferred to END (dropped if that would make them >2 s late — a countdown tick that
-// late is wrong), and say() waits until the current chime has finished sounding so
-// speech never cuts a chime's tail. Both APIs stay; they just never overlap.
-// DEFERRAL DISABLED 2026-09-28: on-device it deadlocked (speech stalls under the keep-alive
-// session, never ENDs, chimes wait forever). Degraded-but-audible beats silent while Web
-// Speech is replaced by pre-generated clips. resume()-at-END and the pre-chime resume stay.
-const SEQ_DEFER=false;
-let speechActive=false,speechAt=0,speechMax=12000,chimeUntil=0,deferred=[],deferT0=0;
-// watchdog: iOS can drop END entirely — expire, and release anything waiting on it
-const speaking=()=>{if(speechActive&&Date.now()-speechAt>speechMax){speechActive=false;dbg('speech watchdog expired after '+speechMax+' ms');flushChimes();}return speechActive;};
-function speechBegan(max){speechActive=true;speechAt=Date.now();speechMax=max||12000;}
-function speechEnded(why){speechActive=false;acResume('speech '+why);
-  setTimeout(()=>{if(actx&&actx.state!=='running')acResume('speech '+why+' +250ms');},250);
-  flushChimes();}
-function flushChimes(){const q=deferred;deferred=[];if(!q.length)return;const late=Date.now()-deferT0;
-  q.forEach(c=>{const wait=Math.max(0,c.at-deferT0);
-    if(late+wait>2000){dbg('chime DROPPED '+c.f+'Hz (would be '+(late+wait)+' ms late)');return;}
-    chimeUntil=Math.max(chimeUntil,Date.now()+wait+c.d*1000);   // so say() waits for the flushed chimes too
-    setTimeout(()=>chimeNow(c.f,c.v,c.d),wait);});}
-function chime(f,v,d){if(SEQ_DEFER&&speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
-function chimeNow(f,v,d){try{const c=ac();if(c.state!=='running')acResume('chime');
-  chimeUntil=Math.max(chimeUntil,Date.now()+d*1000);
+// ---- chimes: sine blips on the shared AudioContext. Every chime (and every chime
+// SEQUENCE via hold()) pushes chimeEndAt, in audio-clock seconds, so a cue can be
+// scheduled to start exactly when the chime tail ends — no timers, no overlap.
+let chimeEndAt=0;
+function hold(secs){try{const c=ac();chimeEndAt=Math.max(chimeEndAt,c.currentTime+secs);}catch(e){}}
+function chime(f,v,d){try{const c=ac();if(c.state!=='running')acResume('chime');
+  chimeEndAt=Math.max(chimeEndAt,c.currentTime+d);
   const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime);
   g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(v,c.currentTime+0.05);
   g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
@@ -657,49 +638,11 @@ function breathTone(f0,f1,d){try{const c=ac();if(c.state!=='running')acResume('b
   g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(0.055,c.currentTime+d*0.3);
   g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
   o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+d);}catch(e){}}
-const cTrans=()=>{chime(440,.12,1);setTimeout(()=>chime(554.37,.1,.8),150);setTimeout(()=>chime(659.25,.08,.6),300);};
-const cSwitch=()=>{chime(659.25,.1,.5);setTimeout(()=>chime(659.25,.1,.5),280);};
-const cDone=()=>{chime(440,.12,1.2);setTimeout(()=>chime(554.37,.1,1),200);
+const cTrans=()=>{hold(.95);chime(440,.12,1);setTimeout(()=>chime(554.37,.1,.8),150);setTimeout(()=>chime(659.25,.08,.6),300);};
+const cSwitch=()=>{hold(.8);chime(659.25,.1,.5);setTimeout(()=>chime(659.25,.1,.5),280);};
+const cDone=()=>{hold(2.1);chime(440,.12,1.2);setTimeout(()=>chime(554.37,.1,1),200);
   setTimeout(()=>chime(659.25,.1,1),400);setTimeout(()=>chime(880,.08,1.5),600);};
-// pick the most natural installed voice: iOS/macOS "Enhanced"/"Premium" voices and
-// Edge "Natural" voices beat the robotic default by a mile when present. The list is
-// async on most browsers, so re-pick on voiceschanged.
-let voicePick=null,voiceWarned=false,lastVoices=null;
 const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){} try{dbg('warn: '+m);}catch(e){}};
-function pickVoice(){try{
-  const vs=speechSynthesis.getVoices(); lastVoices=vs||[]; if(!vs||!vs.length)return;
-  const NICE=['ava','zoe','samantha','allison','serena','karen','moira','tessa','nicky'];
-  let best=null,bs=0;
-  vs.forEach(v=>{
-    if(!/^en/i.test(v.lang))return;
-    const n=v.name.toLowerCase(); let s=0.1;
-    if(n.includes('premium'))s+=8;
-    if(n.includes('enhanced'))s+=6;
-    if(n.includes('natural'))s+=6;
-    if(n.startsWith('google'))s+=5;
-    const i=NICE.findIndex(x=>n.includes(x)); if(i>=0)s+=4-i*0.1;
-    if(/^en-us/i.test(v.lang))s+=1;
-    if(v.localService)s+=0.5;
-    if(s>bs){bs=s;best=v;}});
-  if(best)voicePick=best;
-}catch(e){}}
-if(window.speechSynthesis&&speechSynthesis.getVoices){pickVoice();
-  if(speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',pickVoice);}
-// iOS Safari only lets speak() through when it is rooted SYNCHRONOUSLY in a user
-// gesture; every cue below fires from a setTimeout after a chime, which breaks that
-// chain and is dropped without any error. So the Start/Resume tap speaks a silent
-// utterance itself — the same unlock the AudioContext resume beside it gets. Never
-// throws, never touches the timer.
-function primeSpeech(){try{
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
-    if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues will be silent, timer unaffected');}return;}
-  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
-  u.onerror=e=>{vlog('prime utterance error: '+(e&&e.error));speechEnded('prime error');};
-  u.onend=()=>speechEnded('prime end');
-  dbgWire(u,'prime');
-  speechBegan(1500);const r=speechSynthesis.speak(u);pickVoice();
-  dbg('prime: speak(" ", vol 0) called, returned '+r+', act='+dbgAct()+', speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());
-}catch(e){vlog('prime threw: '+e.message);}}
 // iOS ring/silent switch: a page whose only audio output is Web Audio nodes gets the
 // 'ambient' audio session, which the hardware mute switch silences — Web Audio AND Web
 // Speech alike, with no error or state change (chimes and voice both dead on the new
@@ -741,32 +684,41 @@ function audioKeepAlive(on){
     if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keepAlive play rejected: '+(e&&e.message));});
   }catch(e){vlog('keepAlive FAILED: '+e.name+': '+e.message+' @ '+(e&&e.stack||'').split('\n').slice(0,2).join(' | '));}
 }
-let sayRef=null;
-function say(t,n){if(!voiceOn){dbg('say skipped (voice off): '+t);return;}try{
-  if(deferred.length&&!speaking())flushChimes();           // watchdog expiry releases the queue
-  const wait=chimeUntil-Date.now();n=n||0;
-  if((wait>0||deferred.length)&&n<25){if(!n)dbg('say waits '+(deferred.length?'for deferred chimes':wait+' ms for chime')+': '+t);setTimeout(()=>say(t,n+1),wait>0?wait+30:150);return;}
-  if(n>=25)dbg('say waited long enough — speaking anyway: '+t);
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
-    if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+t);}return;}
-  pickVoice();   // iOS Safari: voiceschanged often never fires and getVoices() is
-                 // empty/compact-only at load — re-pick at speak time, every time
-  const u=new SpeechSynthesisUtterance(t);
-  // iOS ignores u.voice unless u.lang matches it; keep a live ref too, or WebKit
-  // can GC the utterance mid-speech and fall back to the default voice.
-  // No match (empty or non-English list): leave u.voice unset = system default voice,
-  // and say so once in the console rather than failing silently.
-  if(voicePick){u.voice=voicePick;u.lang=voicePick.lang;}
-  else if(!voiceWarned){voiceWarned=true;
-    const n=speechSynthesis.getVoices?speechSynthesis.getVoices().length:'?';
-    vlog('no matching voice ('+n+' listed) — using the system default voice');}
-  u.rate=.8;u.pitch=1;u.volume=.8;
-  u.onerror=e=>{vlog('utterance error '+(e&&e.error)+' on “'+t+'”');speechEnded('error');};
-  sayRef=u;u.onend=()=>{if(sayRef===u)sayRef=null;speechEnded('end');};
-  const tag='cue#'+(++dbgN);dbgWire(u,tag);
-  speechBegan();speechSynthesis.speak(u);
-  dbg(tag+' speak() "'+t+'" voice='+(voicePick?voicePick.name:'default')+' act='+dbgAct()+' speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());
-}catch(e){vlog('say threw: '+e.message);}}
+// ---- spoken cues: PRE-GENERATED CLIPS (Kokoro-82M af_heart, tools/gen_cues.py), played
+// as AudioBuffers on the SAME AudioContext as the chimes. One audio path: no Web Speech,
+// no second audio session, nothing for iOS to interrupt (on-device 2026-09-28: the
+// system synthesizer took the session mid-utterance and never gave it back). CUES
+// (text -> {f: file, s: seconds, sp: speed}) is inlined by build.py from src/cues.json.
+// A cue with no clip logs loudly and is skipped — it never throws, never blocks the timer.
+// The __onSay seam lets tools/cues.js enumerate every string an app can speak.
+const CUES={"Voice on.":{"f":"audio/61b8cef773f5.mp3","s":1.0,"sp":0.85},"Bouncing in place":{"f":"audio/e90b4271241b.mp3","s":1.37,"sp":0.85},"Next: Arm sweeps with knee dip. Stay standing, feet under your hips, arms hanging.":{"f":"audio/6fb026615c37.mp3","s":5.59,"sp":0.85},"Arm sweeps with knee dip":{"f":"audio/bd7e91696c8c.mp3","s":1.64,"sp":0.85},"Next: Punching rotations. Feet wider than your shoulders, knees soft, fists at your ribs.":{"f":"audio/d78b49fe39ac.mp3","s":5.44,"sp":1.0},"Punching rotations":{"f":"audio/514f420bb885.mp3","s":1.47,"sp":0.85},"Next: Dynamic lateral reaches. Feet wide, one hand on your hip, the other arm ready to reach.":{"f":"audio/5ce75b3abc58.mp3","s":5.87,"sp":1.0},"Dynamic lateral reaches":{"f":"audio/01d0a005b24a.mp3","s":1.75,"sp":0.85},"Next: Cross-body knee drives. Feet under your hips, stand tall, elbows up.":{"f":"audio/8a46724c496b.mp3","s":5.12,"sp":0.85},"Cross-body knee drives":{"f":"audio/889b7849f51c.mp3","s":1.51,"sp":0.85},"Next: Chest opener swings. Stand tall, arms out at shoulder height.":{"f":"audio/ec544e829995.mp3","s":4.78,"sp":0.85},"Chest opener swings":{"f":"audio/a15d6172987b.mp3","s":1.47,"sp":0.85},"Next: Hip circles. Hands on your hips, feet planted.":{"f":"audio/a4d13df3eb43.mp3","s":3.71,"sp":0.85},"Hip circles":{"f":"audio/c1cdf62dbe6e.mp3","s":1.11,"sp":0.85},"Change direction":{"f":"audio/4d088baf3505.mp3","s":1.32,"sp":0.85},"Next: Bent rotation sweeps. Hinge forward halfway, arms hanging loose.":{"f":"audio/fcc2a84cdf8d.mp3","s":5.01,"sp":0.85},"Bent rotation sweeps":{"f":"audio/eb1ff86e178a.mp3","s":1.56,"sp":0.85},"Next: Folded cat-cows. Time to get on the ground. Fold down, hands on your bent knees.":{"f":"audio/594ec7e8a164.mp3","s":5.55,"sp":1.0},"Folded cat-cows":{"f":"audio/ccde764ede35.mp3","s":1.39,"sp":0.85},"Next: Cobra press-ups. Lie face down, hands under your shoulders, elbows in.":{"f":"audio/20bc960c62e1.mp3","s":5.67,"sp":0.85},"Cobra press-ups":{"f":"audio/1fe304f8a459.mp3","s":1.3,"sp":0.85},"Next: Pedaling down dog. Tuck your toes and press up and back into down dog, hips high.":{"f":"audio/fd14f169b040.mp3","s":6.08,"sp":0.85},"Pedaling down dog":{"f":"audio/939250bf613f.mp3","s":1.49,"sp":0.85},"Next: Thread the needle. Drop your knees and come to hands and knees, wrists under shoulders.":{"f":"audio/c1479bb69634.mp3","s":5.95,"sp":0.85},"Thread the needle. Start with your right side.":{"f":"audio/d3ebb4e684fb.mp3","s":2.69,"sp":0.85},"Switch sides":{"f":"audio/05006ccefe89.mp3","s":1.24,"sp":0.85},"Next: 90/90 with a fold. Sit into a Z: front shin across in front, back shin behind you.":{"f":"audio/a843f4086aa1.mp3","s":7.66,"sp":0.85},"90/90 with a fold. Start with your right side.":{"f":"audio/e23530ccd571.mp3","s":3.9,"sp":0.85},"Movement complete.":{"f":"audio/5a12bdfc8c7e.mp3","s":1.41,"sp":0.85},"Seated breathing":{"f":"audio/2d86e8ca4e8d.mp3","s":1.17,"sp":0.85},"Seated cat-cow":{"f":"audio/de624d531856.mp3","s":1.34,"sp":0.85},"Seated side reach. Start with your right side.":{"f":"audio/17119c7847fe.mp3","s":3.01,"sp":0.85},"Seated figure-4. Start with your right side.":{"f":"audio/7d541deca5b0.mp3","s":2.94,"sp":0.85},"Sit on the floor.":{"f":"audio/d14c350765e4.mp3","s":1.24,"sp":0.85},"Supported butterfly":{"f":"audio/27b6f9dfbdcb.mp3","s":1.51,"sp":0.85},"Come to kneeling.":{"f":"audio/591af30c77d4.mp3","s":1.13,"sp":0.85},"Wide-knee child's pose":{"f":"audio/b553de978ee5.mp3","s":1.62,"sp":0.85},"Come to hands and knees.":{"f":"audio/d2f4c5d59a42.mp3","s":1.58,"sp":0.85},"Hands-and-knees rocking":{"f":"audio/895d54ed5bc7.mp3","s":1.66,"sp":0.85},"Kneeling hip flexor stretch. Start with your right side.":{"f":"audio/bd6b3febcc5f.mp3","s":3.52,"sp":0.85},"Stand at the wall.":{"f":"audio/0372a337a182.mp3","s":1.3,"sp":0.85},"Standing calf stretch. Start with your right side.":{"f":"audio/deb45dbeb836.mp3","s":3.01,"sp":0.85},"Stand in the doorway.":{"f":"audio/451305c6a9ad.mp3","s":1.43,"sp":0.85},"Doorway chest opener. Start with your right side.":{"f":"audio/e02c5ee36059.mp3","s":3.2,"sp":0.85},"Breath and pelvic floor release":{"f":"audio/2bc2e251aeb5.mp3","s":1.92,"sp":0.85},"Hands-and-knees pelvic rocking":{"f":"audio/90fad9f23de2.mp3","s":2.03,"sp":0.85},"Sit on your ball.":{"f":"audio/c4985ee49856.mp3","s":1.19,"sp":0.85},"Birth ball hip circles":{"f":"audio/19e563d54eb5.mp3","s":1.6,"sp":0.85},"Stand up and hold your chair.":{"f":"audio/a8242fd838e1.mp3","s":1.79,"sp":0.85},"Supported deep squat":{"f":"audio/b9555ddf1d60.mp3","s":1.47,"sp":0.85},"Lie on your side.":{"f":"audio/bfcf51dd7f98.mp3","s":1.34,"sp":0.85},"Side-lying clamshells. Start with your right side.":{"f":"audio/70d993772d52.mp3","s":3.24,"sp":0.85},"Windshield wipers":{"f":"audio/c1d749bd4369.mp3","s":1.41,"sp":0.85},"Supported butterfly with rock":{"f":"audio/ae0d583be3e4.mp3","s":1.94,"sp":0.85},"Kneeling lunge with support. Start with your right side.":{"f":"audio/86f820b04b3a.mp3","s":3.48,"sp":0.85},"Standing wall pelvic tilts":{"f":"audio/5fa52e7e22ab.mp3","s":1.81,"sp":0.85},"Sit on your chair.":{"f":"audio/0ea7cde47933.mp3","s":1.24,"sp":0.85},"Pelvic floor coordination":{"f":"audio/466a366ec4c2.mp3","s":1.81,"sp":0.85},"Lie on your left side.":{"f":"audio/5f5fe792bf68.mp3","s":1.54,"sp":0.85},"Left side-lying rest":{"f":"audio/0bad72cfe9bf.mp3","s":1.69,"sp":0.85},"Deep squats":{"f":"audio/2975400b507e.mp3","s":1.11,"sp":0.85},"Next: Reverse lunges. Stay standing, feet under your hips. You'll step back one leg at a time.":{"f":"audio/e98cf6ad6eea.mp3","s":5.76,"sp":1.0},"Reverse lunges. Start with your right side.":{"f":"audio/efe0065be0b3.mp3","s":2.86,"sp":0.85},"Next: Dead bug. Lie on your back. Knees up over your hips, shins level, arms to the ceiling.":{"f":"audio/e50b9b4a7833.mp3","s":6.29,"sp":0.85},"Dead bug. Start with your right side.":{"f":"audio/2da213a5c115.mp3","s":2.28,"sp":0.85},"Next: Glute bridge. Stay on your back. Feet flat on the floor, hip width, heels close to your hands.":{"f":"audio/4b2b321f028e.mp3","s":6.04,"sp":1.0},"Glute bridge":{"f":"audio/60bb6e6cb988.mp3","s":1.13,"sp":0.85},"Next: Side-lying clamshell. Roll onto your side. Knees bent, heels together, head resting on your lower arm.":{"f":"audio/cf3011997f0e.mp3","s":6.87,"sp":1.0},"Side-lying clamshell. Start with your right side.":{"f":"audio/f717bb67c79d.mp3","s":3.14,"sp":0.85},"Next: Bird dog. Come to hands and knees. Hands under shoulders, knees under hips, back flat.":{"f":"audio/b98c1a0af2fe.mp3","s":6.7,"sp":0.85},"Bird dog. Start with your right side.":{"f":"audio/3c6cf7f51790.mp3","s":2.43,"sp":0.85},"Next: Prone Y-T-W raise. Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.":{"f":"audio/b68864d1476d.mp3","s":8.28,"sp":0.85},"Prone Y-T-W raise":{"f":"audio/5b8d7b2f8776.mp3","s":1.92,"sp":0.85},"Next: Side plank. Roll onto your side. Prop up on your forearm, elbow under your shoulder, feet stacked.":{"f":"audio/28d9f4b70ee0.mp3","s":6.27,"sp":1.0},"Side plank. Start with your right side.":{"f":"audio/028d422dcf06.mp3","s":2.58,"sp":0.85},"Next: Plank hold. Turn over into a plank — elbows or hands under your shoulders, one straight line.":{"f":"audio/bcf242f1b2a2.mp3","s":7.04,"sp":0.85},"Plank hold":{"f":"audio/ab90ded795a4.mp3","s":1.09,"sp":0.85},"Next: Dumbbell bent-over row. Stand up and grab your dumbbells. Soft knees, hinge your chest toward the floor, back flat.":{"f":"audio/c0aacbc56866.mp3","s":8.6,"sp":0.85},"Dumbbell bent-over row":{"f":"audio/5cd9b6b94131.mp3","s":1.56,"sp":0.85},"Next: Bench dips. Dumbbells down — move to the bench. Hands on the edge beside your hips, feet out in front.":{"f":"audio/e80c1c7e05e0.mp3","s":7.23,"sp":0.85},"Bench dips":{"f":"audio/64809c8584b4.mp3","s":1.09,"sp":0.85},"Next: Dumbbell farmer hold. Pick up your dumbbells. Stand tall, shoulders packed down and back.":{"f":"audio/feee393a66a2.mp3","s":6.21,"sp":0.85},"Dumbbell farmer hold":{"f":"audio/881ea5c8d2a5.mp3","s":1.45,"sp":0.85},"Next: Standing posture reset. Set the dumbbells down. Stand tall, feet hip width, arms easy at your sides.":{"f":"audio/eb631fb44a82.mp3","s":8.15,"sp":0.85},"Standing posture reset":{"f":"audio/13b932ebd426.mp3","s":1.64,"sp":0.85},"Lateral band walks. Start with your right side.":{"f":"audio/5d7497fc7bc5.mp3","s":3.14,"sp":0.85},"Clam shells. Start with your right side.":{"f":"audio/598c57ab9f2c.mp3","s":2.58,"sp":0.85},"Single-leg glute bridge. Start with your right side.":{"f":"audio/1ac3659685d2.mp3","s":3.46,"sp":0.85},"Standing hip hike. Start with your right side.":{"f":"audio/724c7bdfce89.mp3","s":2.88,"sp":0.85},"Leg swings. Start with your right side.":{"f":"audio/8dff997efc4d.mp3","s":2.58,"sp":0.85},"Hip activation complete. You're ready to run.":{"f":"audio/4e722460155f.mp3","s":2.9,"sp":0.85}};
+const CUE_GAIN=1.0;
+const cueBytes={},cueBufs={};let cueEndAt=0,cueN=0;
+function cueFetch(t){const e=CUES[t];if(!e)return Promise.reject(new Error('no clip'));
+  if(typeof fetch!=='function')return Promise.reject(new Error('no fetch'));
+  return cueBytes[t]||(cueBytes[t]=fetch(e.f).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();}).catch(err=>{delete cueBytes[t];throw err;}));}
+function cueDecode(t){if(cueBufs[t])return Promise.resolve(cueBufs[t]);
+  return cueFetch(t).then(ab=>new Promise((res,rej)=>{const c=ac();const p=c.decodeAudioData(ab.slice(0),res,rej);if(p&&p.then)p.then(res,rej);}))
+    .then(b=>{cueBufs[t]=b;return b;});}
+// every text this app can say, derived from the SAME rules announce() uses
+const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+g.m.n+'. '+g.m.setup:posCue(g.m)):(g.m.n+(g.m.bil&&!g.m.orb?'. Start with your right side.':''));
+function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(m.orb?'Change direction':'Switch sides');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
+function cuePrefetch(){cueTexts().forEach(t=>{if(!CUES[t]){vlog('NO CLIP for "'+t+'"');return;}cueFetch(t).catch(e=>vlog('prefetch failed "'+t+'": '+e.message));});}
+function cueDecodeAll(){cueTexts().forEach(t=>{if(CUES[t])cueDecode(t).catch(()=>{});});}
+function cueStats(){const ts=cueTexts();return ts.length+' texts, '+ts.filter(t=>CUES[t]).length+' with clips, '+ts.filter(t=>cueBytes[t]).length+' fetched, '+ts.filter(t=>cueBufs[t]).length+' decoded';}
+function say(t){if(!voiceOn){dbg('say skipped (voice off): '+t);return;}
+  try{if(window.__onSay)window.__onSay(t,SEGS[idx]);}catch(e){}
+  if(!CUES[t]){vlog('no clip for "'+t+'" — cue skipped');return;}
+  const tag='cue#'+(++cueN);
+  cueDecode(t).then(buf=>{try{const c=ac();if(c.state!=='running')acResume('cue');
+    const src=c.createBufferSource();src.buffer=buf;const g=c.createGain();g.gain.value=CUE_GAIN;src.connect(g);g.connect(c.destination);
+    // start right after the chime tail, never before the previous cue has finished
+    const at=Math.max(c.currentTime+0.02,chimeEndAt+0.04,cueEndAt);
+    src.start(at);cueEndAt=at+buf.duration;
+    src.onended=()=>dbg(tag+' ended '+dbgAudio());
+    dbg(tag+' "'+t+'" at +'+(at-c.currentTime).toFixed(2)+'s ('+buf.duration.toFixed(1)+'s clip; chime tail +'+Math.max(0,chimeEndAt-c.currentTime).toFixed(2)+'s) '+dbgAudio());
+  }catch(e){vlog('cue play failed "'+t+'": '+e.message);}},e=>vlog('cue unavailable "'+t+'": '+e.message));}
+setTimeout(cuePrefetch,800);   // warm the HTTP cache after first paint; decode happens at Start
 // ---- on-device diagnostics panel. STRICTLY PASSIVE: it only reads properties and
 // listens to events; it never calls speak()/cancel()/resume()/getVoices(), never
 // creates an AudioContext and never touches navigator.audioSession — the probe
@@ -784,10 +736,8 @@ function dbgAudio(){try{
   return 'AC['+ac+'] session['+se+'] keepAlive['+ka+']';}catch(e){return 'audio? '+e.message;}}
 function dbg(m){dbgLog.push(((Date.now()-dbgT0)/1000).toFixed(1)+'s '+m);if(dbgLog.length>120)dbgLog.shift();if(DEBUG)dbgRender();}
 function dbgStatus(){const L=[];try{
-  L.push("'speechSynthesis' in window: "+('speechSynthesis' in window)+"  'SpeechSynthesisUtterance': "+('SpeechSynthesisUtterance' in window)+"  standalone: "+(navigator.standalone===true)+"  visible: "+document.visibilityState);
-  const vs=lastVoices||[];
-  L.push('voices (last list the app fetched): '+vs.length+(vs.length?'  first: '+vs.slice(0,4).map(v=>v.name+' ('+v.lang+(v.default?', default':'')+(v.localService?', local':'')+')').join(' | '):'')+'  picked: '+(voicePick?voicePick.name:'none (system default)'));
-  if(window.speechSynthesis)L.push('speaking: '+speechSynthesis.speaking+'  pending: '+speechSynthesis.pending+'  paused: '+speechSynthesis.paused);
+  L.push('cues: pre-generated clips (no Web Speech)  standalone: '+(navigator.standalone===true)+'  visible: '+document.visibilityState);
+  L.push('clips: '+cueStats()+'  cueEndAt +'+(actx?Math.max(0,cueEndAt-actx.currentTime).toFixed(1):'-')+'s');
   L.push(dbgAudio());
   L.push('userActivation.isActive: '+dbgAct()+'  voiceOn: '+voiceOn+'  running: '+running+'  seg: '+idx+'  UA: '+navigator.userAgent.replace(/^.*?(iPhone|iPad|CPU) ?/,'').slice(0,60));
 }catch(e){L.push('status error: '+e.message);}return L;}
@@ -799,11 +749,9 @@ function dbgRender(){if(!DEBUG)return;try{
     const bar=document.createElement('div');bar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px';
     const mk=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.style.cssText='font:11px ui-monospace,monospace;padding:4px 7px;border-radius:6px;border:1px solid #6c6;background:#123;color:#dfd';b.onclick=()=>{try{f();}catch(e){dbg('button error: '+e.message);}};bar.appendChild(b);};
     // PROBES — active calls, tap-only
-    mk('Speak test',()=>{dbg('PROBE say() act='+dbgAct()+' '+dbgAudio());say('Testing, one two three.');});
-    mk('Speak raw default',()=>{const u=new SpeechSynthesisUtterance('Raw default voice test.');dbgWire(u,'raw');dbg('PROBE raw speak() act='+dbgAct()+' '+dbgAudio());speechSynthesis.speak(u);});
+    mk('Cue test',()=>{dbg('PROBE say("Voice on.") act='+dbgAct()+' '+dbgAudio());say('Voice on.');});
     mk('Chime',()=>{dbg('PROBE chime '+dbgAudio());chime(660,.15,.6);});
-    mk('cancel()+resume()',()=>{speechSynthesis.cancel();speechSynthesis.resume();dbg('PROBE cancel()+resume(); speaking='+speechSynthesis.speaking+' paused='+speechSynthesis.paused);});
-    mk('resume()',()=>{speechSynthesis.resume();dbg('PROBE resume(); paused='+speechSynthesis.paused);});
+    mk('Chime+cue',()=>{dbg('PROBE chime then cue '+dbgAudio());cTrans();say('Switch sides');});
     mk('AC resume()',()=>{acResume('probe');});
     mk('AC close()+new',()=>{const old=actx;actx=null;dbg('PROBE close old AC ('+(old?old.state:'none')+')');if(old&&old.close)old.close().then(()=>dbg('old AC closed'),e=>dbg('old AC close rejected '+e.message));audioSessionPlayback('probe recreate');ac();acResume('probe recreate');});
     mk('Set session playback',()=>{audioSessionPlayback('probe');});
@@ -819,18 +767,9 @@ function dbgRender(){if(!DEBUG)return;try{
     document.body.style.paddingBottom='50vh';}
   dbgBody.textContent=dbgStatus().join('\n')+'\n— log —\n'+dbgLog.join('\n');
 }catch(e){}}
-// utterance lifecycle → log, with the audio snapshot at START and END (tag = 'prime' | 'cue#N' | 'raw')
-function dbgWire(u,tag){try{
-  const t0=Date.now();const el=()=>'+'+((Date.now()-t0)/1000).toFixed(1)+'s';
-  u.addEventListener('start',()=>dbg(tag+' START '+el()+' '+dbgAudio()));
-  u.addEventListener('end',()=>dbg(tag+' END '+el()+' (elapsed '+(u.elapsedTime|0)+') '+dbgAudio()));
-  u.addEventListener('error',e=>dbg(tag+' ERROR '+el()+' code='+(e&&e.error)+' '+dbgAudio()));
-  u.addEventListener('pause',()=>dbg(tag+' pause event'));u.addEventListener('resume',()=>dbg(tag+' resume event'));
-}catch(e){dbg(tag+' (no utterance events available: '+e.message+')');}}
 // passive listeners: session / context / media / visibility / voice-list changes
 try{if(navigator.audioSession&&navigator.audioSession.addEventListener)navigator.audioSession.addEventListener('statechange',()=>dbg('audioSession statechange → '+navigator.audioSession.type+'/'+navigator.audioSession.state));}catch(e){}
 try{document.addEventListener('visibilitychange',()=>dbg('visibility → '+document.visibilityState+' '+dbgAudio()));}catch(e){}
-try{if(window.speechSynthesis&&speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',()=>dbg('voiceschanged → '+(speechSynthesis.getVoices()||[]).length+' voices'));}catch(e){}
 // 5 quick taps on the title toggle the panel (for the home-screen build)
 try{const h=document.querySelector('h1');let taps=[];if(h&&h.addEventListener)h.addEventListener('click',()=>{const now=Date.now();taps=taps.filter(t=>now-t<3000);taps.push(now);if(taps.length>=5){taps=[];dbgEnable('5 taps');}});}catch(e){}
 if(DEBUG)dbgEnable('?debug=1');
@@ -865,8 +804,8 @@ function go(i){
 function announce(g){
   // authored setup scripts (TR_ALL) speak the full "Next: <name>. <equipment/position>"
   // line; the display shows just the instruction (mName already carries the name)
-  if(g.trans){cSwitch();setTimeout(()=>say(TR_ALL&&g.m.setup?'Next: '+g.m.n+'. '+g.m.setup:posCue(g.m)),300);}
-  else{cTrans();setTimeout(()=>say(g.m.n+(g.m.bil&&!g.m.orb?'. Start with your right side.':'')),420);}
+  if(g.trans)cSwitch();else cTrans();
+  say(cueFor(g));
 }
 function sync(){
   if(!running)return;
@@ -881,7 +820,7 @@ function sync(){
   if(rem!==timeLeft){
     timeLeft=rem; clock();
     const g=SEGS[idx], m=g.m;
-    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();setTimeout(()=>say(m.orb?'Change direction':'Switch sides'),300);}
+    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(m.orb?'Change direction':'Switch sides');}
     // 3s warning: TR_ALL gaps get a distinct 3-2-1 triple tick so the start of work
     // is unambiguous; work segments (and legacy gaps) keep the single soft tick
     if(TR_ALL&&g.trans){if(timeLeft<=3&&timeLeft>=1)chime(520,.07,.18);}
@@ -897,7 +836,7 @@ function finish(){
   document.querySelector('.wrap').classList.add('state-done');
   $('cue').innerHTML="<strong>Done.</strong> Squats sunk, bugs dead, bridges built, posture reset. Carry yourself accordingly.";
   $('bMain').style.display='none';$('tm').textContent='\u2713';$('fill').style.width='100%';
-  cDone();setTimeout(()=>say('Movement complete.'),600);
+  cDone();say('Movement complete.');
   setTimeout(()=>{if(!running)audioKeepAlive(false);},6000);   // after the finish cues
 }
 $('bMain').onclick=()=>{
@@ -908,10 +847,8 @@ $('bMain').onclick=()=>{
     // → keep-alive media element → speech priming.
     audioSessionPlayback('start tap');
     try{ac();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}
-    dbg('start step 2 done (context); calling audioKeepAlive');
     try{audioKeepAlive(true);}catch(e){dbg('keepAlive THREW OUTSIDE its guards: '+e.message);}
-    dbg('start step 3 done (keepAlive); calling primeSpeech');
-    primeSpeech();
+    cueDecodeAll();
     if(!started){started=true;go(0);}
     else{segEnd=Date.now()+pausedRem;}
     tick=setInterval(sync,300);
@@ -921,7 +858,7 @@ $('bMain').onclick=()=>{
   }
 };
 $('bVoice').onclick=()=>{voiceOn=!voiceOn;$('bVoice').classList.toggle('on',voiceOn);
-  if(voiceOn){pickVoice();say('Voice on. Using '+(voicePick?voicePick.name:'the default voice'));}};
+  if(voiceOn)say('Voice on.');};
 $('bPrev').onclick=()=>{const t=SEGS[idx].mi-1;if(t>=0){started=true;go(segOfMove(t));}};
 $('bNext').onclick=()=>{const g=SEGS[idx],t=g.trans?g.mi:g.mi+1;if(t<=MOVES.length-1){started=true;go(segOfMove(t));}};
 $('bReset').onclick=()=>{

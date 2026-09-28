@@ -1,5 +1,10 @@
 import os; os.chdir(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.dirname(os.getcwd())  # repo root — built HTML lives there for GitHub Pages
+ROOT = os.path.dirname(os.getcwd())  # repo root — built HTML lives there for GitHub Pages
+# Build into a staging dir first: tools/cues.js --check enumerates every spoken string
+# from the freshly built pages and verifies each has a clip; only then are the pages
+# installed into the repo root. A missing clip therefore never reaches GitHub Pages.
+import tempfile, shutil, subprocess, sys
+OUT = tempfile.mkdtemp(prefix='movement-build-')
 exec(open('build.py', encoding='utf-8').read())
 BLUE=dict(n=13,accent='#2e7d94',
  fig=[('#6d4f1c','#245e70'),('#c2a473','#93b8c4'),('#7d5a1e','#2e7d94')],css=[
@@ -98,9 +103,31 @@ _wv = hashlib.sha1(_wk.encode('utf-8')).hexdigest()[:10]
 _wk = _wk.replace('<script>\n', "<script>\nconst BUILDV='%s';\n" % _wv, 1)
 open(os.path.join(OUT, 'strength.html'), 'w', encoding='utf-8', newline='\n').write(_wk)
 
+# hip-activation.html is not built from src, but its CUES manifest is stamped here
+_hp = os.path.join(ROOT, 'hip-activation.html')
+_hs = open(_hp, encoding='utf-8').read()
+_hn = _re.sub(r"const CUES=\{.*?\};(   // replaced at build time)?\n", "const CUES=" + CUES_JSON + ";\n", _hs, count=1, flags=_re.S)
+assert _hn.count('const CUES=') == 1
+if _hn != _hs:
+    open(_hp, 'w', encoding='utf-8', newline='\n').write(_hn)
+
+# refuse-on-missing: every string the built pages can speak must have a clip
+_chk = subprocess.run(['node', os.path.join(ROOT, 'tools', 'cues.js'), '--check', '--dir', OUT],
+                      capture_output=True, text=True, encoding='utf-8')
+_tail = '\n'.join(l for l in (_chk.stdout + _chk.stderr).splitlines() if 'WARN' in l or 'MISSING' in l or 'CHECK' in l or 'note:' in l)
+if _chk.returncode != 0 and not _tail:   # the checker itself crashed: show why, never a blank refusal
+    _tail = (_chk.stdout + _chk.stderr).strip()[-1500:]
+if _chk.returncode != 0 and not os.environ.get('SKIP_CUE_CHECK'):
+    shutil.rmtree(OUT, ignore_errors=True)
+    raise SystemExit('REBUILD REFUSED — cue clips missing:\n' + _tail + '\n(fix: node tools/cues.js && tools/tts-venv/Scripts/python tools/gen_cues.py; or SKIP_CUE_CHECK=1 to bootstrap)')
+print(_tail)
+for _f in os.listdir(OUT):
+    shutil.copyfile(os.path.join(OUT, _f), os.path.join(ROOT, _f))
+shutil.rmtree(OUT, ignore_errors=True)
+
 # stamp index.html too (hand-edited, so the stamp is refreshed here; deterministic:
 # hash of the content with an emptied stamp, idempotent across rebuilds)
-_ip = os.path.join(OUT, 'index.html')
+_ip = os.path.join(ROOT, 'index.html')
 _s = open(_ip, encoding='utf-8').read()
 _z = _re.sub(r"BUILDV='[0-9a-f]*'", "BUILDV=''", _s, count=1)
 _v = hashlib.sha1(_z.encode('utf-8')).hexdigest()[:10]

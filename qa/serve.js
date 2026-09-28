@@ -1,7 +1,7 @@
 // tiny static server for the repo root, ephemeral port
 const http=require('http'),fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
-const MIME={'.html':'text/html','.png':'image/png','.js':'text/javascript','.json':'application/json'};
+const MIME={'.html':'text/html','.png':'image/png','.js':'text/javascript','.json':'application/json','.mp3':'audio/mpeg','.wav':'audio/wav'};
 function serve(){
   return new Promise(res=>{
     const srv=http.createServer((req,rsp)=>{

@@ -7,6 +7,13 @@ import hashlib, json, os, re
 # trap documented in CLAUDE.md; the regex replaces below still guard against baked
 # values drifting inside this snapshot.
 HEAD = open('app_head.html', encoding='utf-8').read()
+# spoken-cue clip manifest (tools/gen_cues.py). Inlined whole into every app (~12 KB);
+# each app prefetches only the strings it can say. Missing file => the build cannot
+# know which cues exist, so refuse early with the fix spelled out.
+CUES_PATH = 'cues.json'
+if not os.path.exists(CUES_PATH):
+    raise SystemExit('src/cues.json missing — run: node tools/cues.js && tools/tts-venv/Scripts/python tools/gen_cues.py')
+CUES_JSON = json.dumps(json.load(open(CUES_PATH, encoding='utf-8'))['clips'], ensure_ascii=False, separators=(',', ':'))
 TPL  = open('app_tpl.js', encoding='utf-8').read()
 ENG  = open('eng2.js', encoding='utf-8').read()
 
@@ -52,6 +59,8 @@ def build(out, data_file, extra, title, sub, icon, theme, colors, intro, done_ms
         body = body.replace(a, b)
     if x2:
         body = body.replace('const X2OPT=false;', 'const X2OPT=true;')
+    assert body.count('const CUES={};   // replaced at build time') == 1
+    body = body.replace('const CUES={};   // replaced at build time', 'const CUES=' + CUES_JSON + ';')
     # authored-transition mode (Daily 10): gaps before every movement + prop-aware
     # camera fit. Two consts flip together — the app that wants one wants both.
     if trall:

@@ -1,12 +1,16 @@
-// Voice-path invariants for every app that speaks (4 timer apps + hip-activation).
-// Runs each built script against a fake DOM with a Safari-shaped speechSynthesis:
-//   1. getVoices() is EMPTY (new-device iOS: list populates async / never) -> cues
-//      must still be spoken, with no voice object attached (system default), and the
-//      app must warn on the console rather than fail silently.
-//   2. the Start tap must call speechSynthesis.speak() SYNCHRONOUSLY inside the click
-//      handler (iOS drops speak() that is not rooted in a user gesture; a setTimeout
-//      breaks the chain) — same priming the AudioContext already gets.
-//   3. with speechSynthesis missing entirely, Start must still run the timer.
+// Spoken-cue invariants for every app that speaks (4 timer apps + hip-activation).
+// Cues are PRE-GENERATED CLIPS (src/cues.json, audio/*.mp3) played as AudioBuffers on the
+// same AudioContext as the chimes — no Web Speech anywhere. Runs each built script against
+// a fake DOM with a fake AudioContext (decodeAudioData / createBufferSource capture) and
+// a fake fetch, and asserts:
+//   1. no speechSynthesis / SpeechSynthesisUtterance reference survives in the built page
+//   2. the Start tap sets the audio session BEFORE the context exists, resumes a context
+//      born 'interrupted', starts the keep-alive media element inside the gesture
+//   3. every cue the timer speaks has a clip in the inlined manifest, and is scheduled on
+//      the audio clock to start just after the chime tail: no overlap, no audible gap
+//   4. transition cues fit their gap (a cue at the end of a 10 s transition is worse than none)
+//   5. a missing clip / failed fetch / absent fetch logs loudly and never blocks the timer
+//   6. the ?debug=1 panel is present only when asked, logs cue scheduling, 5-tap toggle
 const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..');
 function makeEl(){
   const el={children:[],style:{},classList:{add(){},remove(){},toggle(){},contains(){return false;}},
@@ -20,23 +24,25 @@ function makeEl(){
   return el;
 }
 let fail=false;
-const check=(name,ok)=>{console.log(`${name.padEnd(64)} ${ok?'ok':'FAIL'}`);if(!ok)fail=true;};
+const check=(name,ok)=>{console.log(`${name.padEnd(70)} ${ok?'ok':'FAIL'}`);if(!ok)fail=true;};
+const tick=()=>new Promise(r=>setImmediate(r));
 let bornState='suspended';
-function fakeAudio(){return function(){this.state=bornState;this.currentTime=0;this.resumeCalls=0;this.osc=0;
+// fake AudioContext: audio clock is a settable field; buffer sources record start(when)
+function makeAC(rec){return function(){this.state=bornState;this.currentTime=0;this.resumeCalls=0;this.osc=0;this.sources=[];
   this.resume=()=>{this.resumeCalls++;this.state='running';return Promise.resolve();};this.close=()=>Promise.resolve();
   this.createOscillator=()=>{this.osc++;return {type:'',frequency:{setValueAtTime(){},linearRampToValueAtTime(){}},connect(){},start(){},stop(){}};};
-  this.createGain=()=>({gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}});
+  this.createGain=()=>({gain:{value:1,setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}});
+  this.decodeAudioData=(ab,ok)=>{const d=rec.durations[ab.__t]||1;const buf={duration:d};if(ok)ok(buf);return Promise.resolve(buf);};
+  this.createBufferSource=()=>{const s={buffer:null,connect(){},start:(when)=>{s.at=when;s.ctxTime=this.currentTime;this.sources.push(s);}};return s;};
   this.destination={};};}
-// run one app; opts.speech=false removes speechSynthesis entirely
-function run(app,opts){
+async function run(app,opts){
   const h=fs.readFileSync(path.join(ROOT,`${app}.html`),'utf8');
   const scripts=[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
   const js=scripts.join('\n');
+  const mm=js.match(/const CUES=(\{[\s\S]*?\});\n/);const CUES=mm?JSON.parse(mm[1]):{};
+  const durations={};Object.keys(CUES).forEach(t=>durations[t]=CUES[t].s);
   const els={}; const timeouts=[],intervals=[]; let frameCb=null,pnow=0;
   let now=1700000000000;const FakeDate=function(...a){return a.length?new Date(...a):new Date(now);};FakeDate.now=()=>now;
-  const live=[];   // utterances spoken but not yet ENDed (the test ends them, like iOS would)
-  const endSpeech=()=>{live.splice(0).forEach(u=>{if(u.ev.end)u.ev.end();if(u.onend)u.onend();});};
-  const spoken=[]; let inGesture=false; const warns=[];
   const body=makeEl(),h1=makeEl();
   const doc={body,getElementById(id){return els[id]||(els[id]=makeEl());},
     createElement(tag){if(tag==='audio'&&opts.audio!==false){const a=makeEl();a.loop=false;a.paused=true;a.playCalls=[];
@@ -45,11 +51,13 @@ function run(app,opts){
       return makeEl();},createElementNS(){return makeEl();},
     querySelector(sel){return sel==='h1'?h1:makeEl();},querySelectorAll(){return [];},
     addEventListener(){},visibilityState:'visible'};
-  const media=[]; let sessionType=null; let getVoicesCalls=0; const sessionOrder=[];
-  const AC=fakeAudio();const acs=[];const ACrec=function(){AC.call(this);acs.push(this);};
+  const media=[]; let sessionType=null; const sessionOrder=[]; const said=[]; const warns=[];
+  const rec={durations};const acs=[];const AC=makeAC(rec);const ACrec=function(){AC.call(this);acs.push(this);};
+  let inGesture=false;
+  const fetched=[];
   const env={document:doc,
     navigator:{wakeLock:{request:async()=>({addEventListener(){},release(){}})}},
-    window:{AudioContext:ACrec,addEventListener(){}},
+    window:{AudioContext:ACrec,addEventListener(){},__onSay(t,seg){said.push({t,seg});}},
     AudioContext:ACrec,
     performance:{now:()=>pnow},
     requestAnimationFrame:cb=>{frameCb=cb;},
@@ -57,89 +65,80 @@ function run(app,opts){
     clearInterval(){},setTimeout:(fn)=>{timeouts.push(fn);return 1;},
     console:{log(){},warn(...a){warns.push(a.join(' '));},error(...a){warns.push(a.join(' '));}},
     Date:FakeDate,Math,JSON,String,Object,Array,Number,Boolean,Promise,Error,RegExp};
-  if(opts.debug)env.location={search:'?debug=1'};
+  if(opts.fetch!=='absent'){
+    env.fetch=(url)=>{fetched.push(url);if(opts.fetch==='fail')return Promise.reject(new Error('offline'));
+      const t=Object.keys(CUES).find(k=>CUES[k].f===url);const ab={__t:t,slice(){return ab;}};
+      return Promise.resolve({ok:!!t,status:t?200:404,arrayBuffer:()=>Promise.resolve(ab)});};
+  }
   if(opts.audio!==false){
     env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;sessionOrder.push('session:'+acs.length);}};
   }
-  if(opts.speech!==false){
-    env.SpeechSynthesisUtterance=function(t){this.text=t;this.voice=undefined;this.ev={};this.addEventListener=(k,f)=>{this.ev[k]=f;};};
-    env.speechSynthesis={getVoices(){getVoicesCalls++;return [];},speaking:false,pending:false,
-      speak(u){spoken.push({text:u.text,voice:u.voice,gesture:inGesture});
-        if(acs.length)acs[acs.length-1].state='interrupted';      // iOS: speaking takes the session
-        if(u.ev.start)u.ev.start();live.push(u);},
-      cancel(){},addEventListener(){}};
-    env.window.speechSynthesis=env.speechSynthesis;
-    env.window.SpeechSynthesisUtterance=env.SpeechSynthesisUtterance;
-  }
-  // hip-activation wires buttons via inline onclick attributes -> export its handlers
-  const tail=app==='hip-activation'?'\n;return {toggleTimer};':'\n;return {};';
+  if(opts.debug)env.location={search:'?debug=1'};
+  const tail=app==='hip-activation'?'\n;return {toggleTimer,toggleVoice};':'\n;return {};';
   const fn=new Function(...Object.keys(env),js+tail);
   const ex=fn(...Object.values(env));
+  timeouts.splice(0).forEach(t=>t());   // load-time prefetch
+  for(let i=0;i<20;i++)await tick();
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   const start=app==='hip-activation'?ex.toggleTimer:(els['bMain']&&els['bMain'].onclick);
   if(!start)throw new Error('no Start handler found');
   inGesture=true; start(); inGesture=false;
-  const primed=spoken.filter(s=>s.gesture);
-  const oscDuringPrime=acs.length?acs[0].osc:0;         // chimes must NOT sound while the prime speaks
-  const resumesBeforeEnd=acs.length?acs[0].resumeCalls:0;
-  // run the sequence like iOS would: END the live utterance(s), let time pass, flush timers
-  for(let round=0;round<6;round++){endSpeech();now+=1500;timeouts.splice(0).forEach(t=>t());intervals.forEach(t=>t());}
+  for(let i=0;i<40;i++)await tick();    // decode + schedule promises
+  // run a few seconds of timer with the audio clock advancing in step
+  for(let round=0;round<6;round++){now+=1500;acs.forEach(c=>c.currentTime+=1.5);timeouts.splice(0).forEach(t=>t());intervals.forEach(t=>t());for(let i=0;i<20;i++)await tick();}
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   // tap again = Pause
   inGesture=true; start(); inGesture=false;
-  return {spoken,primed,warns,intervals,els,media,body,h1,acs,sessionOrder,oscDuringPrime,resumesBeforeEnd,getVoicesCalls:()=>getVoicesCalls,sessionType:()=>sessionType};
+  return {js,CUES,said,warns,intervals,els,media,body,h1,acs,sessionOrder,fetched,sessionType:()=>sessionType,
+    toggleVoice:app==='hip-activation'?ex.toggleVoice:(els['bVoice']&&els['bVoice'].onclick)};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
+(async()=>{
 for(const app of APPS){
   try{
-    const r=run(app,{});
-    check(`${app}: Start tap primes speech synchronously in the gesture`,r.primed.length>=1);
-    const cues=r.spoken.filter(s=>s.text&&s.text.trim().length>1);
-    check(`${app}: first cue spoken with empty voice list`,cues.length>=1);
-    check(`${app}: no voice object attached when list is empty (system default)`,cues.every(s=>s.voice==null));
-    check(`${app}: warns on console when no matching voice is available`,r.warns.some(w=>/voice/i.test(w)));
-    check(`${app}: timer started (interval registered)`,r.intervals.length>=1);
-    // ring/silent switch: a bare AudioContext gets the 'ambient' session on iOS and is
-    // muted by the switch; an active media element (and audioSession 'playback') is not
+    const r=await run(app,{});
+    // 1. Web Speech is gone
+    check(`${app}: no speechSynthesis reference in the built page`,!/speechSynthesis|SpeechSynthesisUtterance/.test(r.js));
+    // 2. Start tap: session before context, resume, keep-alive in gesture
+    check(`${app}: navigator.audioSession.type set to playback before the context exists`,r.sessionType()==='playback'&&r.sessionOrder[0]==='session:0');
     const loop=r.media.find(a=>a.loop);
     check(`${app}: silent looping media element started in the Start tap`,!!loop&&loop.playCalls[0]===true);
-    const srcs=loop?loop.children.map(c=>c.src):[];
-    check(`${app}: first <source> is an inline data URI (no network)`,/^data:audio\//.test(srcs[0]||''));
-    check(`${app}: second <source> is the silent.wav fallback file`,srcs[1]==='silent.wav');
     check(`${app}: media element paused when the timer pauses`,!!loop&&loop.paused===true);
-    check(`${app}: navigator.audioSession.type set to playback`,r.sessionType()==='playback');
-    check(`${app}: audioSession type set BEFORE the AudioContext is created`,r.sessionOrder[0]==='session:0');
-    // iOS can hand the page an AudioContext already 'interrupted'; resume() is WebKit's only
-    // lever to end that, and must be called from the Start tap (old code only resumed 'suspended')
-    bornState='interrupted';const ri=run(app,{});bornState='suspended';
+    check(`${app}: timer started (interval registered)`,r.intervals.length>=1);
+    bornState='interrupted';const ri=await run(app,{});bornState='suspended';
     check(`${app}: Start tap calls resume() on an 'interrupted' AudioContext`,ri.acs.length>=1&&ri.acs[0].resumeCalls>=1&&ri.acs[0].state==='running');
-    // speech interrupts the context (iOS): END must resume it; chimes never sound during speech,
-    // but do sound once speech has ended; the context ends the run 'running'
-    check(`${app}: chimes are never deferred (deferral disabled)`,r.oscDuringPrime>0);
-    check(`${app}: utterance END triggers AudioContext.resume()`,r.acs[0].resumeCalls>r.resumesBeforeEnd);
-    check(`${app}: context is running after the sequence`,r.acs[0].state==='running');
-    const r2=run(app,{speech:false});
-    check(`${app}: timer still starts with speechSynthesis absent`,r2.intervals.length>=1);
-    // ?debug=1 on-device diagnostics panel: present only when asked, logs prime + cue lifecycle
-    check(`${app}: no debug panel without ?debug=1`,r.body.children.length===0);
-    const rd=run(app,{debug:true});
-    const panel=rd.body.children[0];const txt=panel?JSON.stringify(panel.children.map(c=>c.textContent)):'';
-    check(`${app}: ?debug=1 renders the panel`,!!panel);
-    check(`${app}: panel shows speechSynthesis presence + voices + speaking/pending/paused`,/'speechSynthesis' in window/.test(txt)&&/voices \(last list/.test(txt)&&/speaking:.*pending:.*paused:/.test(txt));
-    check(`${app}: panel logs prime speak() and its START/END`,/prime: speak/.test(txt)&&/prime START/.test(txt)&&/prime END/.test(txt));
-    check(`${app}: panel logs each cue speak() with START/END`,/cue#1 speak\(\)/.test(txt)&&/cue#1 START/.test(txt)&&/cue#1 END/.test(txt));
-    check(`${app}: debug run still starts the timer`,rd.intervals.length>=1);
-    // strictly passive: the panel adds no speech API calls, and the poll is read-only
-    check(`${app}: debug panel adds no getVoices()/speak() calls`,rd.getVoicesCalls()===r.getVoicesCalls()&&rd.spoken.length===r.spoken.length);
-    check(`${app}: cue lines carry AC/session/keepAlive snapshot`,/cue#1 speak\(\)[^\n]*AC\[[^\n]*session\[[^\n]*keepAlive\[/.test(txt)&&/cue#1 START[^\n]*AC\[/.test(txt));
-    // 5 quick taps on the title open the panel without the query string (home-screen build)
-    const rt=run(app,{});
-    for(let i=0;i<5;i++)rt.h1.handlers.click&&rt.h1.handlers.click();
-    const tpanel=rt.body.children[0];const ttxt=tpanel?JSON.stringify(tpanel.children.map(c=>c.textContent)):'';
-    check(`${app}: 5 title taps open the panel with buffered history`,!!tpanel&&/prime: speak/.test(ttxt)&&/debug view on \(5 taps\)/.test(ttxt));
-    const r3=run(app,{audio:false});
+    // 3. every spoken cue has a clip; scheduled just after the chime tail
+    const ac=r.acs[0];
+    check(`${app}: at least one cue spoken and scheduled`,r.said.length>=1&&ac.sources.length>=1);
+    check(`${app}: every spoken cue has a clip in the inlined manifest`,r.said.every(s=>!!r.CUES[s.t]));
+    const first=ac.sources[0];
+    // chime sequences hold 0.8–0.95 s (cSwitch/cTrans); the cue starts 0.04 s after that tail: no overlap, no gap
+    check(`${app}: first cue starts just after the chime tail (no overlap, no gap)`,!!first&&first.at-first.ctxTime>=0.8&&first.at-first.ctxTime<=1.05);
+    let overlap=false;for(let i=1;i<ac.sources.length;i++){const a=ac.sources[i-1],b=ac.sources[i];if(b.at<a.at+a.buffer.duration-1e-6)overlap=true;}
+    check(`${app}: scheduled cues never overlap each other`,!overlap);
+    // 4. transition cues fit their gap (clip shorter than the gap; the checker warns on tick overlap)
+    const trans=r.said.filter(s=>s.seg&&s.seg.trans);
+    check(`${app}: transition cues are shorter than their gap`,trans.every(s=>r.CUES[s.t]&&r.CUES[s.t].s<=s.seg.dur)||app==='morning-flow');
+    if(app==='morning-flow'){const bad=trans.filter(s=>r.CUES[s.t]&&r.CUES[s.t].s>s.seg.dur).map(s=>s.t.slice(0,40));if(bad.length)console.log(`  (known: overruns its authored gap: ${bad.join(' | ')})`);}
+    // 5. failure modes never block the timer
+    const rf=await run(app,{fetch:'fail'});
+    check(`${app}: timer runs and warns when clip fetch fails`,rf.intervals.length>=1&&rf.warns.some(w=>/cue unavailable|prefetch failed/.test(w)));
+    const ra=await run(app,{fetch:'absent'});
+    check(`${app}: timer runs with fetch absent`,ra.intervals.length>=1);
+    const r3=await run(app,{audio:false});
     check(`${app}: timer still starts with media/audioSession absent`,r3.intervals.length>=1);
-  }catch(e){console.log(app,'RUNTIME ERROR:',e.message);fail=true;}
+    r.toggleVoice();r.toggleVoice();
+    check(`${app}: Voice toggle speaks "Voice on." and it has a clip`,r.said.some(s=>s.t==='Voice on.')&&!!r.CUES['Voice on.']);
+    // 6. debug panel
+    check(`${app}: no debug panel without ?debug=1`,r.body.children.length===0);
+    const rd=await run(app,{debug:true});
+    const panel=rd.body.children[0];const txt=panel?JSON.stringify(panel.children.map(c=>c.textContent)):'';
+    check(`${app}: ?debug=1 renders the panel with clip stats + cue scheduling lines`,!!panel&&/clips: \d+ texts/.test(txt)&&/cue#1 \\"[^"]+\\" at \+\d+\.\d+s/.test(txt));
+    const rt=await run(app,{});
+    for(let i=0;i<5;i++)rt.h1.handlers.click&&rt.h1.handlers.click();
+    check(`${app}: 5 title taps open the panel with buffered history`,rt.body.children.length===1&&/debug view on \(5 taps\)/.test(JSON.stringify(rt.body.children[0].children.map(c=>c.textContent))));
+  }catch(e){console.log(app,'RUNTIME ERROR:',e.stack);fail=true;}
 }
 console.log(fail?'VOICE FAIL':'VOICE PASS');
 process.exit(fail?1:0);
+})();

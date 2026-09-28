@@ -19,7 +19,8 @@ the DOM marker): a different day clears them on load, and a FULLY-checked workou
 on its next same-day load (done = next visit is a new session); partial same-day checks
 survive phone lock. Manual reset button kept. Legacy unstamped data starts fresh.
 Also `hip-activation.html` — older layout, no figures, timer already timestamp-patched. Leave unless asked
-(exception: it shares the voice path rules below and got the 2026-09-24 speech-priming fix inline).
+(exception: it carries the same audio path inline — clip player, keep-alive, panel — and
+rebuild.py stamps its CUES manifest).
 Morning Movement RETIRED 2026-08-26: its movements were redistributed (5 → Flow's ground
 block, 3 → Daily 13); the rest are archived — NOTHING deleted — in `src/d_retired.js`
 (+ `data2.js`/`mm_extra.js` kept intact) and documented in docs/movement-reference.md
@@ -30,7 +31,9 @@ under "Retired — available for future versions".
     python3 src/rebuild.py     # stamps all four timer apps + strength + the daily-10
                                # redirect stub from src/ into the output dir
 
-Everything is inlined: engine + template + data + cues → one self-contained HTML per app.
+Everything is inlined: engine + template + data + cues → one self-contained HTML per app
+(plus the spoken-cue MP3s under `audio/`, referenced by the inlined manifest). rebuild.py
+builds to a staging dir and refuses to install if any spoken string has no clip.
 Edit sources, never the built HTML. `rebuild.py` holds per-app themes (hex swap tables),
 intros, and movement counts. Adjust its output path for this repo (was /mnt/user-data/outputs).
 
@@ -56,112 +59,60 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     swAL untouched; chest row −100/+80; wall slide (retired) −85/+100, dips ±150).
 - `app_tpl.js` — shared app body: renderer, timers, audio. Key facts:
   - Timer is wall-clock anchored (`segEnd`); survives backgrounding, catches up on return.
-  - iOS SAFARI AUDIO CONSTRAINT (platform gotcha, not a code bug): every Web Speech
-    (`speechSynthesis.speak`) and Web Audio (AudioContext creation, `resume()`) call
-    must be rooted in a user gesture. Calls made from a setTimeout, a rAF callback, or
-    any other deferred context are silently dropped: no error, no console warning,
-    nothing happens. Older iOS tolerated deferred speech, so this surfaces as a
-    regression on a device upgrade rather than as a bug in new code (voice went dead
-    on a new iPhone 2026-09-24 while chimes kept working).
-    The pattern that works: prime BOTH APIs inside the Start/Resume tap handler —
-    `primeSpeech()` (silent utterance) plus `ac()`/`resume()` — each wrapped in
-    try/catch so a missing or failing audio API can never block the timer. All later
-    cues then fire normally from their setTimeouts. `say()` re-picks the voice per
-    utterance, leaves `u.voice` unset (system default) when the list is empty or has
-    no English match, and logs `[voice] …` console warnings once rather than failing
-    silently. Same rules inline in hip-activation.html.
-    RING/SILENT SWITCH (the actual 2026-09-24 root cause, found by Will): Web Audio and
-    Web Speech are BOTH gated by the hardware ring/silent switch in iOS Safari unless an
-    HTMLMediaElement is active on the page — a bare AudioContext gets the 'ambient'
-    audio session, an active media element moves it to 'playback' (WebKit bug 237322,
-    engineer-confirmed; iOS 17+ can also ask directly via
-    `navigator.audioSession.type='playback'`). Chrome on iOS is exempt because it
-    configures its own app-level session. Fix in place: `audioKeepAlive(true)` in the
-    Start/Resume tap sets audioSession 'playback' AND starts a silent 0.25 s looping
-    WAV `<audio>` with two `<source>`s — inline data URI (`SILENT_WAV`, no network)
-    first, repo-root `silent.wav` second (only fetched if the inline one fails; some
-    WebKit ports reject data: media) — re-asserted on foreground return, paused on
-    Pause/Reset and 6 s after the finish cues; try/catch, never blocks the timer. The
-    element restarts itself from its own pause/ended events while the session is on
-    (some WebKit builds pause at end-of-media instead of looping — verified in
-    Playwright WebKit; an element a gesture already started may be replayed without
-    one). Same inline in hip-activation.html. Device check with silent mode ON is Will's (pending
-    as of this note). Playwright's Windows WebKit has no AudioContext and rejects
-    data: media (plays the http WAV), so qa/webkit-voice.js proves the fallback path;
-    Chromium plays the data URI.
-    Diagnostic: open the panel and read AC[...] first. 'interrupted' → the session
-    holder, see above. 'running' + speech START/END but no sound → routing. Chimes
-    but no speech → speech lacks gesture coverage.
-    ON-DEVICE DIAGNOSTICS PANEL (all 5 speaking apps; no console on the phone). Open
-    with `?debug=1`, or 5 quick taps on the title — the latter works inside the
-    home-screen build, which has no query string and runs as a separate web-app
-    process (a different audio context from a Safari tab — compare like with like).
-    STRICTLY PASSIVE (Will's requirement 2026-09-25, after a debug build behaved
-    differently from production): it only reads properties and listens to events —
-    never speak()/cancel()/resume()/getVoices() (voice list comes from the app's own
-    last pickVoice() via `lastVoices`), never creates an AudioContext, never touches
-    navigator.audioSession, nothing at load beyond DOM. The log is buffered from load
-    on every build (dbg() is on the production path — keep it and dbgWire() fail-safe;
-    a throw there once killed speech in the WebKit harness), rendered only when
-    enabled. Shows: speechSynthesis presence, standalone/visibility, last voice list,
-    speaking/pending/paused each second, and at the Start tap + every prime/cue
-    speak()/START/END/ERROR a `dbgAudio()` snapshot: AudioContext state + sampleRate +
-    base/outputLatency + maxChannelCount (route hints: Bluetooth shows far higher
-    output latency), audioSession type/state, keep-alive state. Passive listeners log
-    audioSession statechange, AudioContext statechange, keep-alive `playing`,
-    visibilitychange, voiceschanged. Web APIs expose no direct output route in
-    Safari. PROBE buttons (active, tap-only): Speak test (say), Speak raw default,
-    Chime, cancel()+resume(), resume(), List devices (enumerateDevices), Clear.
-    qa/voice.js asserts: off without the flag, on with it, no extra speech API calls,
-    snapshot on cue lines, 5-tap toggle; qa/webkit-voice.js screenshots it.
-    OPEN 2026-09-25: on the deployed build chimes play (speaker, or AirPods when
-    connected) while speech produces NO output on any route; system TTS is fine. A
-    first debug build additionally sent everything to AirPods — separate issue, and
-    that run also differed by launch context (Safari tab vs home-screen). Hypothesis
-    under test: Web Speech does not route via the page audio session. If utterances fire START/END with no sound → routing → drop
-    Web Speech for pre-generated cue audio through Web Audio. Priced by tools/cues.js:
-    90 distinct cue strings across the 5 apps (677 words, ~344 s of speech, ~3.8 s/clip),
-    ≈1.4 MB at 32 kbps AAC / ≈2.1 MB at 48 kbps MP3 total. qa/cue-strings.json lists them.
-    AUDIOCONTEXT 'interrupted' (found on-device 2026-09-26, iOS 18.7 home-screen app):
-    WebKit's non-standard third state — the WebContent process holds a system audio
-    interruption, and iOS hands the page a context BORN interrupted; out=0 ms latency,
-    nothing routed, chimes AND speech silent even though utterances fire START/END.
-    resume() is the ONLY lever: WebKit's AudioContext::resume() calls
-    mediaSession->endInterruption(MayResumePlaying) (verified in WebKit source). Our
-    code used to resume only when state==='suspended', so an interrupted context was
-    never asked to recover — `acResume()` now resumes whenever state!=='running'
-    (Start/Resume tap, foreground return, every chime/breath tone) and logs before/
-    after state + promise outcome to the panel. Order in the tap: audioSession type
-    → AudioContext (create/resume) → keep-alive media element → speech prime.
-    WebKit category rule (MediaSessionManagerCocoa.mm): WebAudio-only → AmbientSound
-    (mute-switch gated); an audible HTMLMediaElement → MediaPlayback; the page's
-    navigator.audioSession type override wins over both. `audioSession.state` is NOT
-    implemented in Safari (BCD: version_added false) — the panel's 'auto/?' is expected.
-    Still unexplained (2026-09-28): keepAlive[none] on-device with no 'keepAlive'
-    lines — but the failure line used to read 'warn: keep-alive media failed' (hyphen)
-    and the entry line 'audioKeepAlive(true) enter' (capital K), easy to miss in a
-    'keepAlive' scan. Now every line says 'keepAlive …' and the Start tap logs
-    'start step 2/3 done' around the call. session[playback] IS set on-device now.
-    PROBE buttons for the levers: AC resume(), AC close()+new, Set session playback,
-    Play keep-alive. Related open WebKit bugs: 273511 (stuck interrupted), 263627
-    (not resumed on foreground), 281566 (resume() never resolves after background).
-    SPEECH INTERRUPTS WEB AUDIO (on-device, iOS 18.7, 2026-09-28 — THE mechanism behind
-    the whole saga): speechSynthesis.speak() activates the system synthesizer's
-    AVAudioSession; WebKit drops the page's AudioContext to 'interrupted' mid-utterance
-    and it stays there past END (Apple forums FB14444620: AVSpeechSynthesizer activates
-    the session and never deactivates/notifies — so no "interruption ended" ever
-    arrives). Whichever API fires first wins, the other is silent. No page-level
-    control exists (usesApplicationAudioSession / mixWithOthers are native-only), so
-    the two can only coexist SEQUENTIALLY. Sequencer in app_tpl.js + hip-activation:
-    resume() at every utterance END/ERROR (+250 ms re-check), chimes requested while
-    speech is active are deferred to END (dropped if >2 s late), say() waits for the
-    current/deferred chimes to finish, 12 s speech watchdog (1.5 s for the prime)
-    releases everything if iOS drops END, say() gives up waiting after ~4 s. Chimes
-    keep the pre-chime resume backstop. If a full-session device run is clean, Web
-    Speech stays; otherwise the priced 90-clip pre-generated audio replaces it
-    (single audio path). Panel: Copy log / Share log buttons.
-    RULE FOR FUTURE FEATURES: anything that plays a sound or speaks must be traceable
-    back to a user gesture, or it needs a priming call added to the Start handler.
+  - SPOKEN CUES ARE PRE-GENERATED CLIPS, NOT WEB SPEECH (decided by Will 2026-09-28 after a
+    two-week on-device investigation; the WHY is recorded below). Kokoro-82M (Apache 2.0,
+    local, free) voice `af_heart`, MP3 48 kbps mono under `audio/<hash>.mp3`, manifest
+    `src/cues.json` (text -> {f, s: seconds, sp: speed}), inlined whole into every app as
+    `CUES` by build.py (rebuild.py also stamps it into hip-activation.html). `say(t)` looks
+    the text up, decodes the clip on the SAME AudioContext as the chimes and schedules an
+    AudioBufferSource on the audio clock: `max(now+0.02, chimeEndAt+0.04, cueEndAt)` --
+    right after the chime tail, never over the previous cue. Chime sequences call
+    `hold(secs)` up front so chimeEndAt covers the whole sequence. Clips prefetch at load
+    (HTTP cache) and decode at the Start tap. No clip -> `[voice] no clip for ...` warning,
+    cue skipped, timer unaffected. Speech is never scheduled by setTimeout any more.
+    CUE WORKFLOW: edit names/setups/posCues in d_*.js -> `npm run cues` (= `node
+    tools/cues.js`, the enumerator and THE source of truth: drives every built app end to
+    end through the `window.__onSay` seam; then `tools/gen_cues.py` generates only the
+    missing clips, prunes orphans, rewrites the manifest) -> `python3 src/rebuild.py`
+    (builds to a staging dir, runs `tools/cues.js --check`, REFUSES to install if any
+    spoken string lacks a clip; `SKIP_CUE_CHECK=1` only to bootstrap) -> commit the new
+    mp3s + manifest with the change. One edited cue = one clip (~3 s CPU); new voice or
+    speed = all 91 (~2 min). Needs `tools/tts-venv` (gitignored: `py -m venv
+    tools/tts-venv && tools/tts-venv/Scripts/pip install kokoro-onnx soundfile lameenc
+    numpy`; kokoro-onnx runs on Python 3.14, the torch build does not) and the model
+    files, auto-downloaded once to %LOCALAPPDATA%/kokoro (~350 MB, never in the repo).
+    SPEED POLICY: 0.85 everywhere it fits; a transition cue must fit its gap minus the
+    chime (0.8 s) minus the 3-2-1 ticks (3 s) -- 6.2 s in a 10 s gap, 11.2 s in 15 s -- else
+    it is refit at 1.0; remaining overruns print as OVERRUN and the checker WARNs. As of
+    2026-09-28 three overrun: Folded cat-cows (Flow's authored 5 s ground gap, 5.5 s clip),
+    Side-lying clamshell (+0.7 s), Side plank (+0.1 s) -- Will's call whether to lengthen
+    the gap or shorten the text; a cue overlapping the ticks mixes, it does not cut.
+    WHY (keep -- it is the platform record): iOS Safari speechSynthesis.speak() activates
+    the system synthesizer's own audio session; WebKit drops the page's AudioContext to
+    'interrupted' mid-utterance and it never comes back without resume() (Apple forums
+    FB14444620: AVSpeechSynthesizer never deactivates/notifies). With the keep-alive media
+    element active the fight reverses: utterances stall mid-speech and never END. No
+    page-level control exists. Whichever API fires first wins -- so there is only one now.
+    STILL TRUE FOR WEB AUDIO: (a) a bare AudioContext gets the 'ambient' session, muted
+    by the ring/silent switch; an active HTMLMediaElement (or navigator.audioSession
+    'playback', set BEFORE the context is created) moves it to 'playback' -- `audioKeepAlive`
+    (silent looping WAV: inline data URI first, repo-root silent.wav second; restarts
+    itself since some WebKit ports don't loop) runs inside the Start/Resume tap and on
+    foreground return, pauses on Pause/Reset and 6 s after the finish cues. (b) resume()
+    is WebKit's lever for BOTH 'suspended' and 'interrupted' -- `acResume()` before every
+    chime/cue and in the tap. (c) every audio call is try/catch: no audio API may ever
+    block the timer. (d) `audioSession.state` is unimplemented in Safari ('auto/?' is
+    normal). Playwright's Windows WebKit has no AudioContext and rejects data: media.
+    ON-DEVICE DIAGNOSTICS PANEL: `?debug=1` or 5 quick taps on the title (works in the
+    home-screen build). Strictly passive (reads + event listeners only; probes are
+    tap-only): clip stats, AC state/sampleRate/latency, audioSession, keep-alive, every
+    cue's scheduled offset vs the chime tail, Copy log / Share log. qa/voice.js (fake DOM:
+    iOS-shaped interrupted context, fetch failure modes, scheduling, no speechSynthesis
+    left) + qa/webkit-voice.js (real MP3 decode + scheduling in Chromium; WebKit runs the
+    page and the keep-alive fallback) + `tools/cues.js --check` are in the gauntlet.
+    RULE FOR FUTURE FEATURES: anything that plays a sound must go through the shared
+    AudioContext (chime() / say()) so it is gesture-unlocked, session-covered and
+    clock-scheduled with everything else. New spoken text = run `npm run cues`.
     Guards: qa/voice.js (fake DOM, empty voice list, absent API, all 5 speaking apps)
     + qa/webkit-voice.js (Playwright WebKit — stubs Web Speech, which Windows WebKit
     lacks — and Chromium). Neither is a substitute for a real-iPhone check.
@@ -218,7 +169,7 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
 
 ## Non-negotiable QA gauntlet (run before every commit)
 
-    npm run gauntlet   # smoke + lint + geo + wk (strength invariants) + daily (Daily 13
+    npm run gauntlet   # cues --check + smoke + lint + geo + wk (strength invariants) + daily (Daily 13
                        # form invariants: dips parallel stop, dead-bug flat back, bridge
                        # line, clamshell heels welded, side-plank line, bird-dog flat
                        # back, held dumbbells in front of torso, 715s) + Playwright:
@@ -228,8 +179,9 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
                        # the 5s ground transition), catchup, trans (legacy gaps on
                        # prenatal-stretch + TR_ALL blocks for flow/daily-13),
                        # breath tones, 2x toggle, auto-update freshness, voice
-                       # (gesture-primed speech, empty-voice fallback, all 5 apps,
-                       # fake DOM + WebKit + Chromium; needs `npx playwright install webkit`)
+                       # (pre-generated cue clips: scheduling, decode, failure modes,
+                       # all 5 apps, fake DOM + WebKit + Chromium; needs `npx playwright install webkit`)
+    npm run cues       # after editing any spoken text: enumerate strings + generate missing clips
     node tools/dump.js && python3 tools/strips.py   # fallback PIL contact sheets (needs Pillow)
     python3 tools/ascii.py <app> "<movement>" 0,3    # text-mode pose render
 
@@ -272,7 +224,7 @@ index.html edit). No manual refresh needed on the phone after the first relaunch
 One home-screen app: every page shares icon-app.png and web-app title "Movement";
 index.html is the launcher. Never add per-app icons (Will's explicit choice).
 
-## Voice ceiling (researched 2026-08-02, Apple-confirmed)
+## Voice ceiling (researched 2026-08-02, Apple-confirmed) — SUPERSEDED 2026-09-28 by pre-generated clips (see app_tpl.js notes); kept for the record
 
 iOS never exposes downloaded Enhanced/Premium voices to web pages — only pre-installed
 ones (Apple engineer, developer.apple.com/forums/thread/723503). Don't retry settings

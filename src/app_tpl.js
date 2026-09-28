@@ -264,32 +264,13 @@ function acResume(why){try{const c=ac();if(c.state==='running')return;
   dbg('AC resume() ['+why+'] from '+before+' → now '+c.state+(p&&p.then?' (promise pending)':''));
   if(p&&p.then)p.then(()=>dbg('AC resume() ['+why+'] resolved; state='+c.state),e=>dbg('AC resume() ['+why+'] REJECTED '+(e&&e.name)+': '+(e&&e.message)+'; state='+c.state));
 }catch(e){vlog('AC resume threw: '+e.message);}}
-// ---- audio sequencing (on-device finding 2026-09-28, iOS 18.7): speechSynthesis.speak()
-// takes the audio session and WebKit drops the page's AudioContext to 'interrupted' for
-// the whole utterance and beyond — until a resume(). So: resume() at every utterance
-// END/ERROR (plus a 250 ms re-check), chimes requested while speech is active are
-// deferred to END (dropped if that would make them >2 s late — a countdown tick that
-// late is wrong), and say() waits until the current chime has finished sounding so
-// speech never cuts a chime's tail. Both APIs stay; they just never overlap.
-// DEFERRAL DISABLED 2026-09-28: on-device it deadlocked (speech stalls under the keep-alive
-// session, never ENDs, chimes wait forever). Degraded-but-audible beats silent while Web
-// Speech is replaced by pre-generated clips. resume()-at-END and the pre-chime resume stay.
-const SEQ_DEFER=false;
-let speechActive=false,speechAt=0,speechMax=12000,chimeUntil=0,deferred=[],deferT0=0;
-// watchdog: iOS can drop END entirely — expire, and release anything waiting on it
-const speaking=()=>{if(speechActive&&Date.now()-speechAt>speechMax){speechActive=false;dbg('speech watchdog expired after '+speechMax+' ms');flushChimes();}return speechActive;};
-function speechBegan(max){speechActive=true;speechAt=Date.now();speechMax=max||12000;}
-function speechEnded(why){speechActive=false;acResume('speech '+why);
-  setTimeout(()=>{if(actx&&actx.state!=='running')acResume('speech '+why+' +250ms');},250);
-  flushChimes();}
-function flushChimes(){const q=deferred;deferred=[];if(!q.length)return;const late=Date.now()-deferT0;
-  q.forEach(c=>{const wait=Math.max(0,c.at-deferT0);
-    if(late+wait>2000){dbg('chime DROPPED '+c.f+'Hz (would be '+(late+wait)+' ms late)');return;}
-    chimeUntil=Math.max(chimeUntil,Date.now()+wait+c.d*1000);   // so say() waits for the flushed chimes too
-    setTimeout(()=>chimeNow(c.f,c.v,c.d),wait);});}
-function chime(f,v,d){if(SEQ_DEFER&&speaking()){if(!deferred.length)deferT0=Date.now();deferred.push({f,v,d,at:Date.now()});dbg('chime deferred '+f+'Hz (speech active)');return;}chimeNow(f,v,d);}
-function chimeNow(f,v,d){try{const c=ac();if(c.state!=='running')acResume('chime');
-  chimeUntil=Math.max(chimeUntil,Date.now()+d*1000);
+// ---- chimes: sine blips on the shared AudioContext. Every chime (and every chime
+// SEQUENCE via hold()) pushes chimeEndAt, in audio-clock seconds, so a cue can be
+// scheduled to start exactly when the chime tail ends — no timers, no overlap.
+let chimeEndAt=0;
+function hold(secs){try{const c=ac();chimeEndAt=Math.max(chimeEndAt,c.currentTime+secs);}catch(e){}}
+function chime(f,v,d){try{const c=ac();if(c.state!=='running')acResume('chime');
+  chimeEndAt=Math.max(chimeEndAt,c.currentTime+d);
   const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime);
   g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(v,c.currentTime+0.05);
   g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
@@ -303,49 +284,11 @@ function breathTone(f0,f1,d){try{const c=ac();if(c.state!=='running')acResume('b
   g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(0.055,c.currentTime+d*0.3);
   g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);
   o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+d);}catch(e){}}
-const cTrans=()=>{chime(440,.12,1);setTimeout(()=>chime(554.37,.1,.8),150);setTimeout(()=>chime(659.25,.08,.6),300);};
-const cSwitch=()=>{chime(659.25,.1,.5);setTimeout(()=>chime(659.25,.1,.5),280);};
-const cDone=()=>{chime(440,.12,1.2);setTimeout(()=>chime(554.37,.1,1),200);
+const cTrans=()=>{hold(.95);chime(440,.12,1);setTimeout(()=>chime(554.37,.1,.8),150);setTimeout(()=>chime(659.25,.08,.6),300);};
+const cSwitch=()=>{hold(.8);chime(659.25,.1,.5);setTimeout(()=>chime(659.25,.1,.5),280);};
+const cDone=()=>{hold(2.1);chime(440,.12,1.2);setTimeout(()=>chime(554.37,.1,1),200);
   setTimeout(()=>chime(659.25,.1,1),400);setTimeout(()=>chime(880,.08,1.5),600);};
-// pick the most natural installed voice: iOS/macOS "Enhanced"/"Premium" voices and
-// Edge "Natural" voices beat the robotic default by a mile when present. The list is
-// async on most browsers, so re-pick on voiceschanged.
-let voicePick=null,voiceWarned=false,lastVoices=null;
 const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){} try{dbg('warn: '+m);}catch(e){}};
-function pickVoice(){try{
-  const vs=speechSynthesis.getVoices(); lastVoices=vs||[]; if(!vs||!vs.length)return;
-  const NICE=['ava','zoe','samantha','allison','serena','karen','moira','tessa','nicky'];
-  let best=null,bs=0;
-  vs.forEach(v=>{
-    if(!/^en/i.test(v.lang))return;
-    const n=v.name.toLowerCase(); let s=0.1;
-    if(n.includes('premium'))s+=8;
-    if(n.includes('enhanced'))s+=6;
-    if(n.includes('natural'))s+=6;
-    if(n.startsWith('google'))s+=5;
-    const i=NICE.findIndex(x=>n.includes(x)); if(i>=0)s+=4-i*0.1;
-    if(/^en-us/i.test(v.lang))s+=1;
-    if(v.localService)s+=0.5;
-    if(s>bs){bs=s;best=v;}});
-  if(best)voicePick=best;
-}catch(e){}}
-if(window.speechSynthesis&&speechSynthesis.getVoices){pickVoice();
-  if(speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',pickVoice);}
-// iOS Safari only lets speak() through when it is rooted SYNCHRONOUSLY in a user
-// gesture; every cue below fires from a setTimeout after a chime, which breaks that
-// chain and is dropped without any error. So the Start/Resume tap speaks a silent
-// utterance itself — the same unlock the AudioContext resume beside it gets. Never
-// throws, never touches the timer.
-function primeSpeech(){try{
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
-    if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cues will be silent, timer unaffected');}return;}
-  const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.rate=2;
-  u.onerror=e=>{vlog('prime utterance error: '+(e&&e.error));speechEnded('prime error');};
-  u.onend=()=>speechEnded('prime end');
-  dbgWire(u,'prime');
-  speechBegan(1500);const r=speechSynthesis.speak(u);pickVoice();
-  dbg('prime: speak(" ", vol 0) called, returned '+r+', act='+dbgAct()+', speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());
-}catch(e){vlog('prime threw: '+e.message);}}
 // iOS ring/silent switch: a page whose only audio output is Web Audio nodes gets the
 // 'ambient' audio session, which the hardware mute switch silences — Web Audio AND Web
 // Speech alike, with no error or state change (chimes and voice both dead on the new
@@ -387,32 +330,41 @@ function audioKeepAlive(on){
     if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keepAlive play rejected: '+(e&&e.message));});
   }catch(e){vlog('keepAlive FAILED: '+e.name+': '+e.message+' @ '+(e&&e.stack||'').split('\n').slice(0,2).join(' | '));}
 }
-let sayRef=null;
-function say(t,n){if(!voiceOn){dbg('say skipped (voice off): '+t);return;}try{
-  if(deferred.length&&!speaking())flushChimes();           // watchdog expiry releases the queue
-  const wait=chimeUntil-Date.now();n=n||0;
-  if((wait>0||deferred.length)&&n<25){if(!n)dbg('say waits '+(deferred.length?'for deferred chimes':wait+' ms for chime')+': '+t);setTimeout(()=>say(t,n+1),wait>0?wait+30:150);return;}
-  if(n>=25)dbg('say waited long enough — speaking anyway: '+t);
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){
-    if(!voiceWarned){voiceWarned=true;vlog('speechSynthesis unavailable — cue skipped: '+t);}return;}
-  pickVoice();   // iOS Safari: voiceschanged often never fires and getVoices() is
-                 // empty/compact-only at load — re-pick at speak time, every time
-  const u=new SpeechSynthesisUtterance(t);
-  // iOS ignores u.voice unless u.lang matches it; keep a live ref too, or WebKit
-  // can GC the utterance mid-speech and fall back to the default voice.
-  // No match (empty or non-English list): leave u.voice unset = system default voice,
-  // and say so once in the console rather than failing silently.
-  if(voicePick){u.voice=voicePick;u.lang=voicePick.lang;}
-  else if(!voiceWarned){voiceWarned=true;
-    const n=speechSynthesis.getVoices?speechSynthesis.getVoices().length:'?';
-    vlog('no matching voice ('+n+' listed) — using the system default voice');}
-  u.rate=.8;u.pitch=1;u.volume=.8;
-  u.onerror=e=>{vlog('utterance error '+(e&&e.error)+' on “'+t+'”');speechEnded('error');};
-  sayRef=u;u.onend=()=>{if(sayRef===u)sayRef=null;speechEnded('end');};
-  const tag='cue#'+(++dbgN);dbgWire(u,tag);
-  speechBegan();speechSynthesis.speak(u);
-  dbg(tag+' speak() "'+t+'" voice='+(voicePick?voicePick.name:'default')+' act='+dbgAct()+' speaking='+speechSynthesis.speaking+' pending='+speechSynthesis.pending+' paused='+speechSynthesis.paused+' '+dbgAudio());
-}catch(e){vlog('say threw: '+e.message);}}
+// ---- spoken cues: PRE-GENERATED CLIPS (Kokoro-82M af_heart, tools/gen_cues.py), played
+// as AudioBuffers on the SAME AudioContext as the chimes. One audio path: no Web Speech,
+// no second audio session, nothing for iOS to interrupt (on-device 2026-09-28: the
+// system synthesizer took the session mid-utterance and never gave it back). CUES
+// (text -> {f: file, s: seconds, sp: speed}) is inlined by build.py from src/cues.json.
+// A cue with no clip logs loudly and is skipped — it never throws, never blocks the timer.
+// The __onSay seam lets tools/cues.js enumerate every string an app can speak.
+const CUES={};   // replaced at build time
+const CUE_GAIN=1.0;
+const cueBytes={},cueBufs={};let cueEndAt=0,cueN=0;
+function cueFetch(t){const e=CUES[t];if(!e)return Promise.reject(new Error('no clip'));
+  if(typeof fetch!=='function')return Promise.reject(new Error('no fetch'));
+  return cueBytes[t]||(cueBytes[t]=fetch(e.f).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();}).catch(err=>{delete cueBytes[t];throw err;}));}
+function cueDecode(t){if(cueBufs[t])return Promise.resolve(cueBufs[t]);
+  return cueFetch(t).then(ab=>new Promise((res,rej)=>{const c=ac();const p=c.decodeAudioData(ab.slice(0),res,rej);if(p&&p.then)p.then(res,rej);}))
+    .then(b=>{cueBufs[t]=b;return b;});}
+// every text this app can say, derived from the SAME rules announce() uses
+const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+g.m.n+'. '+g.m.setup:posCue(g.m)):(g.m.n+(g.m.bil&&!g.m.orb?'. Start with your right side.':''));
+function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(m.orb?'Change direction':'Switch sides');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
+function cuePrefetch(){cueTexts().forEach(t=>{if(!CUES[t]){vlog('NO CLIP for "'+t+'"');return;}cueFetch(t).catch(e=>vlog('prefetch failed "'+t+'": '+e.message));});}
+function cueDecodeAll(){cueTexts().forEach(t=>{if(CUES[t])cueDecode(t).catch(()=>{});});}
+function cueStats(){const ts=cueTexts();return ts.length+' texts, '+ts.filter(t=>CUES[t]).length+' with clips, '+ts.filter(t=>cueBytes[t]).length+' fetched, '+ts.filter(t=>cueBufs[t]).length+' decoded';}
+function say(t){if(!voiceOn){dbg('say skipped (voice off): '+t);return;}
+  try{if(window.__onSay)window.__onSay(t,SEGS[idx]);}catch(e){}
+  if(!CUES[t]){vlog('no clip for "'+t+'" — cue skipped');return;}
+  const tag='cue#'+(++cueN);
+  cueDecode(t).then(buf=>{try{const c=ac();if(c.state!=='running')acResume('cue');
+    const src=c.createBufferSource();src.buffer=buf;const g=c.createGain();g.gain.value=CUE_GAIN;src.connect(g);g.connect(c.destination);
+    // start right after the chime tail, never before the previous cue has finished
+    const at=Math.max(c.currentTime+0.02,chimeEndAt+0.04,cueEndAt);
+    src.start(at);cueEndAt=at+buf.duration;
+    src.onended=()=>dbg(tag+' ended '+dbgAudio());
+    dbg(tag+' "'+t+'" at +'+(at-c.currentTime).toFixed(2)+'s ('+buf.duration.toFixed(1)+'s clip; chime tail +'+Math.max(0,chimeEndAt-c.currentTime).toFixed(2)+'s) '+dbgAudio());
+  }catch(e){vlog('cue play failed "'+t+'": '+e.message);}},e=>vlog('cue unavailable "'+t+'": '+e.message));}
+setTimeout(cuePrefetch,800);   // warm the HTTP cache after first paint; decode happens at Start
 // ---- on-device diagnostics panel. STRICTLY PASSIVE: it only reads properties and
 // listens to events; it never calls speak()/cancel()/resume()/getVoices(), never
 // creates an AudioContext and never touches navigator.audioSession — the probe
@@ -430,10 +382,8 @@ function dbgAudio(){try{
   return 'AC['+ac+'] session['+se+'] keepAlive['+ka+']';}catch(e){return 'audio? '+e.message;}}
 function dbg(m){dbgLog.push(((Date.now()-dbgT0)/1000).toFixed(1)+'s '+m);if(dbgLog.length>120)dbgLog.shift();if(DEBUG)dbgRender();}
 function dbgStatus(){const L=[];try{
-  L.push("'speechSynthesis' in window: "+('speechSynthesis' in window)+"  'SpeechSynthesisUtterance': "+('SpeechSynthesisUtterance' in window)+"  standalone: "+(navigator.standalone===true)+"  visible: "+document.visibilityState);
-  const vs=lastVoices||[];
-  L.push('voices (last list the app fetched): '+vs.length+(vs.length?'  first: '+vs.slice(0,4).map(v=>v.name+' ('+v.lang+(v.default?', default':'')+(v.localService?', local':'')+')').join(' | '):'')+'  picked: '+(voicePick?voicePick.name:'none (system default)'));
-  if(window.speechSynthesis)L.push('speaking: '+speechSynthesis.speaking+'  pending: '+speechSynthesis.pending+'  paused: '+speechSynthesis.paused);
+  L.push('cues: pre-generated clips (no Web Speech)  standalone: '+(navigator.standalone===true)+'  visible: '+document.visibilityState);
+  L.push('clips: '+cueStats()+'  cueEndAt +'+(actx?Math.max(0,cueEndAt-actx.currentTime).toFixed(1):'-')+'s');
   L.push(dbgAudio());
   L.push('userActivation.isActive: '+dbgAct()+'  voiceOn: '+voiceOn+'  running: '+running+'  seg: '+idx+'  UA: '+navigator.userAgent.replace(/^.*?(iPhone|iPad|CPU) ?/,'').slice(0,60));
 }catch(e){L.push('status error: '+e.message);}return L;}
@@ -445,11 +395,9 @@ function dbgRender(){if(!DEBUG)return;try{
     const bar=document.createElement('div');bar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px';
     const mk=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.style.cssText='font:11px ui-monospace,monospace;padding:4px 7px;border-radius:6px;border:1px solid #6c6;background:#123;color:#dfd';b.onclick=()=>{try{f();}catch(e){dbg('button error: '+e.message);}};bar.appendChild(b);};
     // PROBES — active calls, tap-only
-    mk('Speak test',()=>{dbg('PROBE say() act='+dbgAct()+' '+dbgAudio());say('Testing, one two three.');});
-    mk('Speak raw default',()=>{const u=new SpeechSynthesisUtterance('Raw default voice test.');dbgWire(u,'raw');dbg('PROBE raw speak() act='+dbgAct()+' '+dbgAudio());speechSynthesis.speak(u);});
+    mk('Cue test',()=>{dbg('PROBE say("Voice on.") act='+dbgAct()+' '+dbgAudio());say('Voice on.');});
     mk('Chime',()=>{dbg('PROBE chime '+dbgAudio());chime(660,.15,.6);});
-    mk('cancel()+resume()',()=>{speechSynthesis.cancel();speechSynthesis.resume();dbg('PROBE cancel()+resume(); speaking='+speechSynthesis.speaking+' paused='+speechSynthesis.paused);});
-    mk('resume()',()=>{speechSynthesis.resume();dbg('PROBE resume(); paused='+speechSynthesis.paused);});
+    mk('Chime+cue',()=>{dbg('PROBE chime then cue '+dbgAudio());cTrans();say('Switch sides');});
     mk('AC resume()',()=>{acResume('probe');});
     mk('AC close()+new',()=>{const old=actx;actx=null;dbg('PROBE close old AC ('+(old?old.state:'none')+')');if(old&&old.close)old.close().then(()=>dbg('old AC closed'),e=>dbg('old AC close rejected '+e.message));audioSessionPlayback('probe recreate');ac();acResume('probe recreate');});
     mk('Set session playback',()=>{audioSessionPlayback('probe');});
@@ -465,18 +413,9 @@ function dbgRender(){if(!DEBUG)return;try{
     document.body.style.paddingBottom='50vh';}
   dbgBody.textContent=dbgStatus().join('\n')+'\n— log —\n'+dbgLog.join('\n');
 }catch(e){}}
-// utterance lifecycle → log, with the audio snapshot at START and END (tag = 'prime' | 'cue#N' | 'raw')
-function dbgWire(u,tag){try{
-  const t0=Date.now();const el=()=>'+'+((Date.now()-t0)/1000).toFixed(1)+'s';
-  u.addEventListener('start',()=>dbg(tag+' START '+el()+' '+dbgAudio()));
-  u.addEventListener('end',()=>dbg(tag+' END '+el()+' (elapsed '+(u.elapsedTime|0)+') '+dbgAudio()));
-  u.addEventListener('error',e=>dbg(tag+' ERROR '+el()+' code='+(e&&e.error)+' '+dbgAudio()));
-  u.addEventListener('pause',()=>dbg(tag+' pause event'));u.addEventListener('resume',()=>dbg(tag+' resume event'));
-}catch(e){dbg(tag+' (no utterance events available: '+e.message+')');}}
 // passive listeners: session / context / media / visibility / voice-list changes
 try{if(navigator.audioSession&&navigator.audioSession.addEventListener)navigator.audioSession.addEventListener('statechange',()=>dbg('audioSession statechange → '+navigator.audioSession.type+'/'+navigator.audioSession.state));}catch(e){}
 try{document.addEventListener('visibilitychange',()=>dbg('visibility → '+document.visibilityState+' '+dbgAudio()));}catch(e){}
-try{if(window.speechSynthesis&&speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',()=>dbg('voiceschanged → '+(speechSynthesis.getVoices()||[]).length+' voices'));}catch(e){}
 // 5 quick taps on the title toggle the panel (for the home-screen build)
 try{const h=document.querySelector('h1');let taps=[];if(h&&h.addEventListener)h.addEventListener('click',()=>{const now=Date.now();taps=taps.filter(t=>now-t<3000);taps.push(now);if(taps.length>=5){taps=[];dbgEnable('5 taps');}});}catch(e){}
 if(DEBUG)dbgEnable('?debug=1');
@@ -511,8 +450,8 @@ function go(i){
 function announce(g){
   // authored setup scripts (TR_ALL) speak the full "Next: <name>. <equipment/position>"
   // line; the display shows just the instruction (mName already carries the name)
-  if(g.trans){cSwitch();setTimeout(()=>say(TR_ALL&&g.m.setup?'Next: '+g.m.n+'. '+g.m.setup:posCue(g.m)),300);}
-  else{cTrans();setTimeout(()=>say(g.m.n+(g.m.bil&&!g.m.orb?'. Start with your right side.':'')),420);}
+  if(g.trans)cSwitch();else cTrans();
+  say(cueFor(g));
 }
 function sync(){
   if(!running)return;
@@ -527,7 +466,7 @@ function sync(){
   if(rem!==timeLeft){
     timeLeft=rem; clock();
     const g=SEGS[idx], m=g.m;
-    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();setTimeout(()=>say(m.orb?'Change direction':'Switch sides'),300);}
+    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(m.orb?'Change direction':'Switch sides');}
     // 3s warning: TR_ALL gaps get a distinct 3-2-1 triple tick so the start of work
     // is unambiguous; work segments (and legacy gaps) keep the single soft tick
     if(TR_ALL&&g.trans){if(timeLeft<=3&&timeLeft>=1)chime(520,.07,.18);}
@@ -543,7 +482,7 @@ function finish(){
   document.querySelector('.wrap').classList.add('state-done');
   $('cue').innerHTML='<strong>Done.</strong> Hips and ankles mobile, spine articulated, hip rotation opened, core switched on. Nothing loaded the peroneal tendon.';
   $('bMain').style.display='none';$('tm').textContent='\u2713';$('fill').style.width='100%';
-  cDone();setTimeout(()=>say('Movement complete.'),600);
+  cDone();say('Movement complete.');
   setTimeout(()=>{if(!running)audioKeepAlive(false);},6000);   // after the finish cues
 }
 $('bMain').onclick=()=>{
@@ -554,10 +493,8 @@ $('bMain').onclick=()=>{
     // → keep-alive media element → speech priming.
     audioSessionPlayback('start tap');
     try{ac();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}
-    dbg('start step 2 done (context); calling audioKeepAlive');
     try{audioKeepAlive(true);}catch(e){dbg('keepAlive THREW OUTSIDE its guards: '+e.message);}
-    dbg('start step 3 done (keepAlive); calling primeSpeech');
-    primeSpeech();
+    cueDecodeAll();
     if(!started){started=true;go(0);}
     else{segEnd=Date.now()+pausedRem;}
     tick=setInterval(sync,300);
@@ -567,7 +504,7 @@ $('bMain').onclick=()=>{
   }
 };
 $('bVoice').onclick=()=>{voiceOn=!voiceOn;$('bVoice').classList.toggle('on',voiceOn);
-  if(voiceOn){pickVoice();say('Voice on. Using '+(voicePick?voicePick.name:'the default voice'));}};
+  if(voiceOn)say('Voice on.');};
 $('bPrev').onclick=()=>{const t=SEGS[idx].mi-1;if(t>=0){started=true;go(segOfMove(t));}};
 $('bNext').onclick=()=>{const g=SEGS[idx],t=g.trans?g.mi:g.mi+1;if(t<=MOVES.length-1){started=true;go(segOfMove(t));}};
 $('bReset').onclick=()=>{
