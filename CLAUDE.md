@@ -85,8 +85,10 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     chime (0.8 s) minus the 3-2-1 ticks (3 s) -- 6.2 s in a 10 s gap, 11.2 s in 15 s -- else
     it is refit at 1.0; remaining overruns print as OVERRUN and the checker WARNs. As of
     2026-09-28 three overrun: Folded cat-cows (Flow's authored 5 s ground gap, 5.5 s clip),
-    Side-lying clamshell (+0.7 s), Side plank (+0.1 s) -- Will's call whether to lengthen
-    the gap or shorten the text; a cue overlapping the ticks mixes, it does not cut.
+    Side-lying clamshell (+0.7 s), Side plank (+0.1 s) -- Will's decision 2026-09-30:
+    leave all three as they are, not noticeable in use (a cue overlapping the ticks
+    mixes, it does not cut). Device-verified 2026-09-30: full Morning Flow session,
+    silent mode on, phone speaker, every cue and chime audible.
     WHY (keep -- it is the platform record): iOS Safari speechSynthesis.speak() activates
     the system synthesizer's own audio session; WebKit drops the page's AudioContext to
     'interrupted' mid-utterance and it never comes back without resume() (Apple forums
