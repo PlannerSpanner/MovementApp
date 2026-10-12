@@ -9,13 +9,13 @@ const MOVING={
  'Deep squats':'hips drop','Parallel squats':'hips drop','Hands-and-knees rocking':'rocks',
  'Hands-and-knees pelvic rocking':'rocks','Bouncing in place':'bounces','Arm sweeps with knee dip':'knees dip',
  'Left side-lying rest':'settles','Supported butterfly with rock':'rocks','Birth ball hip circles':'hips circle',
- 'Hip circles':'hips circle','Standing wall pelvic tilts':'pelvis tilts','Seated figure-4':'ankle crosses',
+ 'Single-leg hip circles':'hips circle','Standing wall pelvic tilts':'pelvis tilts','Seated figure-4':'ankle crosses',
  'Supported butterfly':'knees open','Wide-knee child\'s pose':'settles back','Seated breathing':'settles',
  'Breath and pelvic floor release':'settles','Pelvic floor coordination':'settles','Knee circles':'knees circle',
  '90/90 with a fold':'folds','Tuck + untuck':'pelvis tilts','Thread the needle':'arm threads',
  'Cobra press-ups':'chest lifts','Plank hold':'micro-adjusts','Punching rotations':'stance shifts',
  'Rotations with shoulder slaps':'torso rotates','Dynamic lateral reaches':'leans','Chest opener swings':'arms swing',
- 'Bent rotation sweeps':'torso rotates','Hip hinges':'hips travel back','Folded cat-cows':'spine moves',
+ 'Bent rotation sweeps':'torso rotates','Hip hinges':'hips travel back',
  'Seated cat-cow':'spine moves','Seated side reach':'leans',
  'Dead bug':'opposite leg extends','Standing quad + hip flexor stretch':'heel drawn to glute'};
 for(const [app,df] of Object.entries(APPS)){

@@ -6,7 +6,10 @@ deployed to GitHub Pages at https://plannerspanner.github.io/MovementApp/
 Built for iPhone Safari (wake lock + Add to Home Screen require Safari, not Chrome).
 
 Apps: `morning-flow` (Morning Flow — 13-move qi gong warmup: 8 standing + 5-move ground
-finish, TR_ALL authored transitions incl. an explicit 5s "get on the ground" gap, 815s),
+finish, TR_ALL authored transitions incl. an explicit 5s "get on the ground" gap, 815s;
+seven poses rebuilt 2026-10-12 per Will's spec — Hip circles became the single-leg hip
+CAR "Single-leg hip circles", Folded cat-cows became the quadruped "Cat-cows"; the old
+poses are archived in d_retired.js),
 `prenatal-stretch` (Prenatal Stretch, 10 moves), `prenatal-movement` (Birth Prep, 11 moves),
 `daily-13` (Daily 13 — 13-move postural maintenance timer, violet theme, dumbbells/bench
 props, authored per-movement transitions via TR_ALL, exactly 715s; renamed from Daily 10
@@ -45,6 +48,19 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
   Coordinates: y DOWN, floor at y=93, canvas 0–100. Limb segments 19 (leg) / 13 (arm/spine),
   foot 6.4. `sl` = lateral spine bend. Feet: sagittal-plane perpendicular + floor clamp
   (flat when planted, trails shin when kneeling).
+  - `tw` is a torso twist about the LOWER-SPINE AXIS (pelvis→chest), not the world
+    vertical (changed 2026-10-12). Upright the two coincide (shoulder yaw); hinged or on
+    all fours it is a true thoracic ROLL — one shoulder rises, the other drops (bent
+    rotation sweeps, thread the needle). Sign: tw>0 raises the right shoulder when the
+    torso is horizontal; upright, tw>0 pulls the right shoulder BACK. Chest→neck carries
+    45%, head/shoulders/FK arms the full angle. FK arm angles are body-frame BEFORE the
+    roll: an arm abducted 60° becomes vertical under a 60° roll (windmill bottom hand).
+  - `orb` modes: `{hips:true,rx,rz,ry}` pelvis circle (feet pinned), `{swivel:true,amp}`
+    knee circles, `{leg:'R'|'L',fB,fA,aB,aA,knee?}` single-leg hip CAR — that leg's thigh
+    traces a cone from the phase, knee ~90° (shin follows the thigh), the other leg keeps
+    its planted target. Only `A` is used by orbital movements. A bilateral `orb.leg`
+    movement is cued/badged like a sided move ("Start with your right side." / "Switch
+    sides."), the other orbits say "Change direction." (`dirOnly()` in app_tpl.js).
   - Arm IK with a joint key (`{k:"shL"}`) can't blend — `lerpT` returns it unchanged
     for an entire blend segment, so the hand stays pinned for the whole half and pops
     at the crossover. Any movement with an `M` keyframe must use world-point targets
@@ -100,7 +116,7 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     SPEED POLICY: 0.95 everywhere it fits (was 0.85 until 2026-10-12); a transition cue must fit its gap minus the
     chime (0.8 s) minus the 3-2-1 ticks (3 s) -- 6.2 s in a 10 s gap, 11.2 s in 15 s -- else
     it is refit at 1.0; remaining overruns print as OVERRUN and the checker WARNs. As of
-    2026-09-28 three overrun: Folded cat-cows (Flow's authored 5 s ground gap, 5.5 s clip),
+    2026-09-28 three overrun: Cat-cows (Flow's authored 5 s ground gap, ~5.7 s clip; was Folded cat-cows),
     Side-lying clamshell (+0.7 s), Side plank (+0.1 s) -- Will's decision 2026-09-30:
     leave all three as they are, not noticeable in use (a cue overlapping the ticks
     mixes, it does not cut). Device-verified 2026-09-30: full Morning Flow session,
@@ -214,12 +230,22 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     npm run cues       # after editing any spoken text: enumerate strings + generate missing clips
     node tools/dump.js && python3 tools/strips.py   # fallback PIL contact sheets (needs Pillow)
     python3 tools/ascii.py <app> "<movement>" 0,3    # text-mode pose render
+    node tools/phases.js morning-flow "thread" [--ph=0,0.125,...]   # figure-only PNG strip per
+                       # movement at phases 0/.25/.5/.75 -> qa/screenshots/phases/. THE look step
+                       # for pose work: several Flow poses failed BETWEEN keyframes (2026-10-12)
 
 Hard-won lessons encoded in these tools:
 - Parse-only checks miss runtime ReferenceErrors → smoke.js is mandatory.
 - Numeric invariants miss gestalt errors (feet never drawn, "alien" legs, belly-as-hips)
   → always LOOK at renders. In Claude Code, replace/augment strips with real Playwright
-  screenshots of the served pages.
+  screenshots of the served pages. Look at phases BETWEEN the keyframes too
+  (tools/phases.js): a pose can be right at A and B and wrong in the blend (an FK arm
+  sweeping under a quadruped shoulder passed through the floor mid-blend; an arm lerped
+  through the camera axis looked retracted). Two keyframes with different IK/FK
+  representations for the same limb do not blend at all (lerpT pins the IK one).
+- Camera vs. read: a punch/reach that must read as LONG needs its direction near the
+  screen plane — screen extent = sin(facing + 40°); with ±tw both ways the only symmetric
+  choice is facing the camera (yaw −40). A 3/4 view foreshortens one side into the lens.
 - Screen-space matters more than world-space for readability (clamshell swivel was tuned
   against projected knee motion, not world lift).
 - Left/right swivel cones are asymmetric — never mirror a swivel by sign-flip; re-fit numerically.

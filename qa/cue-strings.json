@@ -88,29 +88,32 @@
   ]
  },
  {
-  "text": "Next: Hip circles. Hands on your hips, feet planted.",
+  "text": "Next: Single-leg hip circles. Hands on your hips. Stand on your left leg, right knee ready to lift.",
   "gap": 10,
   "apps": [
    "morning-flow"
   ]
  },
  {
-  "text": "Hip circles.",
+  "text": "Single-leg hip circles. Start with your right side.",
   "gap": null,
   "apps": [
    "morning-flow"
   ]
  },
  {
-  "text": "Change direction.",
+  "text": "Switch sides.",
   "gap": null,
   "apps": [
    "morning-flow",
-   "prenatal-movement"
+   "prenatal-stretch",
+   "prenatal-movement",
+   "daily-13",
+   "hip-activation"
   ]
  },
  {
-  "text": "Next: Bent rotation sweeps. Hinge forward halfway, arms hanging loose.",
+  "text": "Next: Bent rotation sweeps. Feet wide, hinge forward, arms hanging loose.",
   "gap": 10,
   "apps": [
    "morning-flow"
@@ -124,14 +127,14 @@
   ]
  },
  {
-  "text": "Next: Folded cat-cows. Time to get on the ground. Fold down, hands on your bent knees.",
+  "text": "Next: Cat-cows. Time to get on the ground. Hands and knees, wrists under your shoulders.",
   "gap": 5,
   "apps": [
    "morning-flow"
   ]
  },
  {
-  "text": "Folded cat-cows.",
+  "text": "Cat-cows.",
   "gap": null,
   "apps": [
    "morning-flow"
@@ -177,17 +180,6 @@
   "gap": null,
   "apps": [
    "morning-flow"
-  ]
- },
- {
-  "text": "Switch sides.",
-  "gap": null,
-  "apps": [
-   "morning-flow",
-   "prenatal-stretch",
-   "prenatal-movement",
-   "daily-13",
-   "hip-activation"
   ]
  },
  {
@@ -347,6 +339,13 @@
  },
  {
   "text": "Birth ball hip circles.",
+  "gap": null,
+  "apps": [
+   "prenatal-movement"
+  ]
+ },
+ {
+  "text": "Change direction.",
   "gap": null,
   "apps": [
    "prenatal-movement"

@@ -102,30 +102,40 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='79a59ce596';
+const BUILDV='d74bd5c3da';
 // Morning Flow — 13 movements: eight standing (continuous and rhythmic), then a
 // five-movement ground finish moved in from the retired Morning Movement app
 // (2026-08-26; poses verbatim). TR_ALL build: tdur = length of the GET SET UP gap
 // BEFORE the movement (default 10, 15 for position changes, 5 for the explicit
-// get-on-the-ground gap before Folded cat-cows); setup = authored transition script,
+// get-on-the-ground gap before Cat-cows); setup = authored transition script,
 // spoken as "Next: <name>. <setup>". Work 680s + gaps 135s = 815s.
 // Retired from Flow (see src/d_retired.js): Rotations with shoulder slaps,
 // Lateral weight shifts.
 const MOVES=[
+// A = airborne (feet off the floor, toes pointing down), M = landed with the legs long,
+// B = the dip. Path A-M-B-M-A, so each bounce leaves the floor (Will, 2026-10-12).
 {n:"Bouncing in place",pos:'standing',cue:"Light bounces, everything loose",dur:50,bil:false,cyc:1.0,
  setup:"Stand easy, feet under your hips, arms loose.",
- A:{p:[0,57,0],yaw:22,tw:0,s:[4,4],hf:0,aL:[8,-11,14,-9],aR:[8,11,14,9],ikFL:[-5,93,1],ikFR:[5,93,1]},
+ A:{p:[0,52,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[10,-11,16,-9],aR:[10,11,16,9],ikFL:[-5,88,-1.5],ikFR:[5,88,-1.5]},
+ M:{p:[0,55.5,0],yaw:22,tw:0,s:[4,4],hf:0,aL:[8,-11,14,-9],aR:[8,11,14,9],ikFL:[-5,93,1],ikFR:[5,93,1]},
  B:{p:[0,61,0],yaw:22,tw:0,s:[5,5],hf:0,aL:[16,-12,26,-10],aR:[16,12,26,10],ikFL:[-5,93,1],ikFR:[5,93,1]}},
 
-{n:"Arm sweeps with knee dip",pos:'standing',cue:"Arms sweep, knees dip in rhythm",dur:50,bil:false,cyc:2.0,
+// Large pendulum (Will, 2026-10-12): A = top, arms overhead and back with the whole body
+// arcing into extension; B = bottom, folded with the head toward the floor and the arms
+// swinging through behind the shins.
+{n:"Arm sweeps with knee dip",pos:'standing',cue:"Arms sweep overhead, then fold and swing through",dur:50,bil:false,cyc:2.0,
  setup:"Stay standing, feet under your hips, arms hanging.",
- A:{p:[0,58,0],yaw:24,tw:0,s:[4,4],hf:-6,aL:[62,-10,72,-8],aR:[58,10,68,8],ikFL:[-5,93,1],ikFR:[5,93,1]},
- B:{p:[0,70,-3],yaw:24,tw:0,s:[16,12],hf:8,aL:[-46,-10,-54,-8],aR:[-50,10,-58,8],ikFL:[-5,93,1],ikFR:[5,93,1]}},
+ A:{p:[0,55.3,2.5],yaw:24,tw:0,s:[-12,-18],hf:-22,aL:[196,-9,204,-7],aR:[196,9,204,7],ikFL:[-5,93,1],ikFR:[5,93,1]},
+ B:{p:[0,68,-6],yaw:24,tw:0,s:[100,112],hf:30,aL:[-62,-9,-70,-7],aR:[-62,9,-70,7],ikFL:[-5,93,1],ikFR:[5,93,1]}},
 
+// A = right punch: the trunk twists left (tw<0 brings the right shoulder forward), the
+// right arm extends fully across the body, the left fist retracts to the ribs; B mirrors.
+// Faces the camera (yaw -40) so BOTH punches cross the screen and the trunk rotation
+// shows as the shoulder line swinging; a 3/4 view foreshortened one punch into the lens.
 {n:"Punching rotations",pos:'standing',cue:"Stand tall, knees soft — punch out, push the shoulder blade forward",dur:50,bil:false,cyc:1.6,
  setup:"Feet wider than your shoulders, knees soft, fists at your ribs.",
- A:{p:[0,61,0],yaw:-16,tw:26,s:[4,4],hf:22,aL:[80,-64,86,-70],aR:[86,20,90,6],ikFL:[-12,93,1],ikFR:[12,93,1],swL:-10,swR:28},
- B:{p:[0,61,0],yaw:-16,tw:-26,s:[4,4],hf:-22,aL:[86,-20,90,-6],aR:[80,64,86,70],ikFL:[-12,93,1],ikFR:[12,93,1],swL:-10,swR:28}},
+ A:{p:[0,61,0],yaw:-40,tw:-50,s:[4,4],hf:0,aL:[-48,-16,62,-22],aR:[92,0,92,0],ikFL:[-12,93,1],ikFR:[12,93,1],swL:-10,swR:28},
+ B:{p:[0,61,0],yaw:-40,tw:50,s:[4,4],hf:0,aL:[92,0,92,0],aR:[-48,16,62,22],ikFL:[-12,93,1],ikFR:[12,93,1],swL:-10,swR:28}},
 
 {n:"Dynamic lateral reaches",pos:'standing',cue:"Reach long overhead, lean to the far side",dur:50,bil:false,cyc:2.2,pin:'LR',
  setup:"Feet wide, one hand on your hip, the other arm ready to reach.",
@@ -146,27 +156,40 @@ const MOVES=[
  A:{p:[0,58,0],yaw:-14,tw:0,s:[3,3],hf:-6,aL:[80,-78,84,-84],aR:[80,78,84,84],ikFL:[-7,93,1],ikFR:[7,93,1]},
  B:{p:[0,58,0],yaw:-14,tw:0,s:[6,6],hf:6,aL:[86,26,88,44],aR:[86,-26,88,-44],ikFL:[-7,93,1],ikFR:[7,93,1]}},
 
-{n:"Hip circles",pos:'standing',cue:"Hands on hips, big slow circles",dur:60,bil:true,cyc:2.6,
- setup:"Hands on your hips, feet planted.",
- orb:{hips:true,rx:9,rz:8,ry:2},
- A:{p:[0,60,0],yaw:20,tw:0,s:[4,4],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-8,93,1],ikFR:[8,93,1]},
- B:{p:[0,60,0],yaw:20,tw:0,s:[4,4],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-8,93,1],ikFR:[8,93,1]}},
+// Single-leg hip CAR (replaced the two-footed standing hip circles, Will 2026-10-12):
+// stand on the left leg, the right knee lifts to hip height and the thigh draws the
+// biggest circle the hip allows -- forward, out, behind, down. orb.leg drives the
+// lifted leg from the phase (see orbitPose); the halfway mirror swaps legs AND reverses
+// the direction. The standing ankle works the whole time (ankle note in x_flow.js).
+{n:"Single-leg hip circles",pos:'standing',cue:"Stand on one leg, circle the lifted knee",dur:60,bil:true,cyc:2.6,
+ setup:"Hands on your hips. Stand on your left leg, right knee ready to lift.",
+ orb:{leg:'R',fB:30,fA:55,aB:28,aA:28},
+ A:{p:[-4,55.5,0],yaw:20,tw:0,s:[2,2],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-6,93,1],lR:[85,6,-5,2]},
+ B:{p:[-4,55.5,0],yaw:20,tw:0,s:[2,2],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-6,93,1],lR:[85,6,-5,2]}},
 
-{n:"Bent rotation sweeps",pos:'standing',cue:"Hinged forward, sweep the arms floor to sky",dur:50,bil:false,cyc:2.0,
- setup:"Hinge forward halfway, arms hanging loose.",
- A:{p:[0,62,-4],yaw:6,tw:40,s:[54,58],hf:26,aL:[2,-4,2,-3],aR:[176,8,174,6],ikFL:[-7,93,1],ikFR:[7,93,1]},
- B:{p:[0,62,-4],yaw:6,tw:-40,s:[54,58],hf:-26,aL:[176,16,174,14],aR:[2,-17,2,-15],ikFL:[-7,93,1],ikFR:[7,93,1]}},
+// Windmill (Will, 2026-10-12): hinged near parallel, the trunk ROLLS (tw about the spine
+// axis) until the bottom hand touches the floor; the hips shift over the bent knee so the
+// leg opposite the grounded hand straightens; the top arm points at the sky. A = left
+// hand down / right leg straight, B mirrors. Both arms FK (abd in the body frame, the
+// roll brings them vertical) so the midpoint is a flat-back T. Pace halved: cyc 4.
+{n:"Bent rotation sweeps",pos:'standing',cue:"Hinged forward, sweep floor to sky",dur:50,bil:false,cyc:4.0,
+ setup:"Feet wide, hinge forward, arms hanging loose.",
+ A:{p:[-8,58,-6],yaw:6,tw:60,s:[96,100],hf:-16,aL:[0,-60,0,-60],aR:[0,120,0,120],ikFL:[-12,93,1],ikFR:[12,93,1]},
+ B:{p:[8,58,-6],yaw:6,tw:-60,s:[96,100],hf:-16,aL:[0,-120,0,-120],aR:[0,60,0,60],ikFL:[-12,93,1],ikFR:[12,93,1]}},
 
 // ---- ground block (poses moved verbatim from data2.js, 2026-08-26) ----
 // Explicit 5s "get on the ground" gap opens the block (Will's authored transition).
-{n:"Folded cat-cows",pos:'standing',cue:"Hands on bent knees, round then arch the spine",dur:30,bil:false,cyc:3.4,pin:"LR",tdur:5,
- setup:"Time to get on the ground. Fold down, hands on your bent knees.",
- A:{p:[0,64,0],yaw:22,tw:0,s:[74,86],hf:28,ikL:{k:"knL"},ikR:{k:"knR"},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[40,-6,-40,-5],lR:[40,6,-40,5]},
- B:{p:[0,64,0],yaw:22,tw:0,s:[72,70],hf:-26,ikL:{k:"knL"},ikR:{k:"knR"},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[40,-6,-40,-5],lR:[40,6,-40,5]}},
+// Quadruped cat-cow (was the standing "Folded cat-cows" until 2026-10-12): hands under
+// the shoulders, knees under the hips, feet trailing. A = cat (round, head down),
+// B = cow (dip, chest open, head up).
+{n:"Cat-cows",pos:'quadruped',cue:"Round the spine, then arch and open the chest",dur:30,bil:false,cyc:3.4,tdur:5,
+ setup:"Time to get on the ground. Hands and knees, wrists under your shoulders.",
+ A:{p:[0,74,0],yaw:22,tw:0,s:[62,92],hf:44,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[7,-6,-90,-5],lR:[7,6,-90,5]},
+ B:{p:[0,74,0],yaw:22,tw:0,s:[104,62],hf:-34,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[7,-6,-90,-5],lR:[7,6,-90,5]}},
 
 {n:"Cobra press-ups",pos:'prone',cue:"Press the chest up, hips stay down",dur:60,bil:false,cyc:3.2,tdur:15,
  setup:"Lie face down, hands under your shoulders, elbows in.",
@@ -182,12 +205,22 @@ const MOVES=[
  B:{p:[0,56,-2],yaw:20,tw:0,s:[136,136],hf:20,ikL:{w:[-9,93,34]},ikR:{w:[9,93,34]},
     aL:[0,0,0,0],aR:[0,0,0,0],lL:[-20,-6,-40,-5],lR:[-24,6,-24,5]}},
 
-{n:"Thread the needle",pos:'quadruped',cue:"Reach up, then slide the arm under",dur:60,bil:true,cyc:3.6,pin:"LR",tdur:15,
+// Rebuilt 2026-10-12 in the standard quadruped frame (torso along +z, shins trailing
+// -z like Bird dog / Cat-cows). The trunk ROLLS about the spine (tw): A = right shoulder
+// up, right arm straight at the ceiling, chest open toward it; B = right shoulder
+// dropped toward the floor, the arm threaded under the left armpit. The right arm is FK
+// in both keyframes (abd in the body frame, the roll carries it from the ceiling, down
+// the right side, under the chest) so the sweep blends; the left hand stays planted.
+// M folds the elbow on the way under: a straight arm hanging from a quadruped shoulder
+// (22 above the floor) would pass through the floor mid-sweep.
+{n:"Thread the needle",pos:'quadruped',cue:"Reach up, then slide the arm under",dur:60,bil:true,cyc:3.6,tdur:15,
  setup:"Drop your knees and come to hands and knees, wrists under shoulders.",
- A:{p:[0,74,-2],yaw:16,tw:52,s:[-74,-74],hf:-18,ikL:{w:[-9,93,-14]},
-    aL:[0,0,0,0],aR:[-58,58,-68,54],lL:[0,-6,90,-5],lR:[4,6,94,5]},
- B:{p:[0,76,-2],yaw:16,tw:-58,s:[-78,-86],hf:26,ikL:{w:[-9,93,-14]},
-    aL:[0,0,0,0],aR:[72,-74,62,-70],lL:[0,-6,90,-5],lR:[4,6,94,5]}},
+ A:{p:[0,74,0],yaw:16,tw:55,s:[84,80],hf:-24,ikL:{w:[-7,93,25]},
+    aR:[0,125,0,125],lL:[7,-6,-90,-5],lR:[7,6,-90,5]},
+ M:{p:[0,74,0],yaw:16,tw:-20,s:[84,96],hf:10,ikL:{w:[-7,93,25]},
+    aR:[0,30,0,-60],lL:[7,-6,-90,-5],lR:[7,6,-90,5]},
+ B:{p:[0,74,0],yaw:16,tw:-62,s:[84,104],hf:30,ikL:{w:[-7,93,25]},
+    aR:[0,-10,0,-10],lL:[7,-6,-90,-5],lR:[7,6,-90,5]}},
 
 {n:"90/90 with a fold",pos:'seated',cue:"Z-sit: front shin across, back shin behind — fold forward",dur:60,bil:true,cyc:3.4,cam:58,tdur:15,
  setup:"Sit into a Z. Front shin across in front, back shin behind you.",
@@ -227,12 +260,19 @@ function ik(S,T,l1,l2,ref,sign,swivel){
 }
 
 function solve(p){
-  const pelvis=p.p, yawP=p.yaw, yawC=p.yaw+p.tw*0.45, yawN=p.yaw+p.tw;
+  const pelvis=p.p, yawP=p.yaw, tw=p.tw||0;
   const sl=p.sl||0;
-  const chest=add(pelvis,rotY(rotZb(spineDir(p.s[0]),sl),yawP),L.s1);
-  const neck =add(chest, rotY(rotZb(spineDir(p.s[1]),sl),yawC),L.s2);
-  const head =add(neck,  rotY(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawN),L.nh);
-  const axS=rotY([1,0,0],yawN), axH=rotY([1,0,0],yawP);
+  const d1=rotY(rotZb(spineDir(p.s[0]),sl),yawP);
+  const chest=add(pelvis,d1,L.s1);
+  // tw = torso twist about the LOWER-SPINE AXIS, not the world vertical (changed
+  // 2026-10-12). Upright the two coincide, so it is the familiar shoulder yaw; hinged
+  // or on all fours it becomes a true thoracic roll -- one shoulder rises, the other
+  // drops -- which is what bent rotations and thread-the-needle actually do. The
+  // chest->neck segment carries 45% of it, the head, shoulders and FK arms the full angle.
+  const twist=(v,k)=>tw?rotAxis(v,d1,-R(tw*k)):v;
+  const neck =add(chest, twist(rotY(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
+  const head =add(neck,  twist(rotY(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
+  const axS=twist(rotY([1,0,0],yawP),1), axH=rotY([1,0,0],yawP);
   const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
   const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
   const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
@@ -270,8 +310,10 @@ function solve(p){
   let elL,haL,elR,haR;
   // optional arm swivel (swAL/swAR): spins the elbow's bend plane about the
   // shoulder->hand axis, same as the leg swivels — undefined means unchanged
-  if(tL){[elL,haL]=ik(shL,tL,L.up,L.fo,axS,-1,p.swAL);} else {[elL,haL]=fk(shL,p.aL,L.up,L.fo,yawN);}
-  if(tR){[elR,haR]=ik(shR,tR,L.up,L.fo,axS, 1,p.swAR);} else {[elR,haR]=fk(shR,p.aR,L.up,L.fo,yawN);}
+  const fkA=(o,a)=>{const j1=add(o,twist(rotY(dir(a[0],a[1]),yawP),1),L.up);
+    return [j1,add(j1,twist(rotY(dir(a[2],a[3]),yawP),1),L.fo)];};
+  if(tL){[elL,haL]=ik(shL,tL,L.up,L.fo,axS,-1,p.swAL);} else {[elL,haL]=fkA(shL,p.aL);}
+  if(tR){[elR,haR]=ik(shR,tR,L.up,L.fo,axS, 1,p.swAR);} else {[elR,haR]=fkA(shR,p.aR);}
   return Object.assign(J,{elL,haL,elR,haR});
 }
 
@@ -280,6 +322,15 @@ function orbitPose(base,o,ph){
   const p=Object.assign({},base);
   if(o.swivel){ // knees orbit around a fixed hip-to-ankle axis; feet never move
     p.swL=o.amp*Math.sin(ph); p.swR=o.amp*Math.sin(ph);
+    return p;
+  }
+  if(o.leg){ // standing hip CAR: one leg (o.leg 'L'/'R') circles from the hip with the knee
+    // bent ~90 deg (the shin follows the thigh); the other leg keeps base's planted target.
+    // o.fB/o.fA: thigh flex centre/amplitude (90 = forward horizontal, <0 = behind);
+    // o.aB/o.aA: abduction centre/amplitude. Phase 0 = forward, then out, then behind.
+    const f1=o.fB+o.fA*Math.cos(ph), a1=o.aB+o.aA*Math.sin(ph), sg=o.leg==='L'?-1:1;
+    p['l'+o.leg]=[f1,sg*a1,f1-(o.knee==null?90:o.knee),sg*a1*0.35];
+    delete p['ikF'+o.leg];
     return p;
   }
   if(o.hips){ // pelvis traces a circle, feet stay planted via leg IK
@@ -295,18 +346,18 @@ function orbitPose(base,o,ph){
 }
 
 const EXTRA={
-"Bouncing in place":["<strong>Form:</strong> Light, quick bounces on the balls of the feet. Knees soft, shoulders relaxed, arms loose. Let everything jiggle. <strong>Ankle note:</strong> if the right peroneal tendon objects, swap this for heel-to-toe rocks with the feet never leaving the floor.","qi+gong+bouncing+shaking+warmup"],
-"Arm sweeps with knee dip":["<strong>Form:</strong> Both arms sweep forward and up, then back behind you as the knees dip. Continuous and pendulum-like — arms and knees move together. <strong>Targets:</strong> dynamic hip hinge, glutes and hamstrings, chest opening on the forward sweep.","qi+gong+arm+swings+front+back+knee+bend"],
-"Punching rotations":["<strong>Form:</strong> Stand tall, feet a bit wider than the shoulders, knees soft. Rotate from the waist and punch slowly, pushing the shoulder blade forward at the end of each punch","qi+gong+punching+rotation+exercise"],
+"Bouncing in place":["<strong>Form:</strong> Light, quick bounces: the ankles extend, the feet leave the floor by an inch or two, and you land softly through the balls of the feet with the knees soft. Shoulders relaxed, arms loose, let everything jiggle. <strong>Ankle note:</strong> if the right peroneal tendon objects, swap this for heel-to-toe rocks with the feet never leaving the floor.","qi+gong+bouncing+shaking+warmup+heels+lift"],
+"Arm sweeps with knee dip":["<strong>Form:</strong> A big pendulum. At the top the arms are overhead and back, hips and chest pushed forward, the whole body arcing into extension. Then fold: knees dip, head drops toward the floor, and the arms swing through behind the shins to deepen the hamstring stretch. Continuous — arms and knees move together. <strong>Targets:</strong> dynamic hip hinge, glutes and hamstrings, full-body extension on the upswing.","qi+gong+arm+swings+forward+fold+extension+knee+bend"],
+"Punching rotations":["<strong>Form:</strong> Stand tall, feet a bit wider than the shoulders, knees soft. Rotate from the waist and punch slowly across the body until the arm is fully extended, pushing the shoulder blade forward at the end; the other fist pulls back to the ribs. The trunk turns with every punch.","qi+gong+punching+rotation+exercise"],
 "Dynamic lateral reaches":["<strong>Form:</strong> Feet wide, one hand resting on the hip. Reach the other arm straight up and over the top as you bend sideways — a standing crescent, hip to fingertips. Alternate sides in one continuous arc. <strong>Targets:</strong> the lateral fascial line connecting IT band, obliques and lats. Addresses your right-side asymmetry.","dynamic+lateral+reach+side+bend+flow"],
 "Cross-body knee drives":["<strong>Form:</strong> Drive one knee up and across the midline while the opposite elbow pulls down to meet it, then plant both feet before the next drive — plant, drive, plant, drive. Stay tall between reps. <strong>Targets:</strong> hip flexors plus rotational core — obliques and glute medius together, your two biggest IT band protectors.","standing+cross+body+knee+drive+exercise"],
 "Chest opener swings":["<strong>Form:</strong> Arms swing wide open, then cross in front. Alternate which arm crosses on top. <strong>Targets:</strong> opening fires rhomboids and lower trap; closing fires serratus. Both sides of your mid-back equation, in a range that's safe for the right AC joint.","dynamic+chest+opener+arm+swings+exercise"],
-"Hip circles":["<strong>Form:</strong> Hands on hips, feet planted. Push the hips forward, to the side, back and around. Half the time each direction. Make the circles big. <strong>Targets:</strong> hip capsule in every plane, IT band fascial connections, hip flexors.","standing+hip+circles+mobility+exercise"],
-"Bent rotation sweeps":["<strong>Form:</strong> Hinge forward about 45° and rotate side to side, sweeping the arms until they stack into one vertical line — bottom hand pointing at the floor, top hand at the sky. Hips stay facing forward — rotation comes from the spine. <strong>Targets:</strong> thoracic rotation under a gravity load, more effective than the upright version.","bent+over+spinal+rotation+windmill+qi+gong"],
-"Folded cat-cows":["<strong>Form:</strong> Knees bent, hands resting on them. Round the spine on the exhale, arch and open the chest on the inhale. <strong>Training link:</strong> targets T4–T8 extension — where your chronic mid-back pain lives.","standing+folded+cat+cow+spinal+mobility"],
+"Single-leg hip circles":["<strong>Form:</strong> Stand tall on one leg, hands on hips. Lift the other knee to hip height and draw the biggest circle the hip allows: forward, out to the side, behind you, then down and around. Pelvis level, trunk quiet — the hip does the work, not the low back. Switch legs and reverse the direction at the halfway chime. <strong>Ankle note:</strong> the standing leg is on single-leg balance the whole time, so the ankle is working too — keep the foot tripod planted and hold a wall if it wobbles. <strong>Targets:</strong> hip capsule through its full arc (a standing hip CAR), glute medius on the standing side, IT band fascial connections.","standing+single+leg+hip+car+controlled+articular+rotation"],
+"Bent rotation sweeps":["<strong>Form:</strong> Feet wide, hinge forward until the back is near parallel. Rotate the trunk so one hand sweeps down to touch the floor while the other reaches straight up — the arms stack into one vertical line. As the hand lands, the leg on the opposite side straightens and the near knee softens. Sweep through flat and rotate the other way. Slow — one full sweep per breath. <strong>Targets:</strong> thoracic rotation under a gravity load, hamstrings on the straight leg.","bent+over+spinal+rotation+windmill+qi+gong"],
+"Cat-cows":["<strong>Form:</strong> Hands and knees — hands under the shoulders, knees under the hips. Exhale and round the whole spine toward the ceiling, chin tucked. Inhale and let the belly drop, arch and open the chest, eyes forward. Slow and segmental. <strong>Training link:</strong> targets T4–T8 extension — where your chronic mid-back pain lives.","cat+cow+quadruped+spinal+mobility"],
 "Cobra press-ups":["<strong>Form:</strong> Face down, hands under shoulders. Press the chest up, hips stay on the floor. Lower with control. <strong>Shoulder note:</strong> elbows tucked close to the ribs — flaring them loads the right AC joint.","cobra+press+up+mckenzie+extension"],
 "Pedaling down dog":["<strong>Form:</strong> Alternate pressing one heel toward the floor while the other knee bends. Slow and rhythmic. <strong>Ankle note:</strong> gentle calf and Achilles work with no peroneal load — keep the foot tracking straight, not rolling outward.","pedaling+downward+dog+calf+stretch"],
-"Thread the needle":["<strong>Form:</strong> On hands and knees. Reach one arm to the ceiling, then slide it under the opposite armpit and let the shoulder rest toward the floor. Switch at the halfway chime. <strong>Training link:</strong> thoracic rotation plus scapular mobility — your mid-back and right shoulder IR limitation.","thread+the+needle+thoracic+rotation+stretch"],
+"Thread the needle":["<strong>Form:</strong> On hands and knees. Reach one arm straight up to the ceiling, opening the chest toward it, then slide it palm-up under the opposite armpit and let that shoulder rest toward the floor. Switch at the halfway chime. <strong>Training link:</strong> thoracic rotation plus scapular mobility — your mid-back and right shoulder IR limitation.","thread+the+needle+thoracic+rotation+stretch"],
 "90/90 with a fold":["<strong>Form:</strong> Z-sit: front leg's outer thigh and shin flat on the floor, back leg's inner thigh down with the shin pointing straight behind you. Sit tall, then hinge forward over the front shin without rounding","90+90+hip+stretch+with+forward+fold"]};
 MOVES.forEach(m=>{m.long=EXTRA[m.n][0];m.q=EXTRA[m.n][1];});
 
@@ -678,7 +729,7 @@ $('bgm').checked=bgMusic;$('bgm').onchange=()=>setBgMusic($('bgm').checked,'tap'
 // (text -> {f: file, s: seconds, sp: speed}) is inlined by build.py from src/cues.json.
 // A cue with no clip logs loudly and is skipped — it never throws, never blocks the timer.
 // The __onSay seam lets tools/cues.js enumerate every string an app can speak.
-const CUES={"Voice on.":{"f":"audio/6d30ea10314b.mp3","s":0.9,"sp":0.95},"Bouncing in place.":{"f":"audio/06673f74fd2d.mp3","s":1.24,"sp":0.95},"Next: Arm sweeps with knee dip. Stay standing, feet under your hips, arms hanging.":{"f":"audio/0151c52ddbc7.mp3","s":5.03,"sp":0.95},"Arm sweeps with knee dip.":{"f":"audio/42a06042c923.mp3","s":1.51,"sp":0.95},"Next: Punching rotations. Feet wider than your shoulders, knees soft, fists at your ribs.":{"f":"audio/c0a7e3ef93ae.mp3","s":5.7,"sp":0.95},"Punching rotations.":{"f":"audio/d9e7a7e948b9.mp3","s":1.32,"sp":0.95},"Next: Dynamic lateral reaches. Feet wide, one hand on your hip, the other arm ready to reach.":{"f":"audio/8807b09e0b06.mp3","s":6.02,"sp":0.95},"Dynamic lateral reaches.":{"f":"audio/d55e940c0076.mp3","s":1.64,"sp":0.95},"Next: Cross-body knee drives. Feet under your hips, stand tall, elbows up.":{"f":"audio/76a6865aa6e7.mp3","s":4.71,"sp":0.95},"Cross-body knee drives.":{"f":"audio/9da8f8b0d0d9.mp3","s":1.43,"sp":0.95},"Next: Chest opener swings. Stand tall, arms out at shoulder height.":{"f":"audio/01ac7358aac0.mp3","s":4.31,"sp":0.95},"Chest opener swings.":{"f":"audio/a3d1a5c708f4.mp3","s":1.39,"sp":0.95},"Next: Hip circles. Hands on your hips, feet planted.":{"f":"audio/6577f39077e0.mp3","s":3.37,"sp":0.95},"Hip circles.":{"f":"audio/2ad48b2772d7.mp3","s":1.05,"sp":0.95},"Change direction.":{"f":"audio/4d9de03e8e97.mp3","s":1.24,"sp":0.95},"Next: Bent rotation sweeps. Hinge forward halfway, arms hanging loose.":{"f":"audio/4fe60ac36493.mp3","s":4.67,"sp":0.95},"Bent rotation sweeps.":{"f":"audio/5ad34d416785.mp3","s":1.49,"sp":0.95},"Next: Folded cat-cows. Time to get on the ground. Fold down, hands on your bent knees.":{"f":"audio/594ec7e8a164.mp3","s":5.55,"sp":1.0},"Folded cat-cows.":{"f":"audio/cdc0d7451d00.mp3","s":1.34,"sp":0.95},"Next: Cobra press-ups. Lie face down, hands under your shoulders, elbows in.":{"f":"audio/cc7e83a091c5.mp3","s":5.31,"sp":0.95},"Cobra press-ups.":{"f":"audio/666e6d7933e6.mp3","s":1.22,"sp":0.95},"Next: Pedaling down dog. Tuck your toes and press up and back into down dog, hips high.":{"f":"audio/62f0467ec01f.mp3","s":5.48,"sp":0.95},"Pedaling down dog.":{"f":"audio/a82c6f23c1ad.mp3","s":1.3,"sp":0.95},"Next: Thread the needle. Drop your knees and come to hands and knees, wrists under shoulders.":{"f":"audio/48aa593bcc84.mp3","s":5.5,"sp":0.95},"Thread the needle. Start with your right side.":{"f":"audio/daab42e04865.mp3","s":2.43,"sp":0.95},"Switch sides.":{"f":"audio/a61314921c89.mp3","s":1.09,"sp":0.95},"Next: 90 90 with a fold. Sit into a Z. Front shin across in front, back shin behind you.":{"f":"audio/ed6477b55d3e.mp3","s":6.53,"sp":0.95},"90 90 with a fold. Start with your right side.":{"f":"audio/ce07c6d43d05.mp3","s":3.24,"sp":0.95},"Movement complete.":{"f":"audio/5248189a4413.mp3","s":1.24,"sp":0.95},"Seated breathing.":{"f":"audio/a871949b26c7.mp3","s":1.11,"sp":0.95},"Seated cat-cow.":{"f":"audio/ef2e3d468eca.mp3","s":1.22,"sp":0.95},"Seated side reach. Start with your right side.":{"f":"audio/79dbe479e00a.mp3","s":2.71,"sp":0.95},"Seated figure-4. Start with your right side.":{"f":"audio/a9333f96d1b6.mp3","s":2.71,"sp":0.95},"Sit on the floor.":{"f":"audio/8f6162d05cd3.mp3","s":1.15,"sp":0.95},"Supported butterfly.":{"f":"audio/ad4c327d0c01.mp3","s":1.43,"sp":0.95},"Come to kneeling.":{"f":"audio/6e602c988747.mp3","s":1.07,"sp":0.95},"Wide-knee child's pose.":{"f":"audio/b7896688a5a8.mp3","s":1.58,"sp":0.95},"Come to hands and knees.":{"f":"audio/e11b9f95b8dc.mp3","s":1.49,"sp":0.95},"Hands-and-knees rocking.":{"f":"audio/d2ec2109231d.mp3","s":1.49,"sp":0.95},"Kneeling hip flexor stretch. Start with your right side.":{"f":"audio/23d95e98b686.mp3","s":3.18,"sp":0.95},"Stand at the wall.":{"f":"audio/63140c8fbf41.mp3","s":1.11,"sp":0.95},"Standing calf stretch. Start with your right side.":{"f":"audio/18ca5fb5246d.mp3","s":2.75,"sp":0.95},"Stand in the doorway.":{"f":"audio/10ff5555b1d0.mp3","s":1.32,"sp":0.95},"Doorway chest opener. Start with your right side.":{"f":"audio/3a44b7b8828e.mp3","s":2.88,"sp":0.95},"Breath and pelvic floor release.":{"f":"audio/3f3b67aa5467.mp3","s":1.88,"sp":0.95},"Hands-and-knees pelvic rocking.":{"f":"audio/221df026817a.mp3","s":1.88,"sp":0.95},"Sit on your ball.":{"f":"audio/fb344c820859.mp3","s":1.07,"sp":0.95},"Birth ball hip circles.":{"f":"audio/58b00879cdaf.mp3","s":1.51,"sp":0.95},"Stand up and hold your chair.":{"f":"audio/297cf66cb1b6.mp3","s":1.6,"sp":0.95},"Supported deep squat.":{"f":"audio/7778a0360337.mp3","s":1.43,"sp":0.95},"Lie on your side.":{"f":"audio/5bd48e51205a.mp3","s":1.22,"sp":0.95},"Side-lying clamshells. Start with your right side.":{"f":"audio/92b616f8774e.mp3","s":3.03,"sp":0.95},"Windshield wipers.":{"f":"audio/9648d0e13b65.mp3","s":1.34,"sp":0.95},"Supported butterfly with rock.":{"f":"audio/5db3bc73eb65.mp3","s":1.88,"sp":0.95},"Kneeling lunge with support. Start with your right side.":{"f":"audio/46249e3401b3.mp3","s":3.14,"sp":0.95},"Standing wall pelvic tilts.":{"f":"audio/d36c04733923.mp3","s":1.75,"sp":0.95},"Sit on your chair.":{"f":"audio/676354cd6369.mp3","s":1.09,"sp":0.95},"Pelvic floor coordination.":{"f":"audio/2e46821e49ad.mp3","s":1.71,"sp":0.95},"Lie on your left side.":{"f":"audio/d29ec34f224d.mp3","s":1.41,"sp":0.95},"Left side-lying rest.":{"f":"audio/5802d084dcf2.mp3","s":1.51,"sp":0.95},"Deep squats.":{"f":"audio/243d31bc929e.mp3","s":1.07,"sp":0.95},"Next: Reverse lunges. Stay standing, feet under your hips. You'll step back one leg at a time.":{"f":"audio/1d6064a9a2dc.mp3","s":6.02,"sp":0.95},"Reverse lunges. Start with your right side.":{"f":"audio/a60897514786.mp3","s":2.6,"sp":0.95},"Next: Dead bug. Lie on your back. Knees up over your hips, shins level, arms to the ceiling.":{"f":"audio/6a3cbab88c9d.mp3","s":5.76,"sp":0.95},"Dead bug. Start with your right side.":{"f":"audio/b384419c0225.mp3","s":2.13,"sp":0.95},"Next: Glute bridge. Stay on your back. Feet flat on the floor, hip width, heels close to your hands.":{"f":"audio/4b2b321f028e.mp3","s":6.04,"sp":1.0},"Glute bridge.":{"f":"audio/b15a6ca3d822.mp3","s":1.05,"sp":0.95},"Next: Side-lying clamshell. Roll onto your side. Knees bent, heels together, head resting on your lower arm.":{"f":"audio/cf3011997f0e.mp3","s":6.87,"sp":1.0},"Side-lying clamshell. Start with your right side.":{"f":"audio/4c82518112fb.mp3","s":2.94,"sp":0.95},"Next: Bird dog. Come to hands and knees. Hands under shoulders, knees under hips, back flat.":{"f":"audio/563af8c8020e.mp3","s":6.02,"sp":0.95},"Bird dog. Start with your right side.":{"f":"audio/725f3748e22d.mp3","s":2.28,"sp":0.95},"Next: Prone Y T W raise. Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.":{"f":"audio/14b2d05498b8.mp3","s":7.64,"sp":0.95},"Prone Y T W raise.":{"f":"audio/9ea0078914e3.mp3","s":1.73,"sp":0.95},"Next: Side plank. Roll onto your side. Prop up on your forearm, elbow under your shoulder, feet stacked.":{"f":"audio/28d9f4b70ee0.mp3","s":6.27,"sp":1.0},"Side plank. Start with your right side.":{"f":"audio/1c8d2bd6ae0b.mp3","s":2.33,"sp":0.95},"Next: Plank hold. Turn over into a plank. Elbows or hands under your shoulders, one straight line.":{"f":"audio/9283952f9d44.mp3","s":6.19,"sp":0.95},"Plank hold.":{"f":"audio/3fc10e67ebb8.mp3","s":0.96,"sp":0.95},"Next: Dumbbell bent-over row. Stand up and grab your dumbbells. Soft knees, hinge your chest toward the floor, back flat.":{"f":"audio/1309eb07d012.mp3","s":7.83,"sp":0.95},"Dumbbell bent-over row.":{"f":"audio/3ad3a26b4198.mp3","s":1.47,"sp":0.95},"Next: Bench dips. Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.":{"f":"audio/009f8d4dca4e.mp3","s":6.85,"sp":0.95},"Bench dips.":{"f":"audio/3300989ddb77.mp3","s":1.0,"sp":0.95},"Next: Dumbbell farmer hold. Pick up your dumbbells. Stand tall, shoulders packed down and back.":{"f":"audio/72281b1554c5.mp3","s":5.95,"sp":0.95},"Dumbbell farmer hold.":{"f":"audio/36e57bc9e64a.mp3","s":1.37,"sp":0.95},"Next: Standing posture reset. Set the dumbbells down. Stand tall, feet hip width, arms easy at your sides.":{"f":"audio/32950181ffc6.mp3","s":7.27,"sp":0.95},"Standing posture reset.":{"f":"audio/64b0ee6e3e03.mp3","s":1.56,"sp":0.95},"Lateral band walks. Start with your right side.":{"f":"audio/256b722f95d1.mp3","s":2.86,"sp":0.95},"Clam shells. Start with your right side.":{"f":"audio/2a8d42907825.mp3","s":2.35,"sp":0.95},"Single-leg glute bridge. Start with your right side.":{"f":"audio/6c9d7dd20f21.mp3","s":3.07,"sp":0.95},"Standing hip hike. Start with your right side.":{"f":"audio/7c40131daee2.mp3","s":2.65,"sp":0.95},"Leg swings. Start with your right side.":{"f":"audio/c222d1e8004a.mp3","s":2.3,"sp":0.95},"Hip activation complete. You're ready to run.":{"f":"audio/84b10cb22e21.mp3","s":2.75,"sp":0.95}};
+const CUES={"Voice on.":{"f":"audio/6d30ea10314b.mp3","s":0.9,"sp":0.95},"Bouncing in place.":{"f":"audio/06673f74fd2d.mp3","s":1.24,"sp":0.95},"Next: Arm sweeps with knee dip. Stay standing, feet under your hips, arms hanging.":{"f":"audio/0151c52ddbc7.mp3","s":5.03,"sp":0.95},"Arm sweeps with knee dip.":{"f":"audio/42a06042c923.mp3","s":1.51,"sp":0.95},"Next: Punching rotations. Feet wider than your shoulders, knees soft, fists at your ribs.":{"f":"audio/c0a7e3ef93ae.mp3","s":5.7,"sp":0.95},"Punching rotations.":{"f":"audio/d9e7a7e948b9.mp3","s":1.32,"sp":0.95},"Next: Dynamic lateral reaches. Feet wide, one hand on your hip, the other arm ready to reach.":{"f":"audio/8807b09e0b06.mp3","s":6.02,"sp":0.95},"Dynamic lateral reaches.":{"f":"audio/d55e940c0076.mp3","s":1.64,"sp":0.95},"Next: Cross-body knee drives. Feet under your hips, stand tall, elbows up.":{"f":"audio/76a6865aa6e7.mp3","s":4.71,"sp":0.95},"Cross-body knee drives.":{"f":"audio/9da8f8b0d0d9.mp3","s":1.43,"sp":0.95},"Next: Chest opener swings. Stand tall, arms out at shoulder height.":{"f":"audio/01ac7358aac0.mp3","s":4.31,"sp":0.95},"Chest opener swings.":{"f":"audio/a3d1a5c708f4.mp3","s":1.39,"sp":0.95},"Next: Single-leg hip circles. Hands on your hips. Stand on your left leg, right knee ready to lift.":{"f":"audio/fe86d7de6cca.mp3","s":5.95,"sp":1.0},"Single-leg hip circles. Start with your right side.":{"f":"audio/b6f7388e7c01.mp3","s":3.01,"sp":0.95},"Switch sides.":{"f":"audio/a61314921c89.mp3","s":1.09,"sp":0.95},"Next: Bent rotation sweeps. Feet wide, hinge forward, arms hanging loose.":{"f":"audio/b5a22d1406c1.mp3","s":4.97,"sp":0.95},"Bent rotation sweeps.":{"f":"audio/5ad34d416785.mp3","s":1.49,"sp":0.95},"Next: Cat-cows. Time to get on the ground. Hands and knees, wrists under your shoulders.":{"f":"audio/b5a84bbf66c2.mp3","s":5.33,"sp":1.0},"Cat-cows.":{"f":"audio/3313ad725fc9.mp3","s":1.0,"sp":0.95},"Next: Cobra press-ups. Lie face down, hands under your shoulders, elbows in.":{"f":"audio/cc7e83a091c5.mp3","s":5.31,"sp":0.95},"Cobra press-ups.":{"f":"audio/666e6d7933e6.mp3","s":1.22,"sp":0.95},"Next: Pedaling down dog. Tuck your toes and press up and back into down dog, hips high.":{"f":"audio/62f0467ec01f.mp3","s":5.48,"sp":0.95},"Pedaling down dog.":{"f":"audio/a82c6f23c1ad.mp3","s":1.3,"sp":0.95},"Next: Thread the needle. Drop your knees and come to hands and knees, wrists under shoulders.":{"f":"audio/48aa593bcc84.mp3","s":5.5,"sp":0.95},"Thread the needle. Start with your right side.":{"f":"audio/daab42e04865.mp3","s":2.43,"sp":0.95},"Next: 90 90 with a fold. Sit into a Z. Front shin across in front, back shin behind you.":{"f":"audio/ed6477b55d3e.mp3","s":6.53,"sp":0.95},"90 90 with a fold. Start with your right side.":{"f":"audio/ce07c6d43d05.mp3","s":3.24,"sp":0.95},"Movement complete.":{"f":"audio/5248189a4413.mp3","s":1.24,"sp":0.95},"Seated breathing.":{"f":"audio/a871949b26c7.mp3","s":1.11,"sp":0.95},"Seated cat-cow.":{"f":"audio/ef2e3d468eca.mp3","s":1.22,"sp":0.95},"Seated side reach. Start with your right side.":{"f":"audio/79dbe479e00a.mp3","s":2.71,"sp":0.95},"Seated figure-4. Start with your right side.":{"f":"audio/a9333f96d1b6.mp3","s":2.71,"sp":0.95},"Sit on the floor.":{"f":"audio/8f6162d05cd3.mp3","s":1.15,"sp":0.95},"Supported butterfly.":{"f":"audio/ad4c327d0c01.mp3","s":1.43,"sp":0.95},"Come to kneeling.":{"f":"audio/6e602c988747.mp3","s":1.07,"sp":0.95},"Wide-knee child's pose.":{"f":"audio/b7896688a5a8.mp3","s":1.58,"sp":0.95},"Come to hands and knees.":{"f":"audio/e11b9f95b8dc.mp3","s":1.49,"sp":0.95},"Hands-and-knees rocking.":{"f":"audio/d2ec2109231d.mp3","s":1.49,"sp":0.95},"Kneeling hip flexor stretch. Start with your right side.":{"f":"audio/23d95e98b686.mp3","s":3.18,"sp":0.95},"Stand at the wall.":{"f":"audio/63140c8fbf41.mp3","s":1.11,"sp":0.95},"Standing calf stretch. Start with your right side.":{"f":"audio/18ca5fb5246d.mp3","s":2.75,"sp":0.95},"Stand in the doorway.":{"f":"audio/10ff5555b1d0.mp3","s":1.32,"sp":0.95},"Doorway chest opener. Start with your right side.":{"f":"audio/3a44b7b8828e.mp3","s":2.88,"sp":0.95},"Breath and pelvic floor release.":{"f":"audio/3f3b67aa5467.mp3","s":1.88,"sp":0.95},"Hands-and-knees pelvic rocking.":{"f":"audio/221df026817a.mp3","s":1.88,"sp":0.95},"Sit on your ball.":{"f":"audio/fb344c820859.mp3","s":1.07,"sp":0.95},"Birth ball hip circles.":{"f":"audio/58b00879cdaf.mp3","s":1.51,"sp":0.95},"Change direction.":{"f":"audio/4d9de03e8e97.mp3","s":1.24,"sp":0.95},"Stand up and hold your chair.":{"f":"audio/297cf66cb1b6.mp3","s":1.6,"sp":0.95},"Supported deep squat.":{"f":"audio/7778a0360337.mp3","s":1.43,"sp":0.95},"Lie on your side.":{"f":"audio/5bd48e51205a.mp3","s":1.22,"sp":0.95},"Side-lying clamshells. Start with your right side.":{"f":"audio/92b616f8774e.mp3","s":3.03,"sp":0.95},"Windshield wipers.":{"f":"audio/9648d0e13b65.mp3","s":1.34,"sp":0.95},"Supported butterfly with rock.":{"f":"audio/5db3bc73eb65.mp3","s":1.88,"sp":0.95},"Kneeling lunge with support. Start with your right side.":{"f":"audio/46249e3401b3.mp3","s":3.14,"sp":0.95},"Standing wall pelvic tilts.":{"f":"audio/d36c04733923.mp3","s":1.75,"sp":0.95},"Sit on your chair.":{"f":"audio/676354cd6369.mp3","s":1.09,"sp":0.95},"Pelvic floor coordination.":{"f":"audio/2e46821e49ad.mp3","s":1.71,"sp":0.95},"Lie on your left side.":{"f":"audio/d29ec34f224d.mp3","s":1.41,"sp":0.95},"Left side-lying rest.":{"f":"audio/5802d084dcf2.mp3","s":1.51,"sp":0.95},"Deep squats.":{"f":"audio/243d31bc929e.mp3","s":1.07,"sp":0.95},"Next: Reverse lunges. Stay standing, feet under your hips. You'll step back one leg at a time.":{"f":"audio/1d6064a9a2dc.mp3","s":6.02,"sp":0.95},"Reverse lunges. Start with your right side.":{"f":"audio/a60897514786.mp3","s":2.6,"sp":0.95},"Next: Dead bug. Lie on your back. Knees up over your hips, shins level, arms to the ceiling.":{"f":"audio/6a3cbab88c9d.mp3","s":5.76,"sp":0.95},"Dead bug. Start with your right side.":{"f":"audio/b384419c0225.mp3","s":2.13,"sp":0.95},"Next: Glute bridge. Stay on your back. Feet flat on the floor, hip width, heels close to your hands.":{"f":"audio/4b2b321f028e.mp3","s":6.04,"sp":1.0},"Glute bridge.":{"f":"audio/b15a6ca3d822.mp3","s":1.05,"sp":0.95},"Next: Side-lying clamshell. Roll onto your side. Knees bent, heels together, head resting on your lower arm.":{"f":"audio/cf3011997f0e.mp3","s":6.87,"sp":1.0},"Side-lying clamshell. Start with your right side.":{"f":"audio/4c82518112fb.mp3","s":2.94,"sp":0.95},"Next: Bird dog. Come to hands and knees. Hands under shoulders, knees under hips, back flat.":{"f":"audio/563af8c8020e.mp3","s":6.02,"sp":0.95},"Bird dog. Start with your right side.":{"f":"audio/725f3748e22d.mp3","s":2.28,"sp":0.95},"Next: Prone Y T W raise. Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.":{"f":"audio/14b2d05498b8.mp3","s":7.64,"sp":0.95},"Prone Y T W raise.":{"f":"audio/9ea0078914e3.mp3","s":1.73,"sp":0.95},"Next: Side plank. Roll onto your side. Prop up on your forearm, elbow under your shoulder, feet stacked.":{"f":"audio/28d9f4b70ee0.mp3","s":6.27,"sp":1.0},"Side plank. Start with your right side.":{"f":"audio/1c8d2bd6ae0b.mp3","s":2.33,"sp":0.95},"Next: Plank hold. Turn over into a plank. Elbows or hands under your shoulders, one straight line.":{"f":"audio/9283952f9d44.mp3","s":6.19,"sp":0.95},"Plank hold.":{"f":"audio/3fc10e67ebb8.mp3","s":0.96,"sp":0.95},"Next: Dumbbell bent-over row. Stand up and grab your dumbbells. Soft knees, hinge your chest toward the floor, back flat.":{"f":"audio/1309eb07d012.mp3","s":7.83,"sp":0.95},"Dumbbell bent-over row.":{"f":"audio/3ad3a26b4198.mp3","s":1.47,"sp":0.95},"Next: Bench dips. Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.":{"f":"audio/009f8d4dca4e.mp3","s":6.85,"sp":0.95},"Bench dips.":{"f":"audio/3300989ddb77.mp3","s":1.0,"sp":0.95},"Next: Dumbbell farmer hold. Pick up your dumbbells. Stand tall, shoulders packed down and back.":{"f":"audio/72281b1554c5.mp3","s":5.95,"sp":0.95},"Dumbbell farmer hold.":{"f":"audio/36e57bc9e64a.mp3","s":1.37,"sp":0.95},"Next: Standing posture reset. Set the dumbbells down. Stand tall, feet hip width, arms easy at your sides.":{"f":"audio/32950181ffc6.mp3","s":7.27,"sp":0.95},"Standing posture reset.":{"f":"audio/64b0ee6e3e03.mp3","s":1.56,"sp":0.95},"Lateral band walks. Start with your right side.":{"f":"audio/256b722f95d1.mp3","s":2.86,"sp":0.95},"Clam shells. Start with your right side.":{"f":"audio/2a8d42907825.mp3","s":2.35,"sp":0.95},"Single-leg glute bridge. Start with your right side.":{"f":"audio/6c9d7dd20f21.mp3","s":3.07,"sp":0.95},"Standing hip hike. Start with your right side.":{"f":"audio/7c40131daee2.mp3","s":2.65,"sp":0.95},"Leg swings. Start with your right side.":{"f":"audio/c222d1e8004a.mp3","s":2.3,"sp":0.95},"Hip activation complete. You're ready to run.":{"f":"audio/84b10cb22e21.mp3","s":2.75,"sp":0.95}};
 const CUE_GAIN=1.0;
 const cueBytes={},cueBufs={};let cueEndAt=0,cueN=0;
 function cueFetch(t){const e=CUES[t];if(!e)return Promise.reject(new Error('no clip'));
@@ -693,8 +744,11 @@ function cueDecode(t){if(cueBufs[t])return Promise.resolve(cueBufs[t]);
 // but not aloud: "90/90" -> "90 90" (else "ninety SLASH ninety"), "Y-T-W" -> "Y T W" (else one
 // run-together word). Display text is untouched — this only shapes the spoken string.
 const spokenName=n=>n.replace(/(\d)\/(\d)/g,'$1 $2').replace(/\b([A-Z])-([A-Z])-([A-Z])\b/g,'$1 $2 $3');
-const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+spokenName(g.m.n)+'. '+g.m.setup:posCue(g.m)):(spokenName(g.m.n)+(g.m.bil&&!g.m.orb?'. Start with your right side.':'.'));
-function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(m.orb?'Change direction.':'Switch sides.');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
+// a bilateral orbit of the hips or knees only reverses at halfway ("Change direction.");
+// a single-leg orbit (orb.leg) swaps legs too, so it is cued and badged like any sided move
+const dirOnly=m=>!!(m.orb&&!m.orb.leg);
+const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+spokenName(g.m.n)+'. '+g.m.setup:posCue(g.m)):(spokenName(g.m.n)+(g.m.bil&&!dirOnly(g.m)?'. Start with your right side.':'.'));
+function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(dirOnly(m)?'Change direction.':'Switch sides.');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
 function cuePrefetch(){cueTexts().forEach(t=>{if(!CUES[t]){vlog('NO CLIP for "'+t+'"');return;}cueFetch(t).catch(e=>vlog('prefetch failed "'+t+'": '+e.message));});}
 function cueDecodeAll(){cueTexts().forEach(t=>{if(CUES[t])cueDecode(t).catch(()=>{});});}
 function cueStats(){const ts=cueTexts();return ts.length+' texts, '+ts.filter(t=>CUES[t]).length+' with clips, '+ts.filter(t=>cueBytes[t]).length+' fetched, '+ts.filter(t=>cueBufs[t]).length+' decoded';}
@@ -774,7 +828,7 @@ function paint(){
   $('cue').innerHTML=m.long;
   $('count').textContent=(g.mi+1)+'/'+MOVES.length;
   $('badge').classList.toggle('visible',!g.trans&&!!m.bil);
-  $('badge').textContent=m.orb?'REVERSES · CHANGE DIRECTION AT HALFWAY':'BOTH SIDES · SWITCH AT HALFWAY';
+  $('badge').textContent=dirOnly(m)?'REVERSES · CHANGE DIRECTION AT HALFWAY':'BOTH SIDES · SWITCH AT HALFWAY';
   $('vid').href='https://www.youtube.com/results?search_query='+m.q;
   $('bPrev').disabled=!g.trans&&g.mi<=0; $('bNext').disabled=!g.trans&&g.mi>=MOVES.length-1;
   if(TR_ALL)document.querySelector('.wrap').classList.toggle('state-trans',!!g.trans);
@@ -812,7 +866,7 @@ function sync(){
   if(rem!==timeLeft){
     timeLeft=rem; clock();
     const g=SEGS[idx], m=g.m;
-    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(m.orb?'Change direction.':'Switch sides.');}
+    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(dirOnly(m)?'Change direction.':'Switch sides.');}
     // 3s warning: TR_ALL gaps get a distinct 3-2-1 triple tick so the start of work
     // is unambiguous; work segments (and legacy gaps) keep the single soft tick
     if(TR_ALL&&g.trans){if(timeLeft<=3&&timeLeft>=1)chime(520,.07,.18);}

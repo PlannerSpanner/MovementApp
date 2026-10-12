@@ -22,6 +22,23 @@ const RETIRED=[
  B:{p:[7,66,0],yaw:-18,tw:0,s:[4,10],hf:12,aL:[64,-30,70,-20],aR:[74,52,80,64],
     ikFL:[-14,93,1],ikFR:[14,93,1]}},
 
+// ---- from Morning Flow, replaced 2026-10-12 (Will's pose corrections): Hip circles
+// ---- became the single-leg hip CAR, Folded cat-cows became the quadruped Cat-cows ----
+{n:"Hip circles",pos:'standing',cue:"Hands on hips, big slow circles",dur:60,bil:true,cyc:2.6,
+ setup:"Hands on your hips, feet planted.",
+ orb:{hips:true,rx:9,rz:8,ry:2},
+ A:{p:[0,60,0],yaw:20,tw:0,s:[4,4],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-8,93,1],ikFR:[8,93,1]},
+ B:{p:[0,60,0],yaw:20,tw:0,s:[4,4],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-8,93,1],ikFR:[8,93,1]}},
+
+{n:"Folded cat-cows",pos:'standing',cue:"Hands on bent knees, round then arch the spine",dur:30,bil:false,cyc:3.4,pin:"LR",tdur:5,
+ setup:"Time to get on the ground. Fold down, hands on your bent knees.",
+ A:{p:[0,64,0],yaw:22,tw:0,s:[74,86],hf:28,ikL:{k:"knL"},ikR:{k:"knR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[40,-6,-40,-5],lR:[40,6,-40,5]},
+ B:{p:[0,64,0],yaw:22,tw:0,s:[72,70],hf:-26,ikL:{k:"knL"},ikR:{k:"knR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[40,-6,-40,-5],lR:[40,6,-40,5]}},
+
 // ---- from Morning Movement (data2.js) — the app itself is retired; these five were
 // ---- not redistributed to Flow or Daily 13 ----
 {n:"Parallel squats",pos:'standing',cue:"Stop at thighs parallel, chest up",dur:30,bil:false,cyc:2.4,pin:"LR",
@@ -69,6 +86,8 @@ const RETIRED=[
 
 // cue text + demo search terms, same [long, q] schema as the x_*.js EXTRA maps
 const RETIRED_EXTRA={
+"Hip circles":["<strong>Form:</strong> Hands on hips, feet planted. Push the hips forward, to the side, back and around. Half the time each direction. Make the circles big. <strong>Targets:</strong> hip capsule in every plane, IT band fascial connections, hip flexors.","standing+hip+circles+mobility+exercise"],
+"Folded cat-cows":["<strong>Form:</strong> Knees bent, hands resting on them. Round the spine on the exhale, arch and open the chest on the inhale. <strong>Training link:</strong> targets T4–T8 extension — where your chronic mid-back pain lives.","standing+folded+cat+cow+spinal+mobility"],
 "Rotations with shoulder slaps":["<strong>Form:</strong> Rotate the upper body side to side, arms completely loose. At each end of the twist the front hand folds up and slaps the opposite shoulder while the back hand wraps behind and taps the opposite low back. Drive from the waist, not the arms. <strong>Targets:</strong> T4–T8 rotation, where your chronic mid-back pain lives.","qi+gong+twisting+body+slapping+shoulders"],
 "Lateral weight shifts":["<strong>Form:</strong> Wide stance, shift fully into one hip and sink. Press through the <em>outside</em> edge of the planted foot. Arms sweep across in the direction of travel. <strong>Targets:</strong> pressing the outside edge is active eversion — dynamic peroneal work, plus glute medius loading. Zero impact.","standing+lateral+weight+shift+exercise+hip"],
 "Parallel squats":["<strong>Form:</strong> Same pattern, but stop when the thighs reach parallel. Chest stays prouder than the deep squat; knees track over the second toe and the heels never lift","parallel+squat+form+bodyweight"],

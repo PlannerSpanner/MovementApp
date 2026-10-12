@@ -78,21 +78,28 @@ shoulder slaps, Lateral weight shifts.
 
 ## 1. Bouncing in place — 50s, ~1s cycle
 - **Setup:** feet hip-width, knees soft, arms hanging loose.
-- **Execution:** light quick bounces driven from the ankles on the balls of the feet;
-  everything above stays relaxed and jiggles.
-- **Anchors:** heels kiss or barely leave the floor; knees never lock; shoulders stay down.
-- **Faults:** turning it into jumping (impact — peroneal risk); gripping the jaw/shoulders.
-  Fallback: heel-to-toe rocks, feet never leaving the floor.
-- **Figure:** small vertical oscillation, feet under hips, no horizontal foot travel.
+- **Execution:** light quick bounces driven from the ankles: the ankles extend, the feet
+  leave the floor by an inch or two, and you land softly through the balls of the feet
+  into a soft-knee dip; everything above stays relaxed and jiggles (updated 2026-10-12 —
+  the feet DO leave the floor; it is a bounce, not a heel pulse).
+- **Anchors:** low flight, soft landing, knees never lock; shoulders stay down.
+- **Faults:** turning it into jumping high (impact — peroneal risk); landing flat-footed;
+  gripping the jaw/shoulders. Fallback: heel-to-toe rocks, feet never leaving the floor.
+- **Figure:** A airborne (toes pointing down, feet just off the floor) → M landed tall →
+  B soft-knee dip → back up; small vertical oscillation, no horizontal foot travel.
 
 ## 2. Arm sweeps with knee dip — 50s, 2s cycle, symmetric
 - **Setup:** feet hip-width.
-- **Execution:** both arms sweep forward/up as the knees straighten, then swing down and
-  behind as the knees dip — one pendulum, arms and knees phase-locked.
-- **Anchors:** slight hip hinge on the downswing; arms reach roughly head height in front;
+- **Execution:** a LARGE pendulum (updated 2026-10-12). Top: arms overhead and back, hips
+  and chest pushed forward, the whole body arcing into extension, head and arms back.
+  Bottom: fold — knees dip, the head drops toward the floor, and the arms swing through
+  behind the shins to deepen the hamstring stretch. Arms and knees phase-locked.
+- **Anchors:** full range at both ends; the fold is a hinge with a knee dip, not a squat;
   continuous, no pause at either end.
-- **Faults:** arms and knees out of phase; squatting instead of dipping.
-- **Figure:** synchronized arm arc and knee bend; heels planted.
+- **Faults:** a timid half-range swing; arms and knees out of phase; squatting instead of
+  folding.
+- **Figure:** A = overhead/back extension arc; B = full fold, head low, hands behind the
+  shins; the midpoint is a flat-back hinge with the arms horizontal; heels planted.
 
 ## 3. Punching rotations — 50s, 1.6s cycle, unilateral (switch)
 - **Setup:** wide horse stance — feet well outside shoulders, toes slightly out, knees bent
@@ -103,7 +110,9 @@ shoulder slaps, Lateral weight shifts.
   of the movement, not the fist.
 - **Faults:** rising out of the stance; fast ballistic punches; shoulder shrug instead of
   protraction.
-- **Figure:** wide low stance held constant; one arm extending with trunk rotation.
+- **Figure:** wide low stance held constant, seen from the FRONT (yaw −40) so both punches
+  cross the screen; each punch extends fully across the body while the other fist pulls
+  back to the ribs; the shoulder line swings ±50° (tw) on every punch (updated 2026-10-12).
 
 ## 4. Dynamic lateral reaches — 50s, 2.2s cycle, unilateral (switch)
 - **Setup:** feet wide, both planted.
@@ -133,34 +142,50 @@ shoulder slaps, Lateral weight shifts.
 - **Faults:** ballistic fling at end range; arms drifting down to waist height.
 - **Figure:** horizontal arm swings, torso upright, feet planted.
 
-## 7. Hip circles — 60s, 2.6s cycle, orbital (direction change)
-- **Setup:** hands on hips, feet planted hip-to-shoulder width, knees soft.
-- **Execution:** push the hips forward → side → back → around in the biggest smooth circle
-  available; half the time each direction, reversing at the halfway chime.
-- **Anchors:** feet never move; head stays roughly centered (the pelvis orbits under a
-  quiet upper body); even circle — no flat spots.
-- **Faults:** knees doing the circling; weight coming off a foot; tiny timid circles.
-- **Figure:** pelvis translating around a circle while feet stay pinned; mirrored (reversed)
-  after halfway.
+## 7. Single-leg hip circles — 60s, 2.6s cycle, unilateral (switch legs AND reverse at halfway)
+Replaced the two-footed standing Hip circles on 2026-10-12 (old pose archived in
+`src/d_retired.js`). This is a standing hip CAR (controlled articular rotation).
+- **Setup:** stand tall on one leg, hands on hips; the other knee lifts to hip height.
+- **Execution:** the lifted thigh draws the biggest circle the hip allows — forward, out to
+  the side, behind, down and around — knee bent about 90° the whole way (the heel rises
+  toward the glute as the hip extends). Start on the right leg; at the halfway chime switch
+  legs and reverse the direction.
+- **Anchors:** pelvis level and trunk quiet — motion isolated to the hip, not the low back;
+  standing leg straight and stable; the standing ankle is on single-leg balance for the
+  whole set (ankle-stability demand — foot tripod planted, hold a wall if it wobbles).
+- **Faults:** trunk leaning away to fake range; hiking the pelvis; the standing knee
+  collapsing inward; rushing the arc.
+- **Figure:** standing leg planted and straight, lifted knee at hip height tracing a full
+  orbit (`orb.leg`); the halfway mirror swaps legs and reverses the circle.
 
-## 8. Bent rotation sweeps — 50s, 2s cycle, alternating
-- **Setup:** hinge forward about 45°, spine long, arms hanging.
-- **Execution:** rotate the trunk side to side under gravity; the loose arms wrap around the
-  body at each end.
-- **Anchors:** hips keep facing forward — rotation is thoracic; hinge angle constant;
-  neutral (not rounded) spine under the load.
-- **Faults:** standing up mid-set; lumbar rotation/hip swivel; actively swinging arms.
-- **Figure:** hinged torso with rotation, arms trailing; feet planted.
+## 8. Bent rotation sweeps — 50s, 4s cycle, alternating (windmill)
+- **Setup:** feet wide, hinge forward until the back is near parallel, spine long, arms
+  hanging (updated 2026-10-12 — pace halved from 2s).
+- **Execution:** rotate the trunk so one hand sweeps down to touch the floor while the other
+  reaches straight up — the arms stack into one vertical line. As the hand lands, the leg
+  on the OPPOSITE side straightens and the near knee softens (the hips shift over the bent
+  knee). Sweep back through flat and rotate the other way.
+- **Anchors:** hips keep facing forward — the rotation is thoracic; hinge depth constant;
+  neutral (not rounded) spine under the load; one full sweep per breath.
+- **Faults:** standing up mid-set; lumbar rotation/hip swivel; stacking the arms without
+  the bottom hand reaching the floor.
+- **Figure:** hinged torso ROLLING about its own axis (tw), bottom hand on the floor, top
+  arm vertical, opposite leg straight; the midpoint is a flat-back T; feet planted.
 
-## 9. Folded cat-cows — 30s, 3.4s cycle, symmetric, feet pinned — 5s "get on the ground" gap before
-- **Setup:** knees bent, hands resting on the knees, weight through the arms. Entered via
-  the explicit 5s authored gap ("Time to get on the ground. Fold down, hands on your bent
-  knees.") — the doorway into the ground block.
-- **Execution:** exhale — round the whole spine toward the ceiling; inhale — arch and open
-  the chest.
-- **Anchors:** emphasis on **T4–T8 extension** on the arch; move segmentally, slow.
-- **Faults:** hinging only at the low back; elbows locking the movement out.
-- **Figure:** alternating spinal round/arch while hands stay on knees, feet planted.
+## 9. Cat-cows — 30s, 3.4s cycle, symmetric, quadruped — 5s "get on the ground" gap before
+Replaced the standing Folded cat-cows on 2026-10-12 (old pose archived in
+`src/d_retired.js`).
+- **Setup:** hands and knees — hands under the shoulders, knees under the hips, feet
+  trailing. Entered via the explicit 5s authored gap ("Time to get on the ground. Hands
+  and knees, wrists under your shoulders.") — the doorway into the ground block.
+- **Execution:** exhale — round the whole spine toward the ceiling, chin tucked; inhale —
+  let the belly drop, arch and open the chest, eyes forward.
+- **Anchors:** emphasis on **T4–T8 extension** on the arch; move segmentally, slow; weight
+  even through hands and knees.
+- **Faults:** hinging only at the low back; elbows locking the movement out; sitting back
+  toward the heels.
+- **Figure:** quadruped base fixed (hands planted, shins trailing), spine rounding with the
+  head tucked, then dipping with the head up.
 
 ## 10. Cobra press-ups — 60s, 3.2s cycle, symmetric (McKenzie extension)
 - **Setup:** face down, hands under the shoulders, legs relaxed.
@@ -180,7 +205,7 @@ shoulder slaps, Lateral weight shifts.
 - **Faults:** bouncing the heel; rolling the pedaling foot outward; sagging shoulders.
 - **Figure:** high-hip V with alternating heel drop (small foot travel expected in QA).
 
-## 12. Thread the needle — 60s, 3.6s cycle, unilateral (switch), knees pinned
+## 12. Thread the needle — 60s, 3.6s cycle, unilateral (switch)
 - **Setup:** quadruped — wrists under shoulders, knees under hips.
 - **Execution:** reach one arm to the ceiling opening the chest, then slide it palm-up under
   the opposite armpit until the shoulder and ear rest toward the floor; re-thread; switch at
@@ -188,7 +213,12 @@ shoulder slaps, Lateral weight shifts.
 - **Anchors:** hips stay stacked over the knees (no sitting back); rotation is thoracic plus
   scapular; targets the right-shoulder IR limitation gently.
 - **Faults:** hips swinging sideways; collapsing onto the head instead of the shoulder.
-- **Figure:** quadruped base fixed while one arm sweeps from ceiling-reach to threaded-under.
+- **Figure:** quadruped base fixed (standard frame: hands under shoulders, shins trailing
+  behind the knees) while the trunk ROLLS about its own axis (tw ±~60): reach = the top
+  shoulder up and the arm straight at the ceiling; thread = that shoulder dropped toward
+  the floor, the arm under the chest past the planted hand. The elbow folds on the way
+  under (a straight arm hanging from a quadruped shoulder would pass through the floor).
+  Rebuilt 2026-10-12.
 
 ## 13. 90/90 with a fold — 60s, 3.4s cycle, unilateral (switch)
 - **Setup (research-anchored — this is a Z-sit):** front leg at 90° with its **outer** thigh
@@ -762,11 +792,25 @@ Retired: Wall slide (see "Retired — available for future versions").
 
 # Retired — available for future versions
 
-Retired 2026-08-26 with the Flow-13 / Daily-13 restructure. Nothing was deleted:
+Retired 2026-08-26 with the Flow-13 / Daily-13 restructure, plus the two Morning Flow
+poses replaced on 2026-10-12 (Hip circles → Single-leg hip circles; Folded cat-cows →
+Cat-cows). Nothing was deleted:
 pose data, props and cue text live verbatim in `src/d_retired.js` (excluded from
 the build), and the retired Morning Movement app is additionally archived wholesale
 as `src/data2.js` + `src/mm_extra.js`. To revive a movement, follow the recipe at
 the top of `src/d_retired.js`.
+
+## Hip circles (was Morning Flow 7 until 2026-10-12) — 60s, 2.6s cycle, orbital (direction change)
+- **Setup:** hands on hips, feet planted hip-to-shoulder width, knees soft.
+- **Execution:** push the hips forward → side → back → around in the biggest smooth circle
+  available; half the time each direction, reversing at the halfway chime.
+- **Anchors:** feet never move; head stays roughly centered; even circle — no flat spots.
+- **Figure:** pelvis translating around a circle while feet stay pinned (`orb.hips`).
+
+## Folded cat-cows (was Morning Flow 9 until 2026-10-12) — 30s, 3.4s cycle, symmetric, feet pinned
+- **Setup:** standing, knees bent, hands resting on the knees, weight through the arms.
+- **Execution:** exhale — round the whole spine; inhale — arch and open the chest.
+- **Figure:** alternating spinal round/arch while hands stay on knees, feet planted.
 
 ## Rotations with shoulder slaps (was Morning Flow 2) — 50s, 1.8s cycle, alternating
 - **Setup:** feet shoulder-width, knees soft.

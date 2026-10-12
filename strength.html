@@ -86,7 +86,7 @@ h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase
   <div id="listB"></div>
 </div>
 <script>
-const BUILDV='7a8def4e4a';
+const BUILDV='caeeebf091';
 const WK_A=[
 {n:"Goblet squat",sets:3,reps:"8",cyc:3.0,pin:"LR",
  how:"Hold one dumbbell vertically against your chest, elbows tucked under it. Sit down and back until your elbows brush the insides of your knees, then drive back up through the whole foot.",
@@ -228,12 +228,19 @@ function ik(S,T,l1,l2,ref,sign,swivel){
 }
 
 function solve(p){
-  const pelvis=p.p, yawP=p.yaw, yawC=p.yaw+p.tw*0.45, yawN=p.yaw+p.tw;
+  const pelvis=p.p, yawP=p.yaw, tw=p.tw||0;
   const sl=p.sl||0;
-  const chest=add(pelvis,rotY(rotZb(spineDir(p.s[0]),sl),yawP),L.s1);
-  const neck =add(chest, rotY(rotZb(spineDir(p.s[1]),sl),yawC),L.s2);
-  const head =add(neck,  rotY(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawN),L.nh);
-  const axS=rotY([1,0,0],yawN), axH=rotY([1,0,0],yawP);
+  const d1=rotY(rotZb(spineDir(p.s[0]),sl),yawP);
+  const chest=add(pelvis,d1,L.s1);
+  // tw = torso twist about the LOWER-SPINE AXIS, not the world vertical (changed
+  // 2026-10-12). Upright the two coincide, so it is the familiar shoulder yaw; hinged
+  // or on all fours it becomes a true thoracic roll -- one shoulder rises, the other
+  // drops -- which is what bent rotations and thread-the-needle actually do. The
+  // chest->neck segment carries 45% of it, the head, shoulders and FK arms the full angle.
+  const twist=(v,k)=>tw?rotAxis(v,d1,-R(tw*k)):v;
+  const neck =add(chest, twist(rotY(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
+  const head =add(neck,  twist(rotY(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
+  const axS=twist(rotY([1,0,0],yawP),1), axH=rotY([1,0,0],yawP);
   const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
   const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
   const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
@@ -271,8 +278,10 @@ function solve(p){
   let elL,haL,elR,haR;
   // optional arm swivel (swAL/swAR): spins the elbow's bend plane about the
   // shoulder->hand axis, same as the leg swivels — undefined means unchanged
-  if(tL){[elL,haL]=ik(shL,tL,L.up,L.fo,axS,-1,p.swAL);} else {[elL,haL]=fk(shL,p.aL,L.up,L.fo,yawN);}
-  if(tR){[elR,haR]=ik(shR,tR,L.up,L.fo,axS, 1,p.swAR);} else {[elR,haR]=fk(shR,p.aR,L.up,L.fo,yawN);}
+  const fkA=(o,a)=>{const j1=add(o,twist(rotY(dir(a[0],a[1]),yawP),1),L.up);
+    return [j1,add(j1,twist(rotY(dir(a[2],a[3]),yawP),1),L.fo)];};
+  if(tL){[elL,haL]=ik(shL,tL,L.up,L.fo,axS,-1,p.swAL);} else {[elL,haL]=fkA(shL,p.aL);}
+  if(tR){[elR,haR]=ik(shR,tR,L.up,L.fo,axS, 1,p.swAR);} else {[elR,haR]=fkA(shR,p.aR);}
   return Object.assign(J,{elL,haL,elR,haR});
 }
 
@@ -281,6 +290,15 @@ function orbitPose(base,o,ph){
   const p=Object.assign({},base);
   if(o.swivel){ // knees orbit around a fixed hip-to-ankle axis; feet never move
     p.swL=o.amp*Math.sin(ph); p.swR=o.amp*Math.sin(ph);
+    return p;
+  }
+  if(o.leg){ // standing hip CAR: one leg (o.leg 'L'/'R') circles from the hip with the knee
+    // bent ~90 deg (the shin follows the thigh); the other leg keeps base's planted target.
+    // o.fB/o.fA: thigh flex centre/amplitude (90 = forward horizontal, <0 = behind);
+    // o.aB/o.aA: abduction centre/amplitude. Phase 0 = forward, then out, then behind.
+    const f1=o.fB+o.fA*Math.cos(ph), a1=o.aB+o.aA*Math.sin(ph), sg=o.leg==='L'?-1:1;
+    p['l'+o.leg]=[f1,sg*a1,f1-(o.knee==null?90:o.knee),sg*a1*0.35];
+    delete p['ikF'+o.leg];
     return p;
   }
   if(o.hips){ // pelvis traces a circle, feet stay planted via leg IK

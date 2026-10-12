@@ -1,6 +1,6 @@
 // Morning Flow visual QA (TR_ALL since 2026-08-26): one screenshot per movement
-// mid-animation, plus the explicit 5s "get on the ground" transition before Folded
-// cat-cows (static preview + authored setup text + state-trans styling). Numeric
+// mid-animation, plus the explicit 5s "get on the ground" transition before
+// Cat-cows (static preview + authored setup text + state-trans styling). Numeric
 // invariants live in tools/geo.js + qa/trans.js — these images are the LOOK step.
 const fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
@@ -25,7 +25,7 @@ const OUT=path.join(__dirname,'screenshots');
     const svg=await page.innerHTML('#layer');
     check(`m${i+1} ${name}: figure drawn`,svg.includes('<line')&&svg.includes('<circle'));
   }
-  // the explicit ground transition: 5s gap before movement 9 (Folded cat-cows)
+  // the explicit ground transition: 5s gap before movement 9 (Cat-cows)
   await page.evaluate(()=>{started=true;go(SEGS.findIndex(s=>s.trans&&s.mi===8));});
   await page.waitForTimeout(400);
   check('ground gap header is GET SET UP',await page.textContent('#mNum')==='GET SET UP');

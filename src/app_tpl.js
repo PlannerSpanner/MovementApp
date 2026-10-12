@@ -381,8 +381,11 @@ function cueDecode(t){if(cueBufs[t])return Promise.resolve(cueBufs[t]);
 // but not aloud: "90/90" -> "90 90" (else "ninety SLASH ninety"), "Y-T-W" -> "Y T W" (else one
 // run-together word). Display text is untouched — this only shapes the spoken string.
 const spokenName=n=>n.replace(/(\d)\/(\d)/g,'$1 $2').replace(/\b([A-Z])-([A-Z])-([A-Z])\b/g,'$1 $2 $3');
-const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+spokenName(g.m.n)+'. '+g.m.setup:posCue(g.m)):(spokenName(g.m.n)+(g.m.bil&&!g.m.orb?'. Start with your right side.':'.'));
-function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(m.orb?'Change direction.':'Switch sides.');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
+// a bilateral orbit of the hips or knees only reverses at halfway ("Change direction.");
+// a single-leg orbit (orb.leg) swaps legs too, so it is cued and badged like any sided move
+const dirOnly=m=>!!(m.orb&&!m.orb.leg);
+const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+spokenName(g.m.n)+'. '+g.m.setup:posCue(g.m)):(spokenName(g.m.n)+(g.m.bil&&!dirOnly(g.m)?'. Start with your right side.':'.'));
+function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(dirOnly(m)?'Change direction.':'Switch sides.');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
 function cuePrefetch(){cueTexts().forEach(t=>{if(!CUES[t]){vlog('NO CLIP for "'+t+'"');return;}cueFetch(t).catch(e=>vlog('prefetch failed "'+t+'": '+e.message));});}
 function cueDecodeAll(){cueTexts().forEach(t=>{if(CUES[t])cueDecode(t).catch(()=>{});});}
 function cueStats(){const ts=cueTexts();return ts.length+' texts, '+ts.filter(t=>CUES[t]).length+' with clips, '+ts.filter(t=>cueBytes[t]).length+' fetched, '+ts.filter(t=>cueBufs[t]).length+' decoded';}
@@ -462,7 +465,7 @@ function paint(){
   $('cue').innerHTML=m.long;
   $('count').textContent=(g.mi+1)+'/'+MOVES.length;
   $('badge').classList.toggle('visible',!g.trans&&!!m.bil);
-  $('badge').textContent=m.orb?'REVERSES · CHANGE DIRECTION AT HALFWAY':'BOTH SIDES · SWITCH AT HALFWAY';
+  $('badge').textContent=dirOnly(m)?'REVERSES · CHANGE DIRECTION AT HALFWAY':'BOTH SIDES · SWITCH AT HALFWAY';
   $('vid').href='https://www.youtube.com/results?search_query='+m.q;
   $('bPrev').disabled=!g.trans&&g.mi<=0; $('bNext').disabled=!g.trans&&g.mi>=MOVES.length-1;
   if(TR_ALL)document.querySelector('.wrap').classList.toggle('state-trans',!!g.trans);
@@ -500,7 +503,7 @@ function sync(){
   if(rem!==timeLeft){
     timeLeft=rem; clock();
     const g=SEGS[idx], m=g.m;
-    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(m.orb?'Change direction.':'Switch sides.');}
+    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(dirOnly(m)?'Change direction.':'Switch sides.');}
     // 3s warning: TR_ALL gaps get a distinct 3-2-1 triple tick so the start of work
     // is unambiguous; work segments (and legacy gaps) keep the single soft tick
     if(TR_ALL&&g.trans){if(timeLeft<=3&&timeLeft>=1)chime(520,.07,.18);}
