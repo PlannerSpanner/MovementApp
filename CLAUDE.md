@@ -81,6 +81,18 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     tools/tts-venv && tools/tts-venv/Scripts/pip install kokoro-onnx soundfile lameenc
     numpy`; kokoro-onnx runs on Python 3.14, the torch build does not) and the model
     files, auto-downloaded once to %LOCALAPPDATA%/kokoro (~350 MB, never in the repo).
+    PUNCTUATION RULE (Will, 2026-10-12): EVERY spoken string ends in terminal punctuation --
+    Kokoro renders an unpunctuated string ("Hip circles", "Switch sides") with a rising,
+    question-like contour. cueFor() appends "." to bare movement names; "Switch sides." /
+    "Change direction." carry theirs. `spokenName()` in app_tpl.js reshapes spellings that
+    read fine on screen but not aloud ("90/90" -> "90 90", else Kokoro says "ninety SLASH
+    ninety"; "Y-T-W" -> "Y T W", else one run-together word) -- display text untouched.
+    Setup scripts use sentence punctuation, not em-dashes or colons mid-sentence. Check a
+    new string's phonemes with the kokoro-onnx Tokenizer before trusting how it reads.
+    PER-TEXT SPEED OVERRIDE (`SPEED_OVERRIDE` in tools/gen_cues.py): "Switch sides." is
+    generated at 1.0 -- at 0.85 Kokoro prepends a voiced vowel before the /s/ ("eSwitch"),
+    measured by onset low/high-band energy (~300 vs ~0 for every other S-initial clip);
+    leading space, lowercase, "!", quotes, phoneme input all reproduce it, 1.0 is clean.
     SPEED POLICY: 0.85 everywhere it fits; a transition cue must fit its gap minus the
     chime (0.8 s) minus the 3-2-1 ticks (3 s) -- 6.2 s in a 10 s gap, 11.2 s in 15 s -- else
     it is refit at 1.0; remaining overruns print as OVERRUN and the checker WARNs. As of
@@ -112,6 +124,18 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     iOS-shaped interrupted context, fetch failure modes, scheduling, no speechSynthesis
     left) + qa/webkit-voice.js (real MP3 decode + scheduling in Chromium; WebKit runs the
     page and the keep-alive fallback) + `tools/cues.js --check` are in the gauntlet.
+    "ALLOW BACKGROUND MUSIC" SETTING (2026-10-12; checkbox under the nav row in all 5
+    speaking apps, localStorage `mvBgMusic`, one value for the whole origin, flips live
+    mid-session). WebKit maps Audio Session types to AVAudioSession categories
+    (DOMAudioSession.cpp): playback -> MediaPlayback (silent-switch immune, EXCLUSIVE: pauses
+    Spotify for the run and iOS never resumes it); transient AND ambient -> Ambient (mixes
+    with other apps, no ducking, silenced by the silent switch AND screen lock);
+    transient-solo -> SoloAmbient (interrupts AND muted). Nothing on the web both mixes
+    and survives the switch (that is Playback+mixWithOthers, not exposed). OFF (default) =
+    'playback' + keep-alive, the proven path. ON = 'transient' and NO keep-alive: a playing
+    media element is itself what makes WebKit claim MediaPlayback, and under Ambient it buys
+    nothing. Engaging the keep-alive only around cues cannot work: each Playback activation
+    interrupts Spotify again. qa/voice.js + qa/webkit-voice.js assert both states.
     RULE FOR FUTURE FEATURES: anything that plays a sound must go through the shared
     AudioContext (chime() / say()) so it is gesture-unlocked, session-covered and
     clock-scheduled with everything else. New spoken text = run `npm run cues`.

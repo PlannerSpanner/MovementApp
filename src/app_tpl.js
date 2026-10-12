@@ -249,7 +249,7 @@ MOVES.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.
 async function lockScreen(){try{if('wakeLock'in navigator){wl=await navigator.wakeLock.request('screen');
   wl.addEventListener('release',()=>{wl=null;});}}catch(e){}}
 function unlockScreen(){if(wl){wl.release();wl=null;}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){lockScreen();audioSessionPlayback('foreground');acResume('foreground');audioKeepAlive(true);sync();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&running){lockScreen();audioSessionApply('foreground');acResume('foreground');audioKeepAlive(true);sync();}});
 
 function ac(){if(!actx){actx=new(window.AudioContext||window.webkitAudioContext)();
   try{if(actx.addEventListener)actx.addEventListener('statechange',()=>dbg('AudioContext statechange → '+actx.state+' '+dbgAudio()));}catch(e){}
@@ -302,17 +302,34 @@ const SILENT_WAV='data:audio/wav;base64,UklGRvQHAABXQVZFZm10IBAAAAABAAEAQB8AAEAf
 // 'auto/?' is expected). Set BEFORE the AudioContext is created — WebKit picks the AVAudioSession
 // category when sessions begin, and three independent iOS writeups report the type only sticks
 // when applied before creation. Logs the read-back value and any exception.
-function audioSessionPlayback(why){try{
+// ---- "Allow background music" setting (localStorage 'mvBgMusic'; one value for every app on
+// the origin). WebKit maps the Audio Session types to AVAudioSession categories as:
+//   playback -> MediaPlayback (immune to the ring/silent switch, EXCLUSIVE: pauses Spotify for the
+//               whole run and iOS does not resume it afterwards)
+//   transient, ambient -> Ambient (mixes with other apps' audio, no ducking; silenced by the silent
+//               switch AND by screen lock)      transient-solo -> SoloAmbient (interrupts AND muted)
+// There is no web session type that both mixes and survives the switch (that would be
+// Playback+mixWithOthers, which the API does not expose), so this is the user's call:
+//   OFF (default): 'playback' + the silent keep-alive element (the 2026-09 silent-switch-proof path)
+//   ON:            'transient' and NO keep-alive — a playing media element is itself what makes
+//                  WebKit claim MediaPlayback, and under Ambient it buys nothing (lock mutes anyway).
+// Engaging the keep-alive only around cues would not help: every Playback activation interrupts
+// Spotify again and WebKit never notifies-on-deactivate, so music would stop at the first cue.
+// Flipping the setting mid-session applies at once (session type re-set, keep-alive started/paused).
+const BGM_KEY='mvBgMusic';
+let bgMusic=(()=>{try{return localStorage.getItem(BGM_KEY)==='1';}catch(e){return false;}})();
+function audioSessionApply(why){try{
+  const want=bgMusic?'transient':'playback';
   if(!navigator.audioSession){dbg('audioSession ['+why+']: navigator.audioSession absent');return;}
-  const before=navigator.audioSession.type;navigator.audioSession.type='playback';
-  dbg('audioSession ['+why+']: set playback; was '+before+' → reads '+navigator.audioSession.type);
+  const before=navigator.audioSession.type;navigator.audioSession.type=want;
+  dbg('audioSession ['+why+']: set '+want+'; was '+before+' → reads '+navigator.audioSession.type);
 }catch(e){vlog('audioSession ['+why+'] threw: '+e.message);}}
 let keepAlive=null,keepAliveOn=false;
 function audioKeepAlive(on){
-  keepAliveOn=!!on;
-  dbg('audioKeepAlive('+on+') enter; element='+(keepAlive?'exists':'none'));
+  keepAliveOn=!!on&&!bgMusic;
+  dbg('audioKeepAlive('+on+') enter; element='+(keepAlive?'exists':'none')+(on&&bgMusic?' — skipped, background music on':''));
   try{
-    if(!on){if(keepAlive)keepAlive.pause();return;}
+    if(!keepAliveOn){if(keepAlive)keepAlive.pause();return;}
     if(!keepAlive){const a=document.createElement('audio');if(!a||typeof a.play!=='function'){dbg('keepAlive: no <audio>.play — abort');return;}
       // inline data URI first (no network); some WebKit ports reject data: media, so a
       // tiny real file is the second <source> — only fetched if the inline one fails
@@ -330,6 +347,18 @@ function audioKeepAlive(on){
     if(p&&p.then)p.then(()=>dbg('keepAlive play() resolved '+dbgAudio()),e=>{dbg('keepAlive play() REJECTED '+(e&&e.name)+': '+(e&&e.message)+' paused='+keepAlive.paused);if(keepAliveOn&&keepAlive.paused)vlog('keepAlive play rejected: '+(e&&e.message));});
   }catch(e){vlog('keepAlive FAILED: '+e.name+': '+e.message+' @ '+(e&&e.stack||'').split('\n').slice(0,2).join(' | '));}
 }
+function setBgMusic(v,why){bgMusic=!!v;try{localStorage.setItem(BGM_KEY,bgMusic?'1':'0');}catch(e){}
+  dbg('background music '+(bgMusic?'ON':'OFF')+' ['+why+']');
+  if(running){audioSessionApply('setting');audioKeepAlive(!bgMusic);}}
+// the toggle sits under the nav row; neutral styling (inherit + opacity) so no theme swap touches it
+try{$('vid').insertAdjacentHTML('beforebegin',
+  '<style>.bgm{display:flex;gap:9px;align-items:flex-start;justify-content:center;margin:2px auto 12px;'
+  +'max-width:300px;font-size:0.72rem;line-height:1.35;color:inherit;opacity:0.78;text-align:left;cursor:pointer;'
+  +'-webkit-tap-highlight-color:transparent}.bgm input{margin:1px 0 0;width:17px;height:17px;flex:none;accent-color:currentColor}'
+  +'.bgm small{display:block;font-size:0.64rem;opacity:0.8;margin-top:1px}</style>'
+  +'<label class="bgm"><input type="checkbox" id="bgm"><span>Allow background music'
+  +'<small>Cues play over your music instead of stopping it. While this is on, the silent switch (and screen lock) will mute the cues.</small></span></label>');}catch(e){}
+$('bgm').checked=bgMusic;$('bgm').onchange=()=>setBgMusic($('bgm').checked,'tap');
 // ---- spoken cues: PRE-GENERATED CLIPS (Kokoro-82M af_heart, tools/gen_cues.py), played
 // as AudioBuffers on the SAME AudioContext as the chimes. One audio path: no Web Speech,
 // no second audio session, nothing for iOS to interrupt (on-device 2026-09-28: the
@@ -346,9 +375,14 @@ function cueFetch(t){const e=CUES[t];if(!e)return Promise.reject(new Error('no c
 function cueDecode(t){if(cueBufs[t])return Promise.resolve(cueBufs[t]);
   return cueFetch(t).then(ab=>new Promise((res,rej)=>{const c=ac();const p=c.decodeAudioData(ab.slice(0),res,rej);if(p&&p.then)p.then(res,rej);}))
     .then(b=>{cueBufs[t]=b;return b;});}
-// every text this app can say, derived from the SAME rules announce() uses
-const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+g.m.n+'. '+g.m.setup:posCue(g.m)):(g.m.n+(g.m.bil&&!g.m.orb?'. Start with your right side.':''));
-function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(m.orb?'Change direction':'Switch sides');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
+// every text this app can say, derived from the SAME rules announce() uses.
+// EVERY cue ends in terminal punctuation: Kokoro renders an unpunctuated string with a rising,
+// question-like contour (Will, 2026-10-12). spokenName() fixes spellings that read fine on screen
+// but not aloud: "90/90" -> "90 90" (else "ninety SLASH ninety"), "Y-T-W" -> "Y T W" (else one
+// run-together word). Display text is untouched — this only shapes the spoken string.
+const spokenName=n=>n.replace(/(\d)\/(\d)/g,'$1 $2').replace(/\b([A-Z])-([A-Z])-([A-Z])\b/g,'$1 $2 $3');
+const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+spokenName(g.m.n)+'. '+g.m.setup:posCue(g.m)):(spokenName(g.m.n)+(g.m.bil&&!g.m.orb?'. Start with your right side.':'.'));
+function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(m.orb?'Change direction.':'Switch sides.');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
 function cuePrefetch(){cueTexts().forEach(t=>{if(!CUES[t]){vlog('NO CLIP for "'+t+'"');return;}cueFetch(t).catch(e=>vlog('prefetch failed "'+t+'": '+e.message));});}
 function cueDecodeAll(){cueTexts().forEach(t=>{if(CUES[t])cueDecode(t).catch(()=>{});});}
 function cueStats(){const ts=cueTexts();return ts.length+' texts, '+ts.filter(t=>CUES[t]).length+' with clips, '+ts.filter(t=>cueBytes[t]).length+' fetched, '+ts.filter(t=>cueBufs[t]).length+' decoded';}
@@ -397,10 +431,10 @@ function dbgRender(){if(!DEBUG)return;try{
     // PROBES — active calls, tap-only
     mk('Cue test',()=>{dbg('PROBE say("Voice on.") act='+dbgAct()+' '+dbgAudio());say('Voice on.');});
     mk('Chime',()=>{dbg('PROBE chime '+dbgAudio());chime(660,.15,.6);});
-    mk('Chime+cue',()=>{dbg('PROBE chime then cue '+dbgAudio());cTrans();say('Switch sides');});
+    mk('Chime+cue',()=>{dbg('PROBE chime then cue '+dbgAudio());cTrans();say('Switch sides.');});
     mk('AC resume()',()=>{acResume('probe');});
-    mk('AC close()+new',()=>{const old=actx;actx=null;dbg('PROBE close old AC ('+(old?old.state:'none')+')');if(old&&old.close)old.close().then(()=>dbg('old AC closed'),e=>dbg('old AC close rejected '+e.message));audioSessionPlayback('probe recreate');ac();acResume('probe recreate');});
-    mk('Set session playback',()=>{audioSessionPlayback('probe');});
+    mk('AC close()+new',()=>{const old=actx;actx=null;dbg('PROBE close old AC ('+(old?old.state:'none')+')');if(old&&old.close)old.close().then(()=>dbg('old AC closed'),e=>dbg('old AC close rejected '+e.message));audioSessionApply('probe recreate');ac();acResume('probe recreate');});
+    mk('Set session type',()=>{audioSessionApply('probe');});
     mk('Play keep-alive',()=>{audioKeepAlive(true);});
     mk('List devices',()=>{if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){dbg('PROBE enumerateDevices: unavailable');return;}
       navigator.mediaDevices.enumerateDevices().then(ds=>dbg('PROBE devices: '+(ds.length?ds.map(d=>d.kind+(d.label?':'+d.label:'')+(d.deviceId==='default'?'(default)':'')).join(', '):'none listed'))).catch(e=>dbg('PROBE enumerateDevices error: '+e.message));});
@@ -466,7 +500,7 @@ function sync(){
   if(rem!==timeLeft){
     timeLeft=rem; clock();
     const g=SEGS[idx], m=g.m;
-    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(m.orb?'Change direction':'Switch sides');}
+    if(!g.trans&&m.bil&&!swAt&&timeLeft<=Math.floor(m.dur*dm/2)){swAt=true;applyMirror(true);cSwitch();say(m.orb?'Change direction.':'Switch sides.');}
     // 3s warning: TR_ALL gaps get a distinct 3-2-1 triple tick so the start of work
     // is unambiguous; work segments (and legacy gaps) keep the single soft tick
     if(TR_ALL&&g.trans){if(timeLeft<=3&&timeLeft>=1)chime(520,.07,.18);}
@@ -491,7 +525,7 @@ $('bMain').onclick=()=>{
     // audio unlock inside the gesture — but no audio API may ever block the timer.
     // Order matters on iOS: session type → context (resume if suspended OR interrupted)
     // → keep-alive media element → speech priming.
-    audioSessionPlayback('start tap');
+    audioSessionApply('start tap');
     try{ac();acResume('start tap');}catch(e){vlog('AudioContext unavailable: '+e.message);}
     try{audioKeepAlive(true);}catch(e){dbg('keepAlive THREW OUTSIDE its guards: '+e.message);}
     cueDecodeAll();

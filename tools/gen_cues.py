@@ -25,6 +25,11 @@ ENGINE='kokoro-onnx'; MODEL='kokoro-v1.0'
 CACHE=os.path.join(os.environ.get('LOCALAPPDATA',os.path.expanduser('~/.cache')),'kokoro')
 RELEASE='https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/'
 CHIME=0.8; TICKS=3.0            # seconds of the gap the cue cannot use
+# Per-text speed overrides. "Switch sides." at 0.85 comes out as "eSwitch sides" — Kokoro prepends a
+# voiced vowel before the /s/ (measured 2026-10-12: low/high-band energy ratio at onset ~300 vs ~0 for
+# every other S-initial clip; a leading space, lowercase, '!' , quotes, '…', phoneme input and a
+# different trailing punctuation all reproduce it; speed 1.0 is clean, 0.9 borderline).
+SPEED_OVERRIDE={'Switch sides.':1.0}
 SR_OUT=24000; KBPS=48; PEAK=0.89
 
 ap=argparse.ArgumentParser()
@@ -67,11 +72,11 @@ def synth(text,speed):
 clips={}; rows=[]; t0=time.time(); made=0
 for s in strings:
     text=s['text']; gap=s.get('gap'); budget=(gap-CHIME-TICKS) if gap else None
-    prev=oldclips.get(text)
-    if prev and not a.force and os.path.exists(os.path.join(ROOT,prev['f'])) and (budget is None or prev['s']<=budget or prev['sp']>=a.fit):
+    prev=oldclips.get(text); want=SPEED_OVERRIDE.get(text,a.speed)
+    if prev and not a.force and os.path.exists(os.path.join(ROOT,prev['f'])) and prev['sp']>=want and (budget is None or prev['s']<=budget or prev['sp']>=a.fit):
         clips[text]=prev; rows.append((text,gap,prev['sp'],prev['s'],'kept')); continue
     if a.dry: rows.append((text,gap,None,None,'WOULD GENERATE')); continue
-    speed=a.speed; audio,sr=synth(text,speed); dur=len(audio)/sr; note='ok'
+    speed=want; audio,sr=synth(text,speed); dur=len(audio)/sr; note='ok' if text not in SPEED_OVERRIDE else 'override'
     if budget is not None and dur>budget:
         speed=a.fit; audio,sr=synth(text,speed); dur=len(audio)/sr
         note='refit' if dur<=budget else f'OVERRUN by {dur-budget:.1f}s'

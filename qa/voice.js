@@ -74,6 +74,9 @@ async function run(app,opts){
     env.navigator.audioSession={get type(){return sessionType||'auto';},set type(v){sessionType=v;sessionOrder.push('session:'+acs.length);}};
   }
   if(opts.debug)env.location={search:'?debug=1'};
+  // localStorage: 'mvBgMusic' is the "Allow background music" setting (shared by every app on the origin)
+  const store={};if(opts.bgm)store.mvBgMusic='1';
+  if(opts.storage!=='absent')env.localStorage={getItem:k=>(k in store?store[k]:null),setItem:(k,v)=>{store[k]=String(v);},removeItem:k=>{delete store[k];}};
   const tail=app==='hip-activation'?'\n;return {toggleTimer,toggleVoice};':'\n;return {};';
   const fn=new Function(...Object.keys(env),js+tail);
   const ex=fn(...Object.values(env));
@@ -89,10 +92,11 @@ async function run(app,opts){
   for(let i=0;i<4;i++){pnow+=40;if(frameCb){const cb=frameCb;frameCb=null;cb(pnow);}}
   // tap again = Pause
   inGesture=true; start(); inGesture=false;
-  return {js,CUES,said,warns,intervals,els,media,body,h1,acs,sessionOrder,fetched,sessionType:()=>sessionType,
+  return {js,CUES,said,warns,intervals,els,media,body,h1,acs,sessionOrder,fetched,store,start,sessionType:()=>sessionType,
     toggleVoice:app==='hip-activation'?ex.toggleVoice:(els['bVoice']&&els['bVoice'].onclick)};
 }
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13','hip-activation'];
+const inGestureHack=r=>{r.start();};
 (async()=>{
 for(const app of APPS){
   try{
@@ -129,6 +133,25 @@ for(const app of APPS){
     check(`${app}: timer still starts with media/audioSession absent`,r3.intervals.length>=1);
     r.toggleVoice();r.toggleVoice();
     check(`${app}: Voice toggle speaks "Voice on." and it has a clip`,r.said.some(s=>s.t==='Voice on.')&&!!r.CUES['Voice on.']);
+    // 7. "Allow background music" setting: OFF (default) = playback session + keep-alive (silent-switch
+    //    proof, stops other apps' audio); ON = 'transient' session (iOS Ambient: mixes with music, muted
+    //    by the silent switch) and NO keep-alive element — a playing media element is what makes iOS
+    //    pause Spotify. Persisted in localStorage 'mvBgMusic'; flipping it mid-session applies at once.
+    const rb=await run(app,{bgm:true});
+    check(`${app}: background music ON → audioSession 'transient' before the context exists`,rb.sessionType()==='transient'&&rb.sessionOrder[0]==='session:0');
+    check(`${app}: background music ON → keep-alive media element never played`,!rb.media.some(a=>a.playCalls.length));
+    check(`${app}: background music ON → timer runs and cues are still scheduled`,rb.intervals.length>=1&&rb.acs[0]&&rb.acs[0].sources.length>=1);
+    check(`${app}: background music ON → checkbox reflects the stored setting`,rb.els['bgm'].checked===true);
+    const rt2=await run(app,{});   // paused after run(); resume so the keep-alive is live, then flip the setting
+    inGestureHack(rt2);
+    const ka=rt2.media.find(a=>a.loop);
+    check(`${app}: default (OFF) → checkbox unchecked, keep-alive playing while running`,rt2.els['bgm'].checked!==true&&!!ka&&ka.paused===false);
+    rt2.els['bgm'].checked=true;rt2.els['bgm'].onchange();
+    check(`${app}: flipping ON mid-session → 'transient' + keep-alive paused + persisted`,rt2.sessionType()==='transient'&&ka.paused===true&&rt2.store.mvBgMusic==='1');
+    rt2.els['bgm'].checked=false;rt2.els['bgm'].onchange();
+    check(`${app}: flipping OFF mid-session → 'playback' + keep-alive playing again + persisted`,rt2.sessionType()==='playback'&&ka.paused===false&&rt2.store.mvBgMusic==='0');
+    const rs=await run(app,{storage:'absent'});
+    check(`${app}: timer still starts with localStorage absent`,rs.intervals.length>=1);
     // 6. debug panel
     check(`${app}: no debug panel without ?debug=1`,r.body.children.length===0);
     const rd=await run(app,{debug:true});

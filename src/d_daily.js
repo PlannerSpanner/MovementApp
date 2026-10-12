@@ -80,7 +80,7 @@ const MOVES=[
     ikFL:[-34.5,91.3,-7.5],ikFR:[-33.5,91.9,-9.5]}},
 
 {n:"Plank hold",pos:'quadruped',pin:"LR",cue:"One straight line, push the floor away",dur:60,bil:false,cyc:4.0,tdur:15,
- setup:"Turn over into a plank — elbows or hands under your shoulders, one straight line.",
+ setup:"Turn over into a plank. Elbows or hands under your shoulders, one straight line.",
  A:{p:[0,84,0],yaw:24,tw:0,s:[80,80],hf:18,ikL:{w:[-7,93,32]},ikR:{w:[7,93,32]},
     aL:[0,0,0,0],aR:[0,0,0,0],lL:[-80,-6,-88,-5],lR:[-80,6,-88,5]},
  B:{p:[0,82,0],yaw:24,tw:0,s:[80,80],hf:18,ikL:{w:[-7,93,32]},ikR:{w:[7,93,32]},
@@ -104,7 +104,7 @@ const MOVES=[
        {l:[[-12,74,0.5],[-12,74,-6.5]]},{l:[[12,74,0.5],[12,74,-6.5]]},
        {l:[[-11,74,0.5],[-11,93,0.5]]},{l:[[11,74,0.5],[11,93,0.5]]},
        {l:[[-11,74,-6.5],[-11,93,-6.5]]},{l:[[11,74,-6.5],[11,93,-6.5]]}],
- setup:"Dumbbells down — move to the bench. Hands on the edge beside your hips, feet out in front.",
+ setup:"Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.",
  A:{p:[0,75.5,6],yaw:14,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},
     ikFL:[-5.5,93,27],ikFR:[5.5,93,27]},
  B:{p:[0,87.5,7],yaw:14,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},

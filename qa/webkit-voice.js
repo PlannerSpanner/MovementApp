@@ -70,6 +70,32 @@ const APPS=[['morning-flow','#bMain'],['prenatal-stretch','#bMain'],['prenatal-m
   }
   await browser.close();
   }
+  // "Allow background music" ON (localStorage mvBgMusic=1), in Chromium: the keep-alive media element
+  // must never play, the audio session type (where the API exists) must read 'transient', and the
+  // cue clips must still decode and schedule. Also: the checkbox is rendered, checked, and persists.
+  {const browser=await pw.chromium.launch();
+   const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true});
+   await ctx.addInitScript(()=>{try{localStorage.setItem('mvBgMusic','1');}catch(e){}
+     window.__media=[];const mp=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){window.__media.push(1);return mp.call(this);};
+     window.__spk=[];if(window.AudioBufferSourceNode){const st=AudioBufferSourceNode.prototype.start;
+       AudioBufferSourceNode.prototype.start=function(when){window.__spk.push({at:when,now:this.context.currentTime});return st.apply(this,arguments);};}
+     Object.defineProperty(navigator,'audioSession',{value:{type:'auto'},configurable:true});});
+   for(const [app,btn] of APPS){
+     const page=await ctx.newPage();const errs=[];page.on('pageerror',e=>errs.push(String(e)));
+     await page.goto(`http://127.0.0.1:${srv.port}/${app}.html`);await page.waitForTimeout(900);
+     check(`${app}: bg-music checkbox rendered and checked from localStorage`,await page.evaluate(()=>{const c=document.getElementById('bgm');return !!c&&c.checked===true&&c.offsetParent!==null;}));
+     await page.tap(btn);await page.waitForTimeout(1500);
+     const r=await page.evaluate(()=>({media:window.__media.length,sess:navigator.audioSession.type,spk:window.__spk.length}));
+     check(`${app}: bg-music ON → no keep-alive play(), session 'transient', cue scheduled`,r.media===0&&r.sess==='transient'&&r.spk>=1&&errs.length===0);
+     await page.evaluate(()=>{const c=document.getElementById('bgm');c.checked=false;c.dispatchEvent(new Event('change'));});
+     const r2=await page.evaluate(()=>({media:window.__media.length,sess:navigator.audioSession.type,stored:localStorage.getItem('mvBgMusic')}));
+     check(`${app}: unticking mid-session → keep-alive plays, session 'playback', persisted '0'`,r2.media>=1&&r2.sess==='playback'&&r2.stored==='0');
+     if(app==='daily-13'){await page.evaluate(()=>{const c=document.getElementById('bgm');c.checked=true;c.dispatchEvent(new Event('change'));});
+       await page.screenshot({path:require('path').join(__dirname,'screenshots','bg-music-toggle.png'),fullPage:true});}
+     if(errs.length)console.log('  errors:',errs);
+     await page.close();
+   }
+   await browser.close();}
   // ?debug=1 diagnostics panel, rendered for real in Chromium, screenshot for the record
   {const browser=await pw.chromium.launch();
    const ctx=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true});

@@ -11,9 +11,9 @@
 "s": 1.0,
 "sp": 0.85
 },
-"Bouncing in place": {
-"f": "audio/e90b4271241b.mp3",
-"s": 1.37,
+"Bouncing in place.": {
+"f": "audio/a4b45c8235ea.mp3",
+"s": 1.39,
 "sp": 0.85
 },
 "Next: Arm sweeps with knee dip. Stay standing, feet under your hips, arms hanging.": {
@@ -21,9 +21,9 @@
 "s": 5.59,
 "sp": 0.85
 },
-"Arm sweeps with knee dip": {
-"f": "audio/bd7e91696c8c.mp3",
-"s": 1.64,
+"Arm sweeps with knee dip.": {
+"f": "audio/0dc9fc57fd36.mp3",
+"s": 1.69,
 "sp": 0.85
 },
 "Next: Punching rotations. Feet wider than your shoulders, knees soft, fists at your ribs.": {
@@ -31,9 +31,9 @@
 "s": 5.44,
 "sp": 1.0
 },
-"Punching rotations": {
-"f": "audio/514f420bb885.mp3",
-"s": 1.47,
+"Punching rotations.": {
+"f": "audio/99af69845eaa.mp3",
+"s": 1.51,
 "sp": 0.85
 },
 "Next: Dynamic lateral reaches. Feet wide, one hand on your hip, the other arm ready to reach.": {
@@ -41,9 +41,9 @@
 "s": 5.87,
 "sp": 1.0
 },
-"Dynamic lateral reaches": {
-"f": "audio/01d0a005b24a.mp3",
-"s": 1.75,
+"Dynamic lateral reaches.": {
+"f": "audio/c6385edc2887.mp3",
+"s": 1.88,
 "sp": 0.85
 },
 "Next: Cross-body knee drives. Feet under your hips, stand tall, elbows up.": {
@@ -51,9 +51,9 @@
 "s": 5.12,
 "sp": 0.85
 },
-"Cross-body knee drives": {
-"f": "audio/889b7849f51c.mp3",
-"s": 1.51,
+"Cross-body knee drives.": {
+"f": "audio/bf0f1bf2a845.mp3",
+"s": 1.56,
 "sp": 0.85
 },
 "Next: Chest opener swings. Stand tall, arms out at shoulder height.": {
@@ -61,9 +61,9 @@
 "s": 4.78,
 "sp": 0.85
 },
-"Chest opener swings": {
-"f": "audio/a15d6172987b.mp3",
-"s": 1.47,
+"Chest opener swings.": {
+"f": "audio/4b5b5515bb5b.mp3",
+"s": 1.6,
 "sp": 0.85
 },
 "Next: Hip circles. Hands on your hips, feet planted.": {
@@ -71,14 +71,14 @@
 "s": 3.71,
 "sp": 0.85
 },
-"Hip circles": {
-"f": "audio/c1cdf62dbe6e.mp3",
-"s": 1.11,
+"Hip circles.": {
+"f": "audio/5337ce07f462.mp3",
+"s": 1.17,
 "sp": 0.85
 },
-"Change direction": {
-"f": "audio/4d088baf3505.mp3",
-"s": 1.32,
+"Change direction.": {
+"f": "audio/2679e6fa13c8.mp3",
+"s": 1.39,
 "sp": 0.85
 },
 "Next: Bent rotation sweeps. Hinge forward halfway, arms hanging loose.": {
@@ -86,9 +86,9 @@
 "s": 5.01,
 "sp": 0.85
 },
-"Bent rotation sweeps": {
-"f": "audio/eb1ff86e178a.mp3",
-"s": 1.56,
+"Bent rotation sweeps.": {
+"f": "audio/b8f547822e7d.mp3",
+"s": 1.64,
 "sp": 0.85
 },
 "Next: Folded cat-cows. Time to get on the ground. Fold down, hands on your bent knees.": {
@@ -96,9 +96,9 @@
 "s": 5.55,
 "sp": 1.0
 },
-"Folded cat-cows": {
-"f": "audio/ccde764ede35.mp3",
-"s": 1.39,
+"Folded cat-cows.": {
+"f": "audio/a167076ab72a.mp3",
+"s": 1.43,
 "sp": 0.85
 },
 "Next: Cobra press-ups. Lie face down, hands under your shoulders, elbows in.": {
@@ -106,9 +106,9 @@
 "s": 5.67,
 "sp": 0.85
 },
-"Cobra press-ups": {
-"f": "audio/1fe304f8a459.mp3",
-"s": 1.3,
+"Cobra press-ups.": {
+"f": "audio/fe802ed78b23.mp3",
+"s": 1.32,
 "sp": 0.85
 },
 "Next: Pedaling down dog. Tuck your toes and press up and back into down dog, hips high.": {
@@ -116,8 +116,8 @@
 "s": 6.08,
 "sp": 0.85
 },
-"Pedaling down dog": {
-"f": "audio/939250bf613f.mp3",
+"Pedaling down dog.": {
+"f": "audio/da6ddf3e1288.mp3",
 "s": 1.49,
 "sp": 0.85
 },
@@ -131,19 +131,19 @@
 "s": 2.69,
 "sp": 0.85
 },
-"Switch sides": {
-"f": "audio/05006ccefe89.mp3",
-"s": 1.24,
+"Switch sides.": {
+"f": "audio/513a6f49ae3b.mp3",
+"s": 1.07,
+"sp": 1.0
+},
+"Next: 90 90 with a fold. Sit into a Z. Front shin across in front, back shin behind you.": {
+"f": "audio/f241dd87bb80.mp3",
+"s": 7.06,
 "sp": 0.85
 },
-"Next: 90/90 with a fold. Sit into a Z: front shin across in front, back shin behind you.": {
-"f": "audio/a843f4086aa1.mp3",
-"s": 7.66,
-"sp": 0.85
-},
-"90/90 with a fold. Start with your right side.": {
-"f": "audio/e23530ccd571.mp3",
-"s": 3.9,
+"90 90 with a fold. Start with your right side.": {
+"f": "audio/64cc40fffcf3.mp3",
+"s": 3.61,
 "sp": 0.85
 },
 "Movement complete.": {
@@ -151,13 +151,13 @@
 "s": 1.41,
 "sp": 0.85
 },
-"Seated breathing": {
-"f": "audio/2d86e8ca4e8d.mp3",
-"s": 1.17,
+"Seated breathing.": {
+"f": "audio/3d770a456124.mp3",
+"s": 1.24,
 "sp": 0.85
 },
-"Seated cat-cow": {
-"f": "audio/de624d531856.mp3",
+"Seated cat-cow.": {
+"f": "audio/48af3e438f47.mp3",
 "s": 1.34,
 "sp": 0.85
 },
@@ -176,9 +176,9 @@
 "s": 1.24,
 "sp": 0.85
 },
-"Supported butterfly": {
-"f": "audio/27b6f9dfbdcb.mp3",
-"s": 1.51,
+"Supported butterfly.": {
+"f": "audio/093bb4f281ab.mp3",
+"s": 1.54,
 "sp": 0.85
 },
 "Come to kneeling.": {
@@ -186,9 +186,9 @@
 "s": 1.13,
 "sp": 0.85
 },
-"Wide-knee child's pose": {
-"f": "audio/b553de978ee5.mp3",
-"s": 1.62,
+"Wide-knee child's pose.": {
+"f": "audio/27e47cafe9a8.mp3",
+"s": 1.69,
 "sp": 0.85
 },
 "Come to hands and knees.": {
@@ -196,8 +196,8 @@
 "s": 1.58,
 "sp": 0.85
 },
-"Hands-and-knees rocking": {
-"f": "audio/895d54ed5bc7.mp3",
+"Hands-and-knees rocking.": {
+"f": "audio/b44ab99874c5.mp3",
 "s": 1.66,
 "sp": 0.85
 },
@@ -226,14 +226,14 @@
 "s": 3.2,
 "sp": 0.85
 },
-"Breath and pelvic floor release": {
-"f": "audio/2bc2e251aeb5.mp3",
-"s": 1.92,
+"Breath and pelvic floor release.": {
+"f": "audio/45ef4902fbe7.mp3",
+"s": 1.98,
 "sp": 0.85
 },
-"Hands-and-knees pelvic rocking": {
-"f": "audio/90fad9f23de2.mp3",
-"s": 2.03,
+"Hands-and-knees pelvic rocking.": {
+"f": "audio/b0b6cac124f1.mp3",
+"s": 2.05,
 "sp": 0.85
 },
 "Sit on your ball.": {
@@ -241,9 +241,9 @@
 "s": 1.19,
 "sp": 0.85
 },
-"Birth ball hip circles": {
-"f": "audio/19e563d54eb5.mp3",
-"s": 1.6,
+"Birth ball hip circles.": {
+"f": "audio/6ebbeb002c0b.mp3",
+"s": 1.62,
 "sp": 0.85
 },
 "Stand up and hold your chair.": {
@@ -251,9 +251,9 @@
 "s": 1.79,
 "sp": 0.85
 },
-"Supported deep squat": {
-"f": "audio/b9555ddf1d60.mp3",
-"s": 1.47,
+"Supported deep squat.": {
+"f": "audio/92e776557272.mp3",
+"s": 1.51,
 "sp": 0.85
 },
 "Lie on your side.": {
@@ -266,14 +266,14 @@
 "s": 3.24,
 "sp": 0.85
 },
-"Windshield wipers": {
-"f": "audio/c1d749bd4369.mp3",
-"s": 1.41,
+"Windshield wipers.": {
+"f": "audio/229608f7ff96.mp3",
+"s": 1.49,
 "sp": 0.85
 },
-"Supported butterfly with rock": {
-"f": "audio/ae0d583be3e4.mp3",
-"s": 1.94,
+"Supported butterfly with rock.": {
+"f": "audio/a18c27838a6d.mp3",
+"s": 2.05,
 "sp": 0.85
 },
 "Kneeling lunge with support. Start with your right side.": {
@@ -281,9 +281,9 @@
 "s": 3.48,
 "sp": 0.85
 },
-"Standing wall pelvic tilts": {
-"f": "audio/5fa52e7e22ab.mp3",
-"s": 1.81,
+"Standing wall pelvic tilts.": {
+"f": "audio/5fe9b0473b63.mp3",
+"s": 1.86,
 "sp": 0.85
 },
 "Sit on your chair.": {
@@ -291,9 +291,9 @@
 "s": 1.24,
 "sp": 0.85
 },
-"Pelvic floor coordination": {
-"f": "audio/466a366ec4c2.mp3",
-"s": 1.81,
+"Pelvic floor coordination.": {
+"f": "audio/0d6a8b50856f.mp3",
+"s": 1.88,
 "sp": 0.85
 },
 "Lie on your left side.": {
@@ -301,14 +301,14 @@
 "s": 1.54,
 "sp": 0.85
 },
-"Left side-lying rest": {
-"f": "audio/0bad72cfe9bf.mp3",
-"s": 1.69,
+"Left side-lying rest.": {
+"f": "audio/80060067409b.mp3",
+"s": 1.66,
 "sp": 0.85
 },
-"Deep squats": {
-"f": "audio/2975400b507e.mp3",
-"s": 1.11,
+"Deep squats.": {
+"f": "audio/dbebb06f1909.mp3",
+"s": 1.17,
 "sp": 0.85
 },
 "Next: Reverse lunges. Stay standing, feet under your hips. You'll step back one leg at a time.": {
@@ -336,9 +336,9 @@
 "s": 6.04,
 "sp": 1.0
 },
-"Glute bridge": {
-"f": "audio/60bb6e6cb988.mp3",
-"s": 1.13,
+"Glute bridge.": {
+"f": "audio/5ad990e6b103.mp3",
+"s": 1.15,
 "sp": 0.85
 },
 "Next: Side-lying clamshell. Roll onto your side. Knees bent, heels together, head resting on your lower arm.": {
@@ -361,13 +361,13 @@
 "s": 2.43,
 "sp": 0.85
 },
-"Next: Prone Y-T-W raise. Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.": {
-"f": "audio/b68864d1476d.mp3",
-"s": 8.28,
+"Next: Prone Y T W raise. Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.": {
+"f": "audio/93b2f990dd9c.mp3",
+"s": 8.32,
 "sp": 0.85
 },
-"Prone Y-T-W raise": {
-"f": "audio/5b8d7b2f8776.mp3",
+"Prone Y T W raise.": {
+"f": "audio/4e47f7992325.mp3",
 "s": 1.92,
 "sp": 0.85
 },
@@ -381,14 +381,14 @@
 "s": 2.58,
 "sp": 0.85
 },
-"Next: Plank hold. Turn over into a plank — elbows or hands under your shoulders, one straight line.": {
-"f": "audio/bcf242f1b2a2.mp3",
-"s": 7.04,
+"Next: Plank hold. Turn over into a plank. Elbows or hands under your shoulders, one straight line.": {
+"f": "audio/f99d25799f7d.mp3",
+"s": 6.91,
 "sp": 0.85
 },
-"Plank hold": {
-"f": "audio/ab90ded795a4.mp3",
-"s": 1.09,
+"Plank hold.": {
+"f": "audio/06292e20e430.mp3",
+"s": 1.05,
 "sp": 0.85
 },
 "Next: Dumbbell bent-over row. Stand up and grab your dumbbells. Soft knees, hinge your chest toward the floor, back flat.": {
@@ -396,18 +396,18 @@
 "s": 8.6,
 "sp": 0.85
 },
-"Dumbbell bent-over row": {
-"f": "audio/5cd9b6b94131.mp3",
-"s": 1.56,
+"Dumbbell bent-over row.": {
+"f": "audio/6c9b9fd7bd7e.mp3",
+"s": 1.66,
 "sp": 0.85
 },
-"Next: Bench dips. Dumbbells down — move to the bench. Hands on the edge beside your hips, feet out in front.": {
-"f": "audio/e80c1c7e05e0.mp3",
-"s": 7.23,
+"Next: Bench dips. Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.": {
+"f": "audio/0cec09d63092.mp3",
+"s": 7.55,
 "sp": 0.85
 },
-"Bench dips": {
-"f": "audio/64809c8584b4.mp3",
+"Bench dips.": {
+"f": "audio/03dd76fa8ac6.mp3",
 "s": 1.09,
 "sp": 0.85
 },
@@ -416,9 +416,9 @@
 "s": 6.21,
 "sp": 0.85
 },
-"Dumbbell farmer hold": {
-"f": "audio/881ea5c8d2a5.mp3",
-"s": 1.45,
+"Dumbbell farmer hold.": {
+"f": "audio/9476a0f0c8a4.mp3",
+"s": 1.47,
 "sp": 0.85
 },
 "Next: Standing posture reset. Set the dumbbells down. Stand tall, feet hip width, arms easy at your sides.": {
@@ -426,9 +426,9 @@
 "s": 8.15,
 "sp": 0.85
 },
-"Standing posture reset": {
-"f": "audio/13b932ebd426.mp3",
-"s": 1.64,
+"Standing posture reset.": {
+"f": "audio/124781697fda.mp3",
+"s": 1.66,
 "sp": 0.85
 },
 "Lateral band walks. Start with your right side.": {
