@@ -12,9 +12,10 @@ Orphaned clips under audio/ are deleted. Model files (~350 MB) are cached in
 %LOCALAPPDATA%/kokoro (auto-downloaded once); the venv is tools/tts-venv (gitignored):
     py -m venv tools/tts-venv && tools/tts-venv/Scripts/pip install kokoro-onnx soundfile lameenc numpy
 
-Speed policy (Will, 2026-09-28): 0.85 everywhere it fits. A transition cue must fit its
-gap minus the transition chime (0.8 s) minus the 3-2-1 ticks (3 s); if it doesn't at
-0.85 it is regenerated at 1.0, and if it still doesn't the overrun is reported loudly.
+Speed policy: 0.95 everywhere it fits (Will, 2026-10-12 — was 0.85 from 2026-09-28; the slower
+speed produced a leading vowel burst on voiced-stop-initial words). A transition cue must fit
+its gap minus the transition chime (0.8 s) minus the 3-2-1 ticks (3 s); if it doesn't at 0.95
+it is regenerated at 1.0, and if it still doesn't the overrun is reported loudly.
 """
 import argparse, hashlib, json, os, sys, time, urllib.request
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,15 +26,16 @@ ENGINE='kokoro-onnx'; MODEL='kokoro-v1.0'
 CACHE=os.path.join(os.environ.get('LOCALAPPDATA',os.path.expanduser('~/.cache')),'kokoro')
 RELEASE='https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/'
 CHIME=0.8; TICKS=3.0            # seconds of the gap the cue cannot use
-# Per-text speed overrides. "Switch sides." at 0.85 comes out as "eSwitch sides" — Kokoro prepends a
-# voiced vowel before the /s/ (measured 2026-10-12: low/high-band energy ratio at onset ~300 vs ~0 for
-# every other S-initial clip; a leading space, lowercase, '!' , quotes, '…', phoneme input and a
-# different trailing punctuation all reproduce it; speed 1.0 is clean, 0.9 borderline).
-SPEED_OVERRIDE={'Switch sides.':1.0}
+# No per-text overrides: the leading "e-" burst (a 40-100 ms vowel before a voiced-stop-initial
+# word) is a Kokoro speed artifact — sweep over all 91 strings 2026-10-12: 11/53 detectable words
+# at 0.85, 5 at 0.90, 1 at 0.95, 1 at 1.0 (that one looks clean on its spectrogram). Default
+# speed is therefore 0.95 (Will, 2026-10-12). Leading pause tokens render no pause in Kokoro;
+# phoneme input reproduces the burst; do not reintroduce a per-string list for this.
+SPEED_OVERRIDE={}
 SR_OUT=24000; KBPS=48; PEAK=0.89
 
 ap=argparse.ArgumentParser()
-ap.add_argument('--voice',default='af_heart'); ap.add_argument('--speed',type=float,default=0.85,help='default speed')
+ap.add_argument('--voice',default='af_heart'); ap.add_argument('--speed',type=float,default=0.95,help='default speed')
 ap.add_argument('--fit',type=float,default=1.0,help='speed used when the default does not fit the gap')
 ap.add_argument('--force',action='store_true'); ap.add_argument('--dry',action='store_true',help='report only')
 a=ap.parse_args()

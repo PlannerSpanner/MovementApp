@@ -77,7 +77,7 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     (builds to a staging dir, runs `tools/cues.js --check`, REFUSES to install if any
     spoken string lacks a clip; `SKIP_CUE_CHECK=1` only to bootstrap) -> commit the new
     mp3s + manifest with the change. One edited cue = one clip (~3 s CPU); new voice or
-    speed = all 91 (~2 min). Needs `tools/tts-venv` (gitignored: `py -m venv
+    speed = all 91 (~1 min). Needs `tools/tts-venv` (gitignored: `py -m venv
     tools/tts-venv && tools/tts-venv/Scripts/pip install kokoro-onnx soundfile lameenc
     numpy`; kokoro-onnx runs on Python 3.14, the torch build does not) and the model
     files, auto-downloaded once to %LOCALAPPDATA%/kokoro (~350 MB, never in the repo).
@@ -89,11 +89,15 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     ninety"; "Y-T-W" -> "Y T W", else one run-together word) -- display text untouched.
     Setup scripts use sentence punctuation, not em-dashes or colons mid-sentence. Check a
     new string's phonemes with the kokoro-onnx Tokenizer before trusting how it reads.
-    PER-TEXT SPEED OVERRIDE (`SPEED_OVERRIDE` in tools/gen_cues.py): "Switch sides." is
-    generated at 1.0 -- at 0.85 Kokoro prepends a voiced vowel before the /s/ ("eSwitch"),
-    measured by onset low/high-band energy (~300 vs ~0 for every other S-initial clip);
-    leading space, lowercase, "!", quotes, phoneme input all reproduce it, 1.0 is clean.
-    SPEED POLICY: 0.85 everywhere it fits; a transition cue must fit its gap minus the
+    LEADING "e-" BURST (class of bug, found 2026-10-12): at speed 0.85 Kokoro prepends a 40-100 ms
+    full-level vowel before voiced-stop-initial words (Glute bridge, Switch sides, Dead bug...).
+    Sweep over all 91 strings: 11/53 detectable words at 0.85, 5 at 0.90, 1 at 0.95, 1 at 1.0.
+    Leading pause tokens render NO pause in Kokoro and phoneme input reproduces it, so the fix is
+    the default speed (0.95), never a per-string list. Detector + sweep tooling under audition/
+    (gitignored). PROSODY: Kokoro exposes no pitch/duration/per-word control; stress and length
+    marks in phoneme input do nothing to the closing contour; the style-vector row lowers the
+    closing word but slows every clip ~30% -- Will's decision 2026-10-12: baseline is fine, skip.
+    SPEED POLICY: 0.95 everywhere it fits (was 0.85 until 2026-10-12); a transition cue must fit its gap minus the
     chime (0.8 s) minus the 3-2-1 ticks (3 s) -- 6.2 s in a 10 s gap, 11.2 s in 15 s -- else
     it is refit at 1.0; remaining overruns print as OVERRUN and the checker WARNs. As of
     2026-09-28 three overrun: Folded cat-cows (Flow's authored 5 s ground gap, 5.5 s clip),
