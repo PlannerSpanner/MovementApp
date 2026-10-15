@@ -1,9 +1,9 @@
 // Morning Flow — 13 movements: eight standing (continuous and rhythmic), then a
 // five-movement ground finish moved in from the retired Morning Movement app
 // (2026-08-26; poses verbatim). TR_ALL build: tdur = length of the GET SET UP gap
-// BEFORE the movement (default 10, 15 for position changes, 5 for the explicit
-// get-on-the-ground gap before Cat-cows); setup = authored transition script,
-// spoken as "Next: <name>. <setup>". Work 680s + gaps 135s = 815s.
+// BEFORE the movement (default 10, 15 for position changes including the explicit
+// get-on-the-ground gap before Cat-cows -- 5s until 2026-10-15); setup = authored
+// transition script, spoken as "Next: <name>. <setup>". Work 660s + gaps 145s = 805s.
 // Retired from Flow (see src/d_retired.js): Rotations with shoulder slaps,
 // Lateral weight shifts.
 const MOVES=[
@@ -32,10 +32,17 @@ const MOVES=[
  A:{p:[0,61,0],yaw:-40,tw:-50,s:[4,4],hf:0,aL:[-48,-16,62,-22],aR:[92,0,92,0],ikFL:[-12,93,1],ikFR:[12,93,1],swL:-10,swR:28},
  B:{p:[0,61,0],yaw:-40,tw:50,s:[4,4],hf:0,aL:[92,0,92,0],aR:[-48,16,62,22],ikFL:[-12,93,1],ikFR:[12,93,1],swL:-10,swR:28}},
 
-{n:"Dynamic lateral reaches",pos:'standing',cue:"Reach long overhead, lean to the far side",dur:50,bil:false,cyc:2.2,pin:'LR',
+// Standing crescent (reworked 2026-10-15): faces the camera (yaw -40) so the side-bend
+// is in the screen plane -- at a 3/4 view the lean read as a fore-aft rock. Both arms
+// FK with the flex pinned at 180 so abd alone sweeps the arm through the FRONTAL plane:
+// the reaching arm goes overhead past the head toward the lean (abd -36), down through
+// a lateral T, to the hip (abd 150 / forearm 210 = elbow bent, hand on the hip). sl is
+// the trunk's lateral bend (shoulders stay level, the arm over-reach carries the arc).
+// Pace halved: cyc 4.4.
+{n:"Dynamic lateral reaches",pos:'standing',cue:"Reach long overhead, lean to the far side",dur:50,bil:false,cyc:4.4,pin:'LR',
  setup:"Feet wide, one hand on your hip, the other arm ready to reach.",
- A:{p:[0,60,0],yaw:-18,tw:0,sl:-16,s:[4,6],hf:-4,ikR:{w:[-8,12,2]},ikL:{w:[-11,64,3]},ikFL:[-12,93,1],ikFR:[12,93,1]},
- B:{p:[0,60,0],yaw:-18,tw:0,sl:16,s:[4,6],hf:-4,ikL:{w:[8,12,2]},ikR:{w:[11,64,3]},ikFL:[-12,93,1],ikFR:[12,93,1]}},
+ A:{p:[0,60,0],yaw:-40,tw:0,sl:-20,s:[4,6],hf:-4,aR:[180,-36,180,-42],aL:[180,-150,180,-210],ikFL:[-12,93,1],ikFR:[12,93,1]},
+ B:{p:[0,60,0],yaw:-40,tw:0,sl:20,s:[4,6],hf:-4,aL:[180,36,180,42],aR:[180,150,180,210],ikFL:[-12,93,1],ikFR:[12,93,1]}},
 
 {n:"Cross-body knee drives",pos:'standing',cue:"Knee up, opposite elbow to meet it",dur:50,bil:false,cyc:1.4,
  setup:"Feet under your hips, stand tall, elbows up.",
@@ -46,51 +53,63 @@ const MOVES=[
  B:{p:[0,58,0],yaw:0,tw:-14,s:[6,8],hf:-12,aL:[26,22,58,30],aR:[-26,12,-42,8],
     ikFL:[-6,93,1],lR:[100,-20,-38,-6],swR:-25}},
 
+// Open position past the frontal plane (2026-10-15): abd beyond 90 puts the arm BEHIND
+// the shoulder line (abd 115 = 25 deg behind), so the swing shows the full range; the
+// cross stays in front (abd 26/44).
 {n:"Chest opener swings",pos:'standing',cue:"Swing wide open, then cross in front",dur:50,bil:false,cyc:1.8,
  setup:"Stand tall, arms out at shoulder height.",
- A:{p:[0,58,0],yaw:-14,tw:0,s:[3,3],hf:-6,aL:[80,-78,84,-84],aR:[80,78,84,84],ikFL:[-7,93,1],ikFR:[7,93,1]},
+ A:{p:[0,58,0],yaw:-14,tw:0,s:[3,3],hf:-6,aL:[86,-115,88,-122],aR:[86,115,88,122],ikFL:[-7,93,1],ikFR:[7,93,1]},
  B:{p:[0,58,0],yaw:-14,tw:0,s:[6,6],hf:6,aL:[86,26,88,44],aR:[86,-26,88,-44],ikFL:[-7,93,1],ikFR:[7,93,1]}},
 
-// Single-leg hip CAR (replaced the two-footed standing hip circles, Will 2026-10-12):
-// stand on the left leg, the right knee lifts to hip height and the thigh draws the
-// biggest circle the hip allows -- forward, out, behind, down. orb.leg drives the
-// lifted leg from the phase (see orbitPose); the halfway mirror swaps legs AND reverses
-// the direction. The standing ankle works the whole time (ankle note in x_flow.js).
-{n:"Single-leg hip circles",pos:'standing',cue:"Stand on one leg, circle the lifted knee",dur:60,bil:true,cyc:2.6,
- setup:"Hands on your hips. Stand on your left leg, right knee ready to lift.",
- orb:{leg:'R',fB:30,fA:55,aB:28,aA:28},
- A:{p:[-4,55.5,0],yaw:20,tw:0,s:[2,2],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-6,93,1],lR:[85,6,-5,2]},
- B:{p:[-4,55.5,0],yaw:20,tw:0,s:[2,2],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-6,93,1],lR:[85,6,-5,2]}},
+// Single-leg hip CAR (replaced the two-footed standing hip circles, Will 2026-10-12;
+// alternating since 2026-10-15): stand on both feet, hands on hips. The right knee lifts
+// and the thigh draws the biggest circle the hip allows -- behind, out, forward -- and
+// the foot lands next to the other; then the left leg does the same (orb.alt: one cycle
+// = right orbit + left orbit, each from the floor and back to it). The halfway mirror
+// reverses the direction, back-to-front becomes front-to-back ("Change direction.").
+{n:"Single-leg hip circles",pos:'standing',cue:"One leg at a time, circle the lifted knee",dur:60,bil:true,cyc:5.2,
+ setup:"Hands on your hips. One leg at a time, the knee draws a circle.",
+ orb:{leg:'R',alt:true},
+ A:{p:[0,55.5,0],yaw:20,tw:0,s:[2,2],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-6,93,1],ikFR:[6,93,1]},
+ B:{p:[0,55.5,0],yaw:20,tw:0,s:[2,2],hf:0,ikL:{k:"hpL"},ikR:{k:"hpR"},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-6,93,1],ikFR:[6,93,1]}},
 
-// Windmill (Will, 2026-10-12): hinged near parallel, the trunk ROLLS (tw about the spine
-// axis) until the bottom hand touches the floor; the hips shift over the bent knee so the
-// leg opposite the grounded hand straightens; the top arm points at the sky. A = left
-// hand down / right leg straight, B mirrors. Both arms FK (abd in the body frame, the
-// roll brings them vertical) so the midpoint is a flat-back T. Pace halved: cyc 4.
+// Windmill (Will, 2026-10-12; M keyframe 2026-10-15): hinged near parallel, the trunk
+// ROLLS (tw about the spine axis) until the bottom hand touches the floor; the hips shift
+// over the bent knee so the leg opposite the grounded hand straightens; the top arm
+// points at the sky. A = left hand down / right leg straight, B mirrors. M = the
+// crossover: unrolled, knees softer, ROUNDED (bend) with BOTH hands on the floor a
+// little ahead of the feet (hands under the shoulders hide behind the shins on screen), so
+// the path A-M-B-M-A is: left planted + rotate up, back down to both hands, right
+// planted + rotate up, back down. Both arms FK in every frame (abd in the body frame,
+// the roll brings them vertical) so the sweeps blend. Pace halved: cyc 4.
 {n:"Bent rotation sweeps",pos:'standing',cue:"Hinged forward, sweep floor to sky",dur:50,bil:false,cyc:4.0,
  setup:"Feet wide, hinge forward, arms hanging loose.",
  A:{p:[-8,58,-6],yaw:6,tw:60,s:[96,100],hf:-16,aL:[0,-60,0,-60],aR:[0,120,0,120],ikFL:[-12,93,1],ikFR:[12,93,1]},
+ M:{p:[0,63.5,-7],yaw:6,tw:0,bend:45,s:[98,108],hf:30,aL:[24,-3,24,-3],aR:[24,3,24,3],ikFL:[-12,93,1],ikFR:[12,93,1]},
  B:{p:[8,58,-6],yaw:6,tw:-60,s:[96,100],hf:-16,aL:[0,-120,0,-120],aR:[0,60,0,60],ikFL:[-12,93,1],ikFR:[12,93,1]}},
 
 // ---- ground block (poses moved verbatim from data2.js, 2026-08-26) ----
-// Explicit 5s "get on the ground" gap opens the block (Will's authored transition).
+// Explicit 15s "get on the ground" gap opens the block (Will's authored transition;
+// was 5s until 2026-10-15 -- not enough time to actually get down to the floor).
 // Quadruped cat-cow (was the standing "Folded cat-cows" until 2026-10-12): hands under
 // the shoulders, knees under the hips, feet trailing. A = cat (round, head down),
-// B = cow (dip, chest open, head up).
-{n:"Cat-cows",pos:'quadruped',cue:"Round the spine, then arch and open the chest",dur:30,bil:false,cyc:3.4,tdur:5,
+// B = cow (dip, chest open, head up). The spine `bend` (2026-10-15) genuinely curves
+// the torso: +60 rounds the back toward the ceiling, -50 sags it toward the floor.
+{n:"Cat-cows",pos:'quadruped',cue:"Round the spine, then arch and open the chest",dur:30,bil:false,cyc:3.4,tdur:15,
  setup:"Time to get on the ground. Hands and knees, wrists under your shoulders.",
- A:{p:[0,74,0],yaw:22,tw:0,s:[62,92],hf:44,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
+ A:{p:[0,74,0],yaw:22,tw:0,bend:60,s:[62,92],hf:44,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
     aL:[0,0,0,0],aR:[0,0,0,0],lL:[7,-6,-90,-5],lR:[7,6,-90,5]},
- B:{p:[0,74,0],yaw:22,tw:0,s:[104,62],hf:-34,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
+ B:{p:[0,74,0],yaw:22,tw:0,bend:-50,s:[104,62],hf:-34,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
     aL:[0,0,0,0],aR:[0,0,0,0],lL:[7,-6,-90,-5],lR:[7,6,-90,5]}},
 
-{n:"Cobra press-ups",pos:'prone',cue:"Press the chest up, hips stay down",dur:60,bil:false,cyc:3.2,tdur:15,
+// 40s since 2026-10-15 (was 60); the press carries a real arch (bend -45).
+{n:"Cobra press-ups",pos:'prone',cue:"Press the chest up, hips stay down",dur:40,bil:false,cyc:3.2,tdur:15,
  setup:"Lie face down, hands under your shoulders, elbows in.",
- A:{p:[0,90.5,4],yaw:18,tw:0,s:[74,66],hf:10,ikL:{w:[-9,93,20]},ikR:{w:[9,93,20]},
+ A:{p:[0,90.5,4],yaw:18,tw:0,bend:-8,s:[74,66],hf:10,ikL:{w:[-9,93,20]},ikR:{w:[9,93,20]},
     aL:[0,0,0,0],aR:[0,0,0,0],lL:[-92,-6,-88,-5],lR:[-96,6,-92,5]},
- B:{p:[0,90.5,4],yaw:18,tw:0,s:[46,24],hf:-22,ikL:{w:[-9,93,20]},ikR:{w:[9,93,20]},
+ B:{p:[0,90.5,4],yaw:18,tw:0,bend:-45,s:[46,24],hf:-22,ikL:{w:[-9,93,20]},ikR:{w:[9,93,20]},
     aL:[0,0,0,0],aR:[0,0,0,0],lL:[-92,-6,-88,-5],lR:[-96,6,-92,5]}},
 
 {n:"Pedaling down dog",pos:'downdog',cue:"Alternate pressing each heel down",dur:60,bil:false,cyc:2.2,tdur:15,

@@ -28,7 +28,7 @@ function normalise(m){
 }
 function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
   swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),
-  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),tw:lerp(A.tw,B.tw,t),
+  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
   s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
@@ -121,7 +121,11 @@ function figMarkup(m,fit,ph){
   const parts=LIMBS.map(([x,y])=>({t:'l',a:P[x],b:P[y],d:(P[x].d+P[y].d)/2,col:side(y),w:1}));
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
   parts.push({t:'l',a:P.ftR,b:P.toeR,d:(P.ftR.d+P.toeR.d)/2,col:INK,w:0.8});
-  parts.push({t:'q',pts:[P.shL,P.shR,P.hpR,P.hpL],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});
+  // torso: the legacy quad, or -- when the pose carries a spine bend -- a path whose
+  // side edges bow with the curvature (torsoEdges in eng2.js; corners unchanged)
+  if(pose.bend){const e=torsoEdges(j,pose.bend,6),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
+    parts.push({t:'qp',pts:[...e.L.slice().reverse().map(Q),...e.R.map(Q)],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});}
+  else parts.push({t:'q',pts:[P.shL,P.shR,P.hpR,P.hpL],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});
   if(m.belly){
     const u=nrm(sub(j.chest,j.pelvis));
     const lat=rotY([1,0,0],pose.yaw);
@@ -163,6 +167,7 @@ function figMarkup(m,fit,ph){
     if(p.t==='p')return p.mk;
     if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${p.col}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
     if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+    if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='bp')return `<polygon points="${p.pts.join(' ')}" fill="${BELLY}"/>`;
     if(p.t==='bc')return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${p.r.toFixed(2)}" fill="${BELLY}"/>`;
     return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${INK}"/>`;}).join('');
@@ -382,8 +387,10 @@ function cueDecode(t){if(cueBufs[t])return Promise.resolve(cueBufs[t]);
 // run-together word). Display text is untouched — this only shapes the spoken string.
 const spokenName=n=>n.replace(/(\d)\/(\d)/g,'$1 $2').replace(/\b([A-Z])-([A-Z])-([A-Z])\b/g,'$1 $2 $3');
 // a bilateral orbit of the hips or knees only reverses at halfway ("Change direction.");
-// a single-leg orbit (orb.leg) swaps legs too, so it is cued and badged like any sided move
-const dirOnly=m=>!!(m.orb&&!m.orb.leg);
+// a single-leg orbit (orb.leg) swaps legs too, so it is cued and badged like any sided
+// move -- unless it already alternates legs every cycle (orb.alt), when the halfway
+// mirror only reverses the circle again
+const dirOnly=m=>!!(m.orb&&(!m.orb.leg||m.orb.alt));
 const cueFor=g=>g.trans?(TR_ALL&&g.m.setup?'Next: '+spokenName(g.m.n)+'. '+g.m.setup:posCue(g.m)):(spokenName(g.m.n)+(g.m.bil&&!dirOnly(g.m)?'. Start with your right side.':'.'));
 function cueTexts(){const s=new Set();SEGS.forEach(g=>s.add(cueFor(g)));MOVES.forEach(m=>{if(m.bil)s.add(dirOnly(m)?'Change direction.':'Switch sides.');});s.add('Movement complete.');s.add('Voice on.');return [...s];}
 function cuePrefetch(){cueTexts().forEach(t=>{if(!CUES[t]){vlog('NO CLIP for "'+t+'"');return;}cueFetch(t).catch(e=>vlog('prefetch failed "'+t+'": '+e.message));});}

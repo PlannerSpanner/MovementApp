@@ -85,6 +85,26 @@ function solve(p){
   return Object.assign(J,{elL,haL,elR,haR});
 }
 
+// spine curvature (added 2026-10-15): `bend` = degrees of arc the trunk curves through,
+// + = flexion (rounding, cat), - = extension (arching, cow / cobra). Like tw it is a
+// pose number that blends. It NEVER moves a joint -- pelvis, chest, neck, head and the
+// shoulder/hip corners are wherever solve() put them -- it only bows the torso's two
+// side edges between hip and shoulder along the trunk's rear normal (flexion) or front
+// normal (extension) by the arc's sagitta, (chord/2)*tan(bend/4). The renderers draw
+// those edges as a path when bend is non-zero and the legacy polygon when it is zero,
+// so every existing pose renders byte-identically. n = samples per edge (>=2).
+function torsoEdges(J,bend,n){
+  const c0=add(J.hpL,sub(J.hpR,J.hpL),0.5), c1=add(J.shL,sub(J.shR,J.shL),0.5);
+  const u=nrm(sub(c1,c0)), lat=nrm(add(sub(J.hpR,J.hpL),sub(J.shR,J.shL),1));
+  let f=cross(u,lat); if(len(f)<1e-6) f=[0,0,1]; f=nrm(f);          // trunk front
+  const sag=-(len(sub(c1,c0))/2)*Math.tan(R(bend)/4);                // + bend bows backward
+  const L=[],Rr=[];
+  for(let i=0;i<=n;i++){const t=i/n, k=sag*Math.sin(Math.PI*t);
+    L.push(add(add(J.hpL,sub(J.shL,J.hpL),t),f,k));
+    Rr.push(add(add(J.hpR,sub(J.shR,J.hpR),t),f,k));}
+  return {L,R:Rr};
+}
+
 // circular-path helper: knees or hips orbit while feet stay pinned
 function orbitPose(base,o,ph){
   const p=Object.assign({},base);
@@ -96,6 +116,30 @@ function orbitPose(base,o,ph){
     // bent ~90 deg (the shin follows the thigh); the other leg keeps base's planted target.
     // o.fB/o.fA: thigh flex centre/amplitude (90 = forward horizontal, <0 = behind);
     // o.aB/o.aA: abduction centre/amplitude. Phase 0 = forward, then out, then behind.
+    // o.alt (2026-10-15): the legs ALTERNATE within one cycle. The first half is o.leg's
+    // orbit, the second half the other leg's mirror image, and each orbit starts and ends
+    // with the foot planted on base's own target for that leg (both feet must carry ikF
+    // targets). The thigh runs through four stations -- down (planted, fitted so the
+    // straight leg's foot lands exactly on the target) -> behind -> out -> front -> down,
+    // i.e. back-to-front; the halfway mirror reverses it -- joined by a periodic
+    // Catmull-Rom spline so the foot lifts and lands smoothly. o.fr/o.out/o.bk override
+    // the station angles [thighFlex, abd, shinFlex, shinAbd] for the right leg.
+    if(o.alt){
+      const half=((ph/(2*Math.PI))%1+1)%1, leg=half<0.5?o.leg:(o.leg==='L'?'R':'L');
+      const th=(half<0.5?half:half-0.5)*4*Math.PI, sg=leg==='L'?-1:1;
+      const J=solve(base), hp=J['hp'+leg], tg=base['ikF'+leg];
+      const d=rotY(nrm(sub(tg,hp)),-base.yaw);                 // straight-leg direction, body frame
+      const fd=Math.atan2(d[2],d[1])*180/Math.PI, ad=Math.asin(Math.max(-1,Math.min(1,d[0])))*180/Math.PI;
+      const D=[fd,ad,fd,ad];
+      const M=(st)=>[st[0],sg*st[1],st[2],sg*st[3]];
+      const S=[D, M(o.bk||[-25,28,-115,10]), M(o.out||[30,56,-60,20]), M(o.fr||[85,6,-5,2])];
+      const seg=th/(Math.PI/2), i=Math.floor(seg)%4, t=seg-Math.floor(seg);
+      const P0=S[(i+3)%4],P1=S[i],P2=S[(i+1)%4],P3=S[(i+2)%4];
+      const cr=(a,b,c,e)=>0.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-e)*t*t+(-a+3*b-3*c+e)*t*t*t);
+      p['l'+leg]=[0,1,2,3].map(k=>cr(P0[k],P1[k],P2[k],P3[k]));
+      delete p['ikF'+leg];
+      return p;
+    }
     const f1=o.fB+o.fA*Math.cos(ph), a1=o.aB+o.aA*Math.sin(ph), sg=o.leg==='L'?-1:1;
     p['l'+o.leg]=[f1,sg*a1,f1-(o.knee==null?90:o.knee),sg*a1*0.35];
     delete p['ikF'+o.leg];

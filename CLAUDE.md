@@ -6,7 +6,8 @@ deployed to GitHub Pages at https://plannerspanner.github.io/MovementApp/
 Built for iPhone Safari (wake lock + Add to Home Screen require Safari, not Chrome).
 
 Apps: `morning-flow` (Morning Flow — 13-move qi gong warmup: 8 standing + 5-move ground
-finish, TR_ALL authored transitions incl. an explicit 5s "get on the ground" gap, 815s;
+finish, TR_ALL authored transitions incl. an explicit 15s "get on the ground" gap (5s until
+2026-10-15), 805s (cobra 40s since 2026-10-15);
 seven poses rebuilt 2026-10-12 per Will's spec — Hip circles became the single-leg hip
 CAR "Single-leg hip circles", Folded cat-cows became the quadruped "Cat-cows"; the old
 poses are archived in d_retired.js),
@@ -55,12 +56,25 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     torso is horizontal; upright, tw>0 pulls the right shoulder BACK. Chest→neck carries
     45%, head/shoulders/FK arms the full angle. FK arm angles are body-frame BEFORE the
     roll: an arm abducted 60° becomes vertical under a 60° roll (windmill bottom hand).
+  - `bend` (added 2026-10-15) = spine curvature in degrees of arc, + flexion/rounding,
+    − extension/arching. Blends like `tw`. It NEVER moves a joint: `torsoEdges()` in
+    eng2.js bows the torso's two hip→shoulder side edges along the trunk's rear (flexion)
+    or front (extension) normal by the arc's sagitta, and figMarkup (app_tpl AND wk_tpl)
+    draws them as a `<path>` only when bend ≠ 0 — zero/absent bend emits the legacy
+    `<polygon>` byte-for-byte (verified over every frame of all five apps). Used by
+    Cat-cows (+60/−50), Cobra (−45), Bent rotation sweeps' M (+45). Candidates: thread
+    the needle, wide-knee child's pose.
   - `orb` modes: `{hips:true,rx,rz,ry}` pelvis circle (feet pinned), `{swivel:true,amp}`
     knee circles, `{leg:'R'|'L',fB,fA,aB,aA,knee?}` single-leg hip CAR — that leg's thigh
     traces a cone from the phase, knee ~90° (shin follows the thigh), the other leg keeps
-    its planted target. Only `A` is used by orbital movements. A bilateral `orb.leg`
-    movement is cued/badged like a sided move ("Start with your right side." / "Switch
-    sides."), the other orbits say "Change direction." (`dirOnly()` in app_tpl.js).
+    its planted target. `{leg,alt:true}` (2026-10-15) ALTERNATES legs within one cycle:
+    first half = `leg`'s orbit from the floor and back (four thigh stations
+    down/behind/out/front on a periodic Catmull-Rom spline; the down station is fitted so
+    the straight leg's foot lands exactly on base's `ikF` target — both feet need targets),
+    second half = the other leg mirrored. Only `A` is used by orbital movements. A
+    bilateral `orb.leg` movement is cued/badged like a sided move ("Start with your right
+    side." / "Switch sides."); `orb.alt` and the other orbits say "Change direction."
+    (`dirOnly()` in app_tpl.js).
   - Arm IK with a joint key (`{k:"shL"}`) can't blend — `lerpT` returns it unchanged
     for an entire blend segment, so the hand stays pinned for the whole half and pops
     at the crossover. Any movement with an `M` keyframe must use world-point targets
@@ -119,7 +133,8 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     2026-09-28 three overrun: Cat-cows (Flow's authored 5 s ground gap, ~5.7 s clip; was Folded cat-cows),
     Side-lying clamshell (+0.7 s), Side plank (+0.1 s) -- Will's decision 2026-09-30:
     leave all three as they are, not noticeable in use (a cue overlapping the ticks
-    mixes, it does not cut). Device-verified 2026-09-30: full Morning Flow session,
+    mixes, it does not cut). Since 2026-10-15 the ground gap is 15 s, so only the two
+    Daily 13 overruns remain. Device-verified 2026-09-30: full Morning Flow session,
     silent mode on, phone speaker, every cue and chime audible.
     WHY (keep -- it is the platform record): iOS Safari speechSynthesis.speak() activates
     the system synthesizer's own audio session; WebKit drops the page's AudioContext to
@@ -218,11 +233,16 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     npm run gauntlet   # cues --check + smoke + lint + geo + wk (strength invariants) + daily (Daily 13
                        # form invariants: dips parallel stop, dead-bug flat back, bridge
                        # line, clamshell heels welded, side-plank line, bird-dog flat
-                       # back, held dumbbells in front of torso, 715s) + Playwright:
+                       # back, held dumbbells in front of torso, 715s) + flow (Morning
+                       # Flow invariants: bend never moves a joint / zero bend = legacy
+                       # polygon, cat rounds + cow arches, cobra 40s + arch, windmill
+                       # both-hands-down crossover, hip circles alternate legs from the
+                       # floor, chest opener behind the frontal plane, lateral reaches
+                       # arc sideways at cyc 4.4, 15s ground gap, 805s) + Playwright:
                        # shots (incl. index),
                        # wkshots (strength cards + set checks), dailyshots (every Daily 13
                        # movement + transition), flowshots (every Morning Flow movement +
-                       # the 5s ground transition), catchup, trans (legacy gaps on
+                       # the 15s ground transition), catchup, trans (legacy gaps on
                        # prenatal-stretch + TR_ALL blocks for flow/daily-13),
                        # breath tones, 2x toggle, auto-update freshness, voice
                        # (pre-generated cue clips: scheduling, decode, failure modes,

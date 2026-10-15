@@ -47,7 +47,7 @@ Three kinds of movement use, or deliberately don't use, that mechanism:
 | Type | Halfway event | Voice | Movements |
 |---|---|---|---|
 | Unilateral (one side at a time) | mirror + chime | "Switch sides" | Punching rotations*, Dynamic lateral reaches, Cross-body knee drives*, Lateral weight shifts, Reverse lunges, 90/90 with a fold, Thread the needle, Seated side reach, Seated figure-4, Kneeling hip flexor stretch, Standing calf stretch, Doorway chest opener, Side-lying clamshells, Kneeling lunge with support |
-| Direction change (orbital) | mirror reverses the circle | "Change direction" | Hip circles, Knee circles, Birth ball hip circles |
+| Direction change (orbital) | mirror reverses the circle | "Change direction" | Hip circles, Single-leg hip circles (alternates legs every cycle, so the mirror only reverses), Knee circles, Birth ball hip circles |
 | Alternating within each rep | none needed | — | Rotations with shoulder slaps, Chest opener swings, Bent rotation sweeps, Pedaling down dog, Arm sweeps, Bouncing, Hands-and-knees rocking, Supported butterfly with rock, Windshield wipers |
 | Deliberately one-sided | none — do not "fix" | — | Left side-lying rest (left side only: vena cava decompression) |
 
@@ -66,12 +66,13 @@ five-movement ground block moved in verbatim from the retired Morning Movement a
 (2026-08-26). Every movement doubles as warmup plus targeted rehab.
 
 **Transitions (TR_ALL build):** every movement is preceded by an authored GET SET UP
-gap (`tdur` 10s in the standing block, 15s for the floor position changes, and an
-explicit **5s "get on the ground" gap before Folded cat-cows** — Will's authored
-block transition). The voice reads "Next: <name>. <setup script>"; the figure holds
+gap (`tdur` 10s in the standing block, 15s for the floor position changes including
+the explicit **"get on the ground" gap before Cat-cows** — Will's authored block
+transition, 5s until 2026-10-15 when it grew to 15s so there is time to actually get
+down to the floor). The voice reads "Next: <name>. <setup script>"; the figure holds
 the upcoming A keyframe statically, dimmed, with a tan countdown; a 520 Hz 3-2-1
-triple tick ends the gap. Work 680s + gaps 135s = **815s (13:35)**; launcher label
-14 min.
+triple tick ends the gap. Work 660s + gaps 145s = **805s (13:25)**; launcher label
+13 min.
 
 Retired from Flow (see "Retired — available for future versions"): Rotations with
 shoulder slaps, Lateral weight shifts.
@@ -114,14 +115,20 @@ shoulder slaps, Lateral weight shifts.
   cross the screen; each punch extends fully across the body while the other fist pulls
   back to the ribs; the shoulder line swings ±50° (tw) on every punch (updated 2026-10-12).
 
-## 4. Dynamic lateral reaches — 50s, 2.2s cycle, unilateral (switch)
-- **Setup:** feet wide, both planted.
-- **Execution:** reach one arm overhead and lean to the opposite side — long line from hip
-  to fingertips; return and repeat, same side until the switch.
+## 4. Dynamic lateral reaches — 50s, 4.4s cycle, alternating
+- **Setup:** feet wide, both planted, one hand on the hip.
+- **Execution:** reach the other arm overhead and lean to the opposite side — long line
+  from hip to fingertips — then arc back through upright and over to the other side, the
+  arms trading roles. Slow: one side per breath (pace halved 2026-10-15, was 2.2s).
 - **Anchors:** pure frontal plane — no forward slump; both feet stay full-contact; stretch
   runs the lateral fascial line (IT band–obliques–lats).
-- **Faults:** hip swaying out instead of trunk bending; trailing heel lifting.
-- **Figure:** clear side-bend with overhead arm, pelvis relatively level, feet planted.
+- **Faults:** hip swaying out instead of trunk bending; trailing heel lifting; rocking
+  fore-aft instead of bending sideways.
+- **Figure:** seen from the FRONT (yaw −40) so the side-bend is in the screen plane (a 3/4
+  view read as a fore-aft rock — fixed 2026-10-15); the trunk arcs side to side (`sl` ±20)
+  and the reaching arm over-reaches past the head toward the lean, sweeping down through a
+  lateral T to the hip as the other rises (FK, flex pinned at 180 so abd alone carries the
+  frontal-plane arc); pelvis level, feet pinned.
 
 ## 5. Cross-body knee drives — 50s, 1.4s cycle, unilateral (switch)
 - **Setup:** standing tall.
@@ -137,64 +144,84 @@ shoulder slaps, Lateral weight shifts.
 - **Setup:** feet shoulder-width, arms at shoulder height.
 - **Execution:** swing both arms wide open (horizontal abduction), then cross in front,
   alternating which arm crosses on top each rep.
-- **Anchors:** arms stay near shoulder height; open phase squeezes rhomboids/lower trap,
-  cross phase protracts (serratus); short of end range for the right AC joint.
-- **Faults:** ballistic fling at end range; arms drifting down to waist height.
-- **Figure:** horizontal arm swings, torso upright, feet planted.
+- **Anchors:** arms stay near shoulder height; the open phase carries the arms BEHIND
+  the frontal plane (that is where the rhomboid/lower-trap squeeze lives), the cross phase
+  protracts (serratus); still short of end range for the right AC joint.
+- **Faults:** ballistic fling at end range; arms drifting down to waist height; stopping
+  the open swing at the shoulder line.
+- **Figure:** horizontal arm swings, torso upright, feet planted; open = hands ~25° behind
+  the shoulder line (abd 115, updated 2026-10-15 — the swing used to stop in the frontal
+  plane), close = forearms crossed in front.
 
-## 7. Single-leg hip circles — 60s, 2.6s cycle, unilateral (switch legs AND reverse at halfway)
+## 7. Single-leg hip circles — 60s, 5.2s cycle (one circle per leg), orbital (direction change)
 Replaced the two-footed standing Hip circles on 2026-10-12 (old pose archived in
 `src/d_retired.js`). This is a standing hip CAR (controlled articular rotation).
-- **Setup:** stand tall on one leg, hands on hips; the other knee lifts to hip height.
-- **Execution:** the lifted thigh draws the biggest circle the hip allows — forward, out to
-  the side, behind, down and around — knee bent about 90° the whole way (the heel rises
-  toward the glute as the hip extends). Start on the right leg; at the halfway chime switch
-  legs and reverse the direction.
+Alternating since 2026-10-15 (was one leg per half with a side switch).
+- **Setup:** stand tall on both feet, hands on hips.
+- **Execution:** one knee lifts and the thigh draws the biggest circle the hip allows —
+  behind, out to the side, forward, then down — knee bent about 90° the whole way (the
+  heel rises toward the glute as the hip extends); the foot lands next to the other, then
+  the other leg lifts and circles. Back-to-front for the first half; at the halfway chime
+  the direction reverses to front-to-back.
 - **Anchors:** pelvis level and trunk quiet — motion isolated to the hip, not the low back;
   standing leg straight and stable; the standing ankle is on single-leg balance for the
   whole set (ankle-stability demand — foot tripod planted, hold a wall if it wobbles).
 - **Faults:** trunk leaning away to fake range; hiking the pelvis; the standing knee
   collapsing inward; rushing the arc.
-- **Figure:** standing leg planted and straight, lifted knee at hip height tracing a full
-  orbit (`orb.leg`); the halfway mirror swaps legs and reverses the circle.
+- **Figure:** standing leg planted and straight, the lifted knee reaching hip height on
+  a full orbit from the floor and back to it, right leg then left within one cycle
+  (`orb.leg` + `orb.alt`: four thigh stations down/behind/out/front on a periodic
+  Catmull-Rom spline, the down station fitted so the foot lands exactly on its planted
+  target); the halfway mirror reverses the circle ("Change direction.").
 
 ## 8. Bent rotation sweeps — 50s, 4s cycle, alternating (windmill)
 - **Setup:** feet wide, hinge forward until the back is near parallel, spine long, arms
   hanging (updated 2026-10-12 — pace halved from 2s).
-- **Execution:** rotate the trunk so one hand sweeps down to touch the floor while the other
-  reaches straight up — the arms stack into one vertical line. As the hand lands, the leg
-  on the OPPOSITE side straightens and the near knee softens (the hips shift over the bent
-  knee). Sweep back through flat and rotate the other way.
-- **Anchors:** hips keep facing forward — the rotation is thoracic; hinge depth constant;
-  neutral (not rounded) spine under the load; one full sweep per breath.
+- **Execution:** both hands reach down to the floor. One hand stays planted while the
+  trunk, head and free arm rotate up until the arms stack into one vertical line; as the
+  trunk rotates, the leg on the OPPOSITE side straightens and the near knee softens (the
+  hips shift over the bent knee). Rotate back down until both hands are on the floor,
+  then rotate up to the other side — so the planted hand alternates every half cycle
+  (sequence per Will, 2026-10-15; before that the arms stayed opposite each other).
+- **Anchors:** hips keep facing forward — the rotation is thoracic; hinge depth roughly
+  constant; both hands genuinely meet the floor between rotations; one full sweep per
+  breath.
 - **Faults:** standing up mid-set; lumbar rotation/hip swivel; stacking the arms without
-  the bottom hand reaching the floor.
-- **Figure:** hinged torso ROLLING about its own axis (tw), bottom hand on the floor, top
-  arm vertical, opposite leg straight; the midpoint is a flat-back T; feet planted.
+  the bottom hand reaching the floor; skipping the both-hands-down crossover.
+- **Figure:** A/M/B keyframes (path A→M→B→M→A): A = hinged torso ROLLED about its own
+  axis (tw +60), left hand on the floor, right arm vertical, right leg straight; M = the
+  crossover — unrolled, knees softer, spine ROUNDED (`bend` 45), both hands on the floor
+  a little ahead of the feet (hands under the shoulders hide behind the shins on screen);
+  B mirrors A. All arms FK so the sweeps blend; feet planted.
 
-## 9. Cat-cows — 30s, 3.4s cycle, symmetric, quadruped — 5s "get on the ground" gap before
+## 9. Cat-cows — 30s, 3.4s cycle, symmetric, quadruped — 15s "get on the ground" gap before
 Replaced the standing Folded cat-cows on 2026-10-12 (old pose archived in
 `src/d_retired.js`).
 - **Setup:** hands and knees — hands under the shoulders, knees under the hips, feet
-  trailing. Entered via the explicit 5s authored gap ("Time to get on the ground. Hands
-  and knees, wrists under your shoulders.") — the doorway into the ground block.
+  trailing. Entered via the explicit authored gap ("Time to get on the ground. Hands
+  and knees, wrists under your shoulders.") — the doorway into the ground block; 15s
+  since 2026-10-15 (the 5s gap left no time to actually get down).
 - **Execution:** exhale — round the whole spine toward the ceiling, chin tucked; inhale —
   let the belly drop, arch and open the chest, eyes forward.
 - **Anchors:** emphasis on **T4–T8 extension** on the arch; move segmentally, slow; weight
   even through hands and knees.
 - **Faults:** hinging only at the low back; elbows locking the movement out; sitting back
   toward the heels.
-- **Figure:** quadruped base fixed (hands planted, shins trailing), spine rounding with the
-  head tucked, then dipping with the head up.
+- **Figure:** quadruped base fixed (hands planted, shins trailing); the torso genuinely
+  CURVES (`bend` +60 cat / −50 cow, engine spine curvature added 2026-10-15): cat rounds
+  the back toward the ceiling with the head tucked, cow sags it toward the floor with the
+  head up.
 
-## 10. Cobra press-ups — 60s, 3.2s cycle, symmetric (McKenzie extension)
+## 10. Cobra press-ups — 40s, 3.2s cycle, symmetric (McKenzie extension)
+Work interval 40s since 2026-10-15 (was 60s).
 - **Setup:** face down, hands under the shoulders, legs relaxed.
 - **Execution:** press the chest up and forward, hips staying on the floor; lower with
   control.
 - **Anchors:** **elbows tucked close to the ribs** (flaring loads the right AC joint);
   pelvis never leaves the floor; range grows over the set, never forced.
 - **Faults:** hips lifting (turning it into up-dog); shoulders shrugging to the ears.
-- **Figure:** chest arcing up while pelvis and legs stay grounded.
+- **Figure:** chest arcing up while pelvis and legs stay grounded; the press carries a
+  real arch (`bend` −45, from −8 flat).
 
 ## 11. Pedaling down dog — 60s, 2.2s cycle, alternating
 - **Setup:** inverted V — hands and feet down, hips high.

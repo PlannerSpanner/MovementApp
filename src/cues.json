@@ -66,19 +66,19 @@
 "s": 1.39,
 "sp": 0.95
 },
-"Next: Single-leg hip circles. Hands on your hips. Stand on your left leg, right knee ready to lift.": {
-"f": "audio/fe86d7de6cca.mp3",
-"s": 5.95,
-"sp": 1.0
-},
-"Single-leg hip circles. Start with your right side.": {
-"f": "audio/b6f7388e7c01.mp3",
-"s": 3.01,
+"Next: Single-leg hip circles. Hands on your hips. One leg at a time, the knee draws a circle.": {
+"f": "audio/4f2442dabf2d.mp3",
+"s": 5.93,
 "sp": 0.95
 },
-"Switch sides.": {
-"f": "audio/a61314921c89.mp3",
-"s": 1.09,
+"Single-leg hip circles.": {
+"f": "audio/c487cd895b25.mp3",
+"s": 1.56,
+"sp": 0.95
+},
+"Change direction.": {
+"f": "audio/4d9de03e8e97.mp3",
+"s": 1.24,
 "sp": 0.95
 },
 "Next: Bent rotation sweeps. Feet wide, hinge forward, arms hanging loose.": {
@@ -129,6 +129,11 @@
 "Thread the needle. Start with your right side.": {
 "f": "audio/daab42e04865.mp3",
 "s": 2.43,
+"sp": 0.95
+},
+"Switch sides.": {
+"f": "audio/a61314921c89.mp3",
+"s": 1.09,
 "sp": 0.95
 },
 "Next: 90 90 with a fold. Sit into a Z. Front shin across in front, back shin behind you.": {
@@ -239,11 +244,6 @@
 "Birth ball hip circles.": {
 "f": "audio/58b00879cdaf.mp3",
 "s": 1.51,
-"sp": 0.95
-},
-"Change direction.": {
-"f": "audio/4d9de03e8e97.mp3",
-"s": 1.24,
 "sp": 0.95
 },
 "Stand up and hold your chair.": {

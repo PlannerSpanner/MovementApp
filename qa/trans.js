@@ -51,15 +51,15 @@ const {serve}=require('./serve');
     const n=await p.evaluate(()=>SEGS.filter(s=>s.trans).length);await p.close();return n;};
   check('prenatal-movement has 10 gaps', await gapCount('prenatal-movement')===10);
   // morning-flow (TR_ALL since 2026-08-26): authored gaps before every movement,
-  // 10s standing block, explicit 5s "get on the ground" before Cat-cows,
-  // 15s for the floor position changes. Work 680 + gaps 135 = 815s.
+  // 10s standing block, 15s for the floor position changes including the explicit
+  // "get on the ground" gap before Cat-cows (5s until 2026-10-15). Work 660 + gaps 145 = 805s.
   const p2=await browser.newPage();
   await p2.goto(`http://127.0.0.1:${srv.port}/morning-flow.html`);
   const fsegs=await p2.evaluate(()=>SEGS.map(s=>({dur:s.dur,trans:!!s.trans,mi:s.mi})));
   check('morning-flow has a gap before every movement (12)', fsegs.filter(s=>s.trans).length===12);
   const fdur=fsegs.filter(s=>s.trans).map(s=>s.dur).join(',');
-  check(`morning-flow gap lengths authored (${fdur})`, fdur==='10,10,10,10,10,10,10,5,15,15,15,15');
-  check('morning-flow session is 815s', fsegs.reduce((a,s)=>a+s.dur,0)===815);
+  check(`morning-flow gap lengths authored (${fdur})`, fdur==='10,10,10,10,10,10,10,15,15,15,15,15');
+  check('morning-flow session is 805s', fsegs.reduce((a,s)=>a+s.dur,0)===805);
   await p2.close();
   // daily-13 (TR_ALL): authored gaps before EVERY movement, per-movement lengths,
   // "Next:" voice script shown as the instruction, distinct state-trans styling
