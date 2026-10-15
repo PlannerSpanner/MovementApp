@@ -102,7 +102,9 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     cue skipped, timer unaffected. Speech is never scheduled by setTimeout any more.
     CUE WORKFLOW: edit names/setups/posCues in d_*.js -> `npm run cues` (= `node
     tools/cues.js`, the enumerator and THE source of truth: drives every built app end to
-    end through the `window.__onSay` seam; then `tools/gen_cues.py` generates only the
+    end through the `window.__onSay` seam; then `node tools/gen_cues.js`, a launcher that
+    finds the venv interpreter on any OS -- cmd.exe could not run the forward-slash venv
+    path, fixed 2026-10-15 -- and runs `tools/gen_cues.py`, which generates only the
     missing clips, prunes orphans, rewrites the manifest) -> `python3 src/rebuild.py`
     (builds to a staging dir, runs `tools/cues.js --check`, REFUSES to install if any
     spoken string lacks a clip; `SKIP_CUE_CHECK=1` only to bootstrap) -> commit the new

@@ -7,7 +7,7 @@
     "qa:shots": "node qa/shots.js",
     "qa:catchup": "node qa/catchup.js",
     "qa:voice": "node qa/voice.js && node qa/webkit-voice.js",
-    "cues": "node tools/cues.js && tools/tts-venv/Scripts/python tools/gen_cues.py",
+    "cues": "node tools/cues.js && node tools/gen_cues.js",
     "qa:strips": "node tools/dump.js && python3 tools/strips.py"
   },
   "repository": {
