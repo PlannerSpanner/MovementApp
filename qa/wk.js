@@ -90,7 +90,7 @@ function ang(a,b,c){const u=[a[0]-b[0],a[1]-b[1],a[2]-b[2]],v=[c[0]-b[0],c[1]-b[
   return Math.acos(Math.max(-1,Math.min(1,d)))*180/Math.PI;}
 [...WK_A,...WK_B].forEach(checkMove);
 // color lint on emitted markup
-const OKCOL=new Set(['#42591f','#a8bc85','#5c7d34','#b9a98b']);
+const OKCOL=new Set(['#42591f','#7a8f57','#5c7d34','#b9a98b']);
 [...WK_A,...WK_B].forEach(m=>{
   const fit=ctx.fitOf(m);
   for(const ph of [0,0.25,0.5,0.75]){

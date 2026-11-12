@@ -392,6 +392,14 @@ stamping bugs. Design docs/plans from past features live in docs/superpowers/.
 
 ## Backlog (agreed with Will, rough priority)
 
+0. FOR THE UX REFRESH (Will, 2026-11-12: "not now, note it"): raise the figure's hip joint 3 to 4
+   units to real proportions. Against Drillis and Contini at this figure's height (79 units) the
+   arms are right (26 vs 26.2) but the hip sits at 37.8 above the floor instead of 41.9: trunk 3.2
+   long, legs about 4 short. Effect today: dumbbells hang 3.3 units (7 cm) below the hip joint
+   where a person's hang 6.9 (15 cm), deadlift arms sit 5 to 10 deg back of plumb, the back slopes
+   up on all fours. It moves every pose in all five apps, so do it when everything is being
+   re-verified anyway. Do NOT shorten the arms.
+
 1. Session logging to localStorage (date/completions) + streaks.
 2. PWA: manifest + service worker for full offline.
 3. Polish: figure-4 knee flare, cobra asymmetric tempo, knee-circles readability.

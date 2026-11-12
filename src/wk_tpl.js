@@ -49,7 +49,7 @@ function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
 const LIMBS=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],
              ['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
 const SEGS_SKIN=['upper','fore','upper','fore','thigh','shin','thigh','shin'];   // skin profile per limb (eng2.js SKIN)
-const INK='#42591f',LIMB_L='#a8bc85',TORSO='#5c7d34',PROP='#b9a98b';
+const INK='#42591f',LIMB_L='#7a8f57',TORSO='#5c7d34',PROP='#b9a98b';
 // A prop point may be a world [x,y,z], a joint name ('haL'), a joint plus a
 // body-frame offset ({j:'haR',o:[x,y,z]} — o is rotated by the pose yaw), or the
 // midpoint of two joints plus an offset ({m:['haL','haR'],o:[x,y,z]}). Joint-referenced

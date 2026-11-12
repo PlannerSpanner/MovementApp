@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='1da10a5125';
+const BUILDV='0a47d70518';
 // Morning Flow — 13 movements: eight standing (continuous and rhythmic), then a
 // five-movement ground finish moved in from the retired Morning Movement app
 // (2026-08-26; poses verbatim). TR_ALL build: tdur = length of the GET SET UP gap
@@ -479,7 +479,7 @@ function torsoEdges(J,bend,n){
 //    upper:{w,at},fore:{w,at},thigh:{w,at},shin:{w,at},
 //    torso:{chest,waist,at,stroke}}      width factors at the shoulder line and the waist,
 //                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
-let SKIN={"joint":4.4,"mid":3.2,"tip":2.3,"upper":{"w":3.6,"at":0.4},"fore":{"w":3.1,"at":0.3},"thigh":{"w":4.3,"at":0.38},"shin":{"w":3.5,"at":0.3},"torso":{"chest":1.01,"waist":0.85,"at":0.47,"stroke":3.2},"far":0.8};
+let SKIN={"joint":3.0,"mid":3.2,"tip":2.3,"upper":{"w":3.6,"at":0.4},"fore":{"w":3.1,"at":0.3},"thigh":{"w":4.3,"at":0.38},"shin":{"w":3.5,"at":0.3},"torso":{"chest":1.01,"waist":0.85,"at":0.47,"stroke":3.2},"far":0.8};
 const smooth=x=>x*x*(3-2*x);
 // half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
 // with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
@@ -729,7 +729,7 @@ function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
 const LIMBS=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],
              ['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
 const SEGS_SKIN=['upper','fore','upper','fore','thigh','shin','thigh','shin'];   // skin profile per limb (eng2.js SKIN)
-const INK='#245e70',LIMB_L='#93b8c4',TORSO='#2e7d94',BELLY='#2e7d94',PROP='#b9a98b';
+const INK='#245e70',LIMB_L='#618f9e',TORSO='#2e7d94',BELLY='#2e7d94',PROP='#b9a98b';
 // A prop point may be a world [x,y,z], a joint name ('haL'), a joint plus a
 // body-frame offset ({j:'haR',o:[x,y,z]} — o is rotated by the pose yaw), or the
 // midpoint of two joints plus an offset ({m:['haL','haR'],o:[x,y,z]}). Joint-referenced

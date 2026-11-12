@@ -7,7 +7,7 @@ import tempfile, shutil, subprocess, sys
 OUT = tempfile.mkdtemp(prefix='movement-build-')
 exec(open('build.py', encoding='utf-8').read())
 BLUE=dict(n=13,accent='#2e7d94',
- fig=[('#6d4f1c','#245e70'),('#c2a473','#93b8c4'),('#7d5a1e','#2e7d94')],css=[
+ fig=[('#6d4f1c','#245e70'),('#c2a473','#618f9e'),('#7d5a1e','#2e7d94')],css=[
  ('#fdf7e9 0%,#fdf0dc 45%,#f4f3e3 100%','#eef6f8 0%,#e6f0f5 45%,#eaf2ee 100%'),
  ('#a5762a','#2e7d94'),('#a4947a','#8aa2ab'),('#bd8629','#3f96ae'),('#7d5a1e','#245e70'),
  ('#9c8b6d','#7d97a0'),('#f0e5cd','#d9e8ee'),('#dd9a3c','#3f96ae'),('#ecca8e','#a8cdd9'),
@@ -18,7 +18,7 @@ BLUE=dict(n=13,accent='#2e7d94',
  ('rgba(180,140,60,0.3)','rgba(63,150,174,0.3)'),('#e8dcc0','#d3e4ea'),
  ('#6d4f1c','#245e70'),('#c2a473','#93b8c4'),('#7d5a1e','#2e7d94'),('#caac79','#9dc2cd')])
 ROSE=dict(n=10,accent='#a8546b',
- fig=[('#6d4f1c','#7d3f53'),('#c2a473','#cfa8b3'),('#7d5a1e','#a8546b')],
+ fig=[('#6d4f1c','#7d3f53'),('#c2a473','#ad7c8b'),('#7d5a1e','#a8546b')],
  warnText='#8f4550',warnBg='rgba(214,110,120,0.11)',
  warnBorder='rgba(214,110,120,0.3)',warnStrong='#7d353f',css=[
  ('#fdf7e9 0%,#fdf0dc 45%,#f4f3e3 100%','#fdf4f1 0%,#fbecf1 42%,#f1eefa 100%'),
@@ -30,10 +30,13 @@ ROSE=dict(n=10,accent='#a8546b',
  ('rgba(221,154,60,0.45)','rgba(217,120,143,0.45)'),('rgba(221,154,60,0.5)','rgba(217,120,143,0.45)'),
  ('rgba(180,140,60,0.3)','rgba(190,120,140,0.3)'),('#e8dcc0','#f0dde3'),
  ('#6d4f1c','#7d3f53'),('#c2a473','#cfa8b3'),('#7d5a1e','#a8546b'),('#caac79','#dcbcc4')])
-A11=dict(n=12,accent='#a5762a',warnText='#8d5326',warnBg='rgba(214,140,70,0.12)',
+# Left-limb colours (the middle `fig` pair of each theme, and A11's only pair) were darkened
+# 2026-11-12 so the left limb is at least 3:1 against the darkest stop of its page background
+# (they were 1.8 to 2.1:1). qa/fig/skin.js checks the built pages.
+A11=dict(n=12,accent='#a5762a',fig=[('#c2a473','#a48655')],warnText='#8d5326',warnBg='rgba(214,140,70,0.12)',
  warnBorder='rgba(214,140,70,0.32)',warnStrong='#7a441c',css=[])
 VIOLET=dict(n=13,accent='#6b5ca8',
- fig=[('#6d4f1c','#453a70'),('#c2a473','#b0a6d4'),('#7d5a1e','#6b5ca8')],css=[
+ fig=[('#6d4f1c','#453a70'),('#c2a473','#8b80b1'),('#7d5a1e','#6b5ca8')],css=[
  ('#fdf7e9 0%,#fdf0dc 45%,#f4f3e3 100%','#f4f2fb 0%,#ece9f8 45%,#efeef6 100%'),
  ('#a5762a','#6b5ca8'),('#a4947a','#948aa8'),('#bd8629','#7d6bbd'),('#7d5a1e','#4a3f78'),
  ('#9c8b6d','#8d84a0'),('#f0e5cd','#e6e2f2'),('#dd9a3c','#8a76cf'),('#ecca8e','#c3b8e8'),

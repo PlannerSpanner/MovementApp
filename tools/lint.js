@@ -1,7 +1,8 @@
 // visual linter: checks the actual emitted SVG markup per frame
 const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..');
 const APPS=process.argv.slice(2).length?process.argv.slice(2):['morning-flow','prenatal-stretch','prenatal-movement','daily-13'];
-const OKCOL=new Set(['#6d4f1c','#c2a473','#7d5a1e','#caac79','#b9a98b',
+const OKCOL=new Set(['#6d4f1c','#c2a473','#7d5a1e','#caac79','#b9a98b','#618f9e','#ad7c8b','#8b80b1','#a48655',   // + left limbs darkened to 3:1, 2026-11-12
+
   '#245e70','#93b8c4','#2e7d94','#9dc2cd',        // blue theme
   '#7d3f53','#cfa8b3','#a8546b','#dcbcc4',        // rose theme
   '#453a70','#b0a6d4','#6b5ca8','#b8addc']);      // violet theme (daily-10)

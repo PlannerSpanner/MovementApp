@@ -4,11 +4,18 @@
 
 Your skin is applied to both templates, with feet and hands as small 3D shapes, the two-camera Y-T-W and the 4-in, 6-out posture reset. The full audit passes with it. The skin has a measured cost at Live Activity size, listed below. Hands do not show grip direction at phone size; the implement does.
 
+## Update after your answers (same day)
+
+- **Joint width 3.0** (was 4.4), below the narrowest swell (forearm 3.1), so every limb tapers into the shoulder and hip. Of the 12 accepted regressions, **2 went away and 10 remain**. Gone: the Arm sweeps fold thumbnail (back to 3 of 8 limbs, same as the old skin) and Plank's hidden far thigh. The 10 that remain are a far arm lying along the trunk or thigh in standing poses (5), a far limb behind a near one (3) and two thumbnails that follow from those. They come from limb thickness, not the joint caps.
+- Elbow and knee width is still your 3.2, which is wider than the forearm swell (3.1). A dry run at 2.9 clears one more (the Plank thumbnail). I left it as exported.
+- **Left-limb colours darkened** in all five pages to at least 3:1 against the darkest part of each page background (3.02 to 3.06:1; they were 1.8 to 2.1:1). Left against right is now 2.0 to 2.8:1, down from 3.2 to 4.4:1. The build checks both. One caveat: during GET SET UP the whole figure is dimmed to 62% on purpose, and there the left limb is about 1.9:1.
+- **Far-limb factor** stays 0.8. **Hip joint** is noted in `CLAUDE.md` for the UX refresh.
+
 ## What you asked for in this round
 
 | Item | Status |
 |---|---|
-| 1. Apply the skin, re-audit | Done. `src/skin.json` is your export plus the far-limb factor. 261 of 261 rubric tests pass, no numeric fault. The skin check passes with 12 accepted costs. |
+| 1. Apply the skin, re-audit | Done. `src/skin.json` is your export plus the far-limb factor. 261 of 261 rubric tests pass, no numeric fault. The skin check passes with 10 accepted costs (12 before the joint width change). |
 | 2. Feet with a real shape | Done. A wedge from the side, a footprint from above, both projected from one 3D foot. Heel-up pivots on the ball. |
 | 3. Hands, and implement height | Done, with two findings you asked me to report: grip direction does not read from the hand at phone size, and the dumbbells still hang short of mid-thigh. No limb length changed. |
 | 4. Y-T-W on both cameras | Done. Setup preview side-on, work phase from above, mat under the body. |

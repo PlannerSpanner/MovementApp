@@ -65,6 +65,15 @@ STAGES.forEach(([n,bg])=>{const T=theme(bg),a=contrast(T.L,bg),b=contrast(T.R,bg
   md.push(`| ${n} ${bg} | ${a.toFixed(1)} | ${b.toFixed(1)} | ${c.toFixed(1)} | ${d.toFixed(1)} |`);
   if(a<3)flag('contrast:'+n,`contrast: left limb on ${n} is ${a.toFixed(2)}:1 (needs 3:1)`);
   if(d<2)flag('legibility:'+n,`legibility: left against right on ${n} is ${d.toFixed(2)}:1 (needs 2:1)`);});
+// the pages as they ship: left limb against the darkest stop of each page's own background
+if(gate){const ROOT=path.join(__dirname,'..','..'),mixw=(c)=>require('./theme').mix(c,'#ffffff',0.55);
+  const PAGES=[['morning-flow.html','#e6f0f5'],['daily-13.html','#ece9f8'],['prenatal-stretch.html','#f1eefa'],['prenatal-movement.html','#fdf0dc'],['strength.html','#e8efe0']];
+  md.push('','## The shipped pages','','| page | left limb | darkest background | left : background | left : right |','|---|---|---|---|---|');
+  PAGES.forEach(([f,bg])=>{const h=fs.readFileSync(path.join(ROOT,f),'utf8'),m=h.match(/const INK='(#[0-9a-f]{6})',LIMB_L='(#[0-9a-f]{6})'/);
+    if(!m){flag('theme:'+f,'theme: cannot read the figure colours of '+f);return;}
+    const a=contrast(m[2],bg),d=contrast(m[2],m[1]);md.push(`| ${f} | ${m[2]} | ${bg} | ${a.toFixed(2)} | ${d.toFixed(2)} |`);
+    if(a<3)flag('theme:'+f,`theme: left limb in ${f} is ${a.toFixed(2)}:1 against ${bg} (needs 3:1)`);
+    if(d<2)flag('themeLR:'+f,`theme: left against right in ${f} is ${d.toFixed(2)}:1 (needs 2:1)`);});}
 md.push('','## Per movement','','| movement | limbs hidden (new) | pairs merged (new) | limbs that read at 28 pt, worst phase: today → profile |','|---|---|---|---|');
 let nM=0,worst=9,worstN='';
 for(const app of IN_SCOPE){const E=load(app,{noSkin:true});
