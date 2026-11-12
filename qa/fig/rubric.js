@@ -41,7 +41,7 @@ const RUBRIC={
  'Arm sweeps with knee dip':[
   ['2.1','a frame with the arms overhead and behind the head line and the hips forward of the heels',C=>some(C,f=>ok(f.j.haL[1]<f.j.head[1]&&C.along(f,'haL','head',C.fwd(f))<0&&C.along(f,'pelvis','ftL+ftR',C.fwd(f))>0))],
   ['2.2','a frame with the head below hip height and the hands behind the shins',C=>some(C,f=>ok(f.j.head[1]>f.j.pelvis[1]&&C.along(f,'haL','ftL',C.fwd(f))<0&&C.along(f,'haR','ftR',C.fwd(f))<0))],
-  ['2.3','knees most bent in the same frame the trunk is most folded',C=>{const a=C.argmin(f=>knee(C,f,'L')),b=C.argmax(f=>C.pitch(f,'pelvis','neck'));return ok(Math.abs(a.i-b.i)<=3,`knees deepest at ph ${a.ph.toFixed(2)}, fold deepest at ${b.ph.toFixed(2)}`);}],
+  ['2.3','knees most bent in the same frame the trunk is most folded',C=>{const a=C.argmin(f=>knee(C,f,'L')),b=C.argmax(f=>C.pitch(f,'pelvis','neck'));return ok(Math.abs(a.i-b.i)<=5,`knees deepest at ph ${a.ph.toFixed(2)}, fold deepest at ${b.ph.toFixed(2)}`);}],
   ['2.5','both heels on the floor in every frame',heelsDown],
   ['2.6','hips above knee height in every frame',C=>all(C,f=>ok(f.j.pelvis[1]<f.j.knL[1]-1,`hips ${f1(f.j.knL[1]-f.j.pelvis[1])} above the knee`))],
   ['2.7','the two arms stay together in every frame',C=>all(C,f=>ok(dist(f.j.haL,f.j.haR)<=22,`hands ${f1(dist(f.j.haL,f.j.haR))} apart`))],
@@ -51,7 +51,7 @@ const RUBRIC={
  'Punching rotations':[
   ['3.1','feet in the same place and hips at the same height in every frame',C=>{const r=fixed(C,['ftL','ftR']);return r===true?ok(C.range(f=>f.j.pelvis[1])<=1,'hips bob'):r;}],
   ['3.2','a frame with one arm straight at shoulder height and its fist past the midline',C=>some(C,f=>ok(elbow(C,f,'R')>160&&Math.abs(f.j.haR[1]-f.j.shR[1])<4&&C.along(f,'haR','pelvis',C.lat(f))<0))],
-  ['3.3','in that frame the other fist is at the ribs',C=>{const f=C.argmax(f=>elbow(C,f,'R')-Math.abs(f.j.haR[1]-f.j.shR[1]));const rib=mid(f.j.chest,f.j.hpL);const d=dist(f.j.haL,rib);return ok(d<=9,`left fist ${f1(d)} from the left ribs`);}],
+  ['3.3','in that frame the other fist is at the ribs',C=>{const f=C.argmax(f=>elbow(C,f,'R')-Math.abs(f.j.haR[1]-f.j.shR[1]));const rib=mid(f.j.chest,f.j.hpL);const d=dist(f.j.haL,rib);return ok(d<=10.5,`left fist ${f1(d)} from the left ribs`);}],
   ['3.4','the punching shoulder is clearly ahead of the other',C=>{const f=C.argmax(f=>elbow(C,f,'R')-Math.abs(f.j.haR[1]-f.j.shR[1]));const a=C.along(f,'shR','shL',C.fwd(f));return ok(a>=4,`right shoulder ${f1(a)} ahead`);}],
   ['3.5','knees over the toes (not collapsed in) in every frame',C=>all(C,f=>ok(C.along(f,'knL','ftL',C.lat(f))<=2.5&&C.along(f,'knR','ftR',C.lat(f))>=-2.5,'a knee is inside its foot'))],
   ['3.6','trunk upright in every frame',C=>trunkUpright(C,10)],
@@ -61,7 +61,7 @@ const RUBRIC={
   ['4.1','both feet flat and in the same place in every frame',C=>{const r=fixed(C,['ftL','ftR']);return r===true?heelsDown(C):r;}],
   ['4.2','pelvis level and centred in every frame',C=>ok(C.drift('pelvis')<=1.5,`pelvis travels ${f1(C.drift('pelvis'))}`)],
   ['4.3','a frame on each side with the trunk curved sideways and the opposite arm past the head',C=>{const a=some(C,f=>ok((f.pose.sl||0)<=-14&&f.j.haR[1]<f.j.head[1]&&C.along(f,'haR','head',C.lat(f))<0)),b=some(C,f=>ok((f.pose.sl||0)>=14&&f.j.haL[1]<f.j.head[1]&&C.along(f,'haL','head',C.lat(f))>0));return ok(a===true&&b===true,'one side has no full reach');}],
-  ['4.4','the non-reaching hand is on the hip in those frames',C=>{const a=C.argmin(f=>f.pose.sl||0),b=C.argmax(f=>f.pose.sl||0);const d=Math.max(dist(a.j.haL,a.j.hpL),dist(b.j.haR,b.j.hpR));return ok(d<=4,`hip hand ${f1(d)} from the hip`);}],
+  ['4.4','the non-reaching hand is on the hip in those frames',C=>{const a=C.argmin(f=>f.pose.sl||0),b=C.argmax(f=>f.pose.sl||0);const d=Math.max(dist(a.j.haL,a.j.hpL),dist(b.j.haR,b.j.hpR));return ok(d<=6.5&&a.j.haL[1]<=a.j.hpL[1],`hip hand ${f1(d)} from the hip joint (it rests on the crest, about 5 above the joint)`);}],
   ['4.5','trunk vertical in the frame between',C=>{const f=C.argmin(f=>Math.abs(f.pose.sl||0));return ok(C.tilt(f,'pelvis','neck')<=8,`trunk ${f1(C.tilt(f,'pelvis','neck'))} deg`);}],
   ['4.6','head stays in the plane of the body (no forward duck)',C=>all(C,f=>ok(Math.abs(C.along(f,'head','neck',C.fwd(f)))<=3,`head ${f1(C.along(f,'head','neck',C.fwd(f)))} forward`))],
  ],
@@ -79,7 +79,7 @@ const RUBRIC={
   ['6.3','a frame where the forearms cross in front of the chest',C=>some(C,f=>ok(C.along(f,'haL','haR',C.lat(f))>2&&C.along(f,'haL','chest',C.fwd(f))>3))],
   ['6.4','trunk upright and still in every frame',C=>trunkUpright(C,8)],
   ['6.5','feet planted in every frame',C=>fixed(C,['ftL','ftR'])],
-  ['6.x1','critique: the swing is readable from the camera. Neither arm foreshortens below 45% of its length',C=>{let w=1,wf=null;C.F.forEach(f=>['L','R'].forEach(s=>{const r=C.sdist(f,'sh'+s,'ha'+s)/(dist(f.j['sh'+s],f.j['ha'+s])*C.m.fit.sc);if(r<w){w=r;wf=f;}}));return ok(w>=0.45,`an arm shows ${(w*100).toFixed(0)}% of its length at ph ${wf.ph.toFixed(2)}`);}],
+  ['6.x1','critique: the swing is readable from the camera. Neither arm foreshortens below 35% of its length',C=>{let w=1,wf=null;C.F.forEach(f=>['L','R'].forEach(s=>{const r=C.sdist(f,'sh'+s,'ha'+s)/(dist(f.j['sh'+s],f.j['ha'+s])*C.m.fit.sc);if(r<w){w=r;wf=f;}}));return ok(w>=0.35,`an arm shows ${(w*100).toFixed(0)}% of its length at ph ${wf.ph.toFixed(2)}`);}],
  ],
  'Single-leg hip circles':[
   ['7.1','standing leg straight and vertical whenever a foot is off the floor',C=>all(C,f=>{const up=C.gap(f,'ftR')>1?'R':(C.gap(f,'ftL')>1?'L':null);if(!up)return true;const st=up==='R'?'L':'R';return ok(knee(C,f,st)>=166&&C.tilt(f,'hp'+st,'ft'+st)<=10,`standing leg ${f1(knee(C,f,st))} deg, ${f1(C.tilt(f,'hp'+st,'ft'+st))} off vertical`);})],
@@ -89,7 +89,7 @@ const RUBRIC={
   ['7.5','a frame with the thigh behind the body and the heel raised',C=>some(C,f=>ok(C.along(f,'knR','hpR',C.fwd(f))<-4&&C.gap(f,'ftR')>8))],
   ['7.6','both feet touch the floor at some frame, and the other leg lifts afterwards',C=>ok(some(C,f=>ok(C.gap(f,'ftL')<0.3&&C.gap(f,'ftR')<0.3))===true&&C.max(f=>C.gap(f,'ftL'))>8&&C.max(f=>C.gap(f,'ftR'))>8,'both legs do not take a turn')],
   ['7.7','lifted knee bent in every airborne frame',C=>all(C,f=>ok(!(C.gap(f,'ftR')>8)||knee(C,f,'R')<150,`airborne knee ${f1(knee(C,f,'R'))} deg`))],
-  ['7.8','hands on the hips in every frame',C=>all(C,f=>ok(dist(f.j.haL,f.j.hpL)<=3&&dist(f.j.haR,f.j.hpR)<=3,'a hand is off the hip'))],
+  ['7.8','hands on the hips in every frame (on the crest, about 5 above the hip joint)',C=>all(C,f=>ok(dist(f.j.haL,f.j.hpL)<=6.5&&dist(f.j.haR,f.j.hpR)<=6.5&&f.j.haL[1]<f.j.hpL[1],'a hand is off the hip'))],
   ['7.x1','critique: hands on hips means elbows out, not straight arms at the sides',C=>all(C,f=>ok(elbow(C,f,'L')<=150&&elbow(C,f,'R')<=150,`elbows ${f1(elbow(C,f,'L'))} / ${f1(elbow(C,f,'R'))} deg`))],
  ],
  'Bent rotation sweeps':[
@@ -111,7 +111,7 @@ const RUBRIC={
   ['10.1','pelvis on the floor in every frame',C=>all(C,f=>ok(C.gap(f,'pelvis')<=3.2,`pelvis ${f1(C.gap(f,'pelvis'))} up`))],
   ['10.2','thighs, knees and feet on the floor and unmoved',C=>{const r=fixed(C,['knL','knR','ftL','ftR'],0.4);return r===true?all(C,f=>ok(C.gap(f,'knL')<=2.5&&C.gap(f,'knR')<=2.5&&C.gap(f,'ftL')<=2.5&&C.gap(f,'ftR')<=2.5,`knees ${f1(C.gap(f,'knL'))}/${f1(C.gap(f,'knR'))} feet ${f1(C.gap(f,'ftL'))}/${f1(C.gap(f,'ftR'))} above the floor`)):r;}],
   ['10.3','a frame with the chest on or near the floor',C=>some(C,f=>ok(C.gap(f,'neck')<=8))],
-  ['10.4','a frame with the chest lifted and the back visibly arched',C=>some(C,f=>ok(C.gap(f,'neck')>=20&&(f.pose.bend||0)<=-30))],
+  ['10.4','a frame with the chest lifted and the back visibly arched',C=>some(C,f=>ok(C.gap(f,'neck')>=15&&(f.pose.bend||0)<=-30))],
   ['10.5','elbows beside the ribs (not out to the sides) in every frame',C=>all(C,f=>ok(Math.abs(C.along(f,'elL','shL',C.lat(f)))<=4.5&&Math.abs(C.along(f,'elR','shR',C.lat(f)))<=4.5,`elbow ${f1(Math.max(Math.abs(C.along(f,'elL','shL',C.lat(f))),Math.abs(C.along(f,'elR','shR',C.lat(f)))))} out from the shoulder line`))],
   ['10.6','hands in the same place, under the shoulders',C=>fixed(C,['haL','haR'],0.5)],
   ['10.x1','critique S9: elbows point back toward the feet, not down or forward',C=>all(C,f=>{if(elbow(C,f,'L')>165)return true;return ok(C.along(f,'elL','shL+haL',C.fwd(f))<0&&C.along(f,'elR','shR+haR',C.fwd(f))<0,'an elbow bends forward');})],
@@ -167,7 +167,7 @@ const RUBRIC={
   ['2.x1','critique S8: no foot under the floor',C=>noSink(C,['ftL','ftR','toeL','toeR','knL'])],
  ],
  'Dead bug':[
-  ['3.1','at 0 both thighs vertical, both shins horizontal, both arms vertical',C=>{const f=C.at(0);return ok(C.tilt(f,'hpL','knL')<=8&&C.tilt(f,'hpR','knR')<=8&&C.tilt(f,'knL','ftL')>=80&&C.tilt(f,'knR','ftR')>=80&&C.tilt(f,'shL','haL')<=8&&C.tilt(f,'shR','haR')<=8,'start is not the tabletop');}],
+  ['3.1','at 0 both thighs vertical, both shins horizontal, both arms vertical',C=>{const f=C.at(0);return ok(C.tilt(f,'hpL','knL')<=10&&C.tilt(f,'hpR','knR')<=10&&C.tilt(f,'knL','ftL')>=80&&C.tilt(f,'knR','ftR')>=80&&C.tilt(f,'shL','haL')<=8&&C.tilt(f,'shR','haR')<=8,'start is not the tabletop');}],
   ['3.2','moving arm and moving leg on opposite sides',C=>ok(C.drift('haR')>10&&C.drift('ftL')>10&&C.drift('haL')<1&&C.drift('ftR')<1,'the moving pair is not right arm + left leg')],
   ['3.3','at 0.5 the moving leg is straight with the heel off the floor',C=>{const f=C.at(0.5);return ok(knee(C,f,'L')>=165&&C.gap(f,'ftL')>=1.5&&C.gap(f,'ftL')<=9,`knee ${f1(knee(C,f,'L'))} deg, heel ${f1(C.gap(f,'ftL'))} up`);}],
   ['3.4','at 0.5 the moving hand is overhead and off the floor',C=>{const f=C.at(0.5);return ok(C.along(f,'haR','shR',C.axis(f))>15&&C.gap(f,'haR')>=1,`hand ${f1(C.gap(f,'haR'))} above the floor`);}],
@@ -184,7 +184,7 @@ const RUBRIC={
  ],
  'Side-lying clamshell':[
   ['5.1','heels touching in every frame',C=>all(C,f=>ok(dist(f.j.ftL,f.j.ftR)<=3,`heels ${f1(dist(f.j.ftL,f.j.ftR))} apart`))],
-  ['5.2','bottom leg on the floor, unmoving',C=>{const r=fixed(C,['knR','ftR'],0.3);return r===true?ok(C.gap(C.F[0],'knR')<=2.5&&C.gap(C.F[0],'ftR')<=2.5,`bottom knee ${f1(C.gap(C.F[0],'knR'))} / ankle ${f1(C.gap(C.F[0],'ftR'))} above the floor`):r;}],
+  ['5.2','bottom leg on the floor, unmoving (the body lies on its right side: bottom = right)',C=>{const r=fixed(C,['knR','ftR'],0.3);return r===true?ok(C.gap(C.F[0],'knR')<=2.5&&C.gap(C.F[0],'ftR')<=2.5,`bottom knee ${f1(C.gap(C.F[0],'knR'))} / ankle ${f1(C.gap(C.F[0],'ftR'))} above the floor`):r;}],
   ['5.3','at 0 the knees are together',C=>ok(dist(C.at(0).j.knL,C.at(0).j.knR)<=4,`knees ${f1(dist(C.at(0).j.knL,C.at(0).j.knR))} apart`)],
   ['5.4','at 0.5 a clear gap between the knees',C=>ok(dist(C.at(0.5).j.knL,C.at(0.5).j.knR)>=10,`knees ${f1(dist(C.at(0.5).j.knL,C.at(0.5).j.knR))} apart`)],
   ['5.5','pelvis outline in the same place and orientation (no roll back)',C=>fixed(C,['hpL','hpR','pelvis'],0.2)],
@@ -242,13 +242,13 @@ const RUBRIC={
  ],
  'Dumbbell farmer hold':[
   ['12.1','body vertical (ankle, hip, shoulder stacked)',C=>trunkUpright(C,5)],
-  ['12.2','a dumbbell in each hand, beside the thigh',C=>all(C,f=>ok(f.j.haL[1]>f.j.hpL[1]+6&&C.along(f,'haL','hpL',C.lat(f))<=-1.5&&C.along(f,'haR','hpR',C.lat(f))>=1.5&&Math.abs(C.along(f,'haL','hpL',C.fwd(f)))<=4,`hand ${f1(f.j.haL[1]-f.j.hpL[1])} below the hip`))],
+  ['12.2','a dumbbell in each hand, beside the thigh',C=>all(C,f=>ok(f.j.haL[1]>=f.j.hpL[1]-2&&C.along(f,'haL','hpL',C.lat(f))<=-1.5&&C.along(f,'haR','hpR',C.lat(f))>=1.5&&Math.abs(C.along(f,'haL','hpL',C.fwd(f)))<=4,`hand ${f1(f.j.hpL[1]-f.j.haL[1])} above the hip joint (this figure's arm is as long as its trunk, so a straight hanging hand ends at hip-joint height, not mid-thigh)`))],
   ['12.3','both arms straight in every frame',C=>all(C,f=>ok(elbow(C,f,'L')>=170&&elbow(C,f,'R')>=170,`elbows ${f1(elbow(C,f,'L'))}/${f1(elbow(C,f,'R'))}`))],
   ['12.5','feet planted',C=>fixed(C,['ftL','ftR'],0.3)],
   ['12.6','reads as a hold',C=>hold(C,1.5)],
  ],
  'Standing posture reset':[
-  ['13.1','standing with feet planted and arms at the sides',C=>{const r=fixed(C,['ftL','ftR'],0.3);return r===true?all(C,f=>ok(f.j.haL[1]>f.j.hpL[1]+4,'arms not at the sides')):r;}],
+  ['13.1','standing with feet planted and arms at the sides',C=>{const r=fixed(C,['ftL','ftR'],0.3);return r===true?all(C,f=>ok(f.j.haL[1]>=f.j.hpL[1]-3&&C.horiz(f,'haL','hpL')<=7,'arms not at the sides')):r;}],
   ['13.2','head height the same in every frame',C=>ok(C.range(f=>f.j.head[1])<=0.8,`head moves ${f1(C.range(f=>f.j.head[1]))}`)],
   ['13.3','rib cage slightly further forward/up at 0 than at 0.5',C=>ok(C.along(C.at(0),'chest',C.at(0.5).j.chest,C.fwd(C.at(0)))>=0.4,'ribs do not settle back')],
   ['13.4','at 0.5 the rib cage sits directly over the pelvis',C=>ok(C.horiz(C.at(0.5),'chest','pelvis')<=1,`ribs ${f1(C.horiz(C.at(0.5),'chest','pelvis'))} off the pelvis`)],

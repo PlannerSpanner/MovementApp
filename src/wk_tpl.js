@@ -17,7 +17,7 @@ function normalise(m){
   });
 }
 function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
-  swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),
+  swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),st:lerp(A.st||0,B.st||0,t),
   p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
   s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};

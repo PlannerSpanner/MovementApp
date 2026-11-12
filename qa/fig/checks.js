@@ -2,7 +2,8 @@
 // Flags (engine units; the figure is ~80 tall, 1 unit ~ 2.2 cm):
 //  floor      a joint below the floor plane (y > 93.6)
 //  miss       an IK hand/foot target the limb cannot reach (effector > 0.5 from its target)
-//  pop        a joint that jumps: one 1/64 step more than 5x its own median step and > 2.5 units
+//  pop        a joint that jumps: one 1/64 step > 2.5 units, more than 5x its own median step and
+//             more than 2.5x both neighbouring steps (fast but smooth motion is not a pop)
 //  kneeBack   knee bending the wrong way relative to the pelvis' own front
 //  hyperExt   hip extended more than 35 deg behind the trunk line
 //  hidden     a limb segment behind the torso and fully covered by it for 1/8 of the cycle or more
@@ -50,7 +51,9 @@ function audit(E,m){
   for(const k in fr[0].j){const st=fr.map((f,i)=>len(sub(fr[(i+1)%N].j[k],f.j[k])));
     const nz=st.filter(x=>x>1e-3).sort((x,y)=>x-y); if(!nz.length)continue; const med=nz[nz.length>>1];
     const mx=Math.max(...st), at=st.indexOf(mx);
-    if(mx>2.5&&mx>5*med)add('pop',k,`${k} jumps ${mx.toFixed(1)} in one 1/64 step at ph ${fr[at].ph.toFixed(2)} (median step ${med.toFixed(2)})`);}
+    // a pop is a discontinuity, not speed: the step must also dwarf both of its neighbours
+    const nb=Math.max(st[(at+N-1)%N],st[(at+1)%N]);
+    if(mx>2.5&&mx>5*med&&mx>2.5*nb)add('pop',k,`${k} jumps ${mx.toFixed(1)} in one 1/64 step at ph ${fr[at].ph.toFixed(2)} (median step ${med.toFixed(2)})`);}
   return {flags:F,scale:m.fit.sc,C};
 }
 module.exports={audit,HARD};

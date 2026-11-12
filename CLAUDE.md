@@ -69,6 +69,15 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     the right side. Blends like `yaw`. Zero/absent is the old engine exactly. This is what
     lets a figure be genuinely side-lying (side plank, clamshell); joint-attached prop
     offsets roll with it.
+  - `st` (added 2026-11-12) = shoulder-line tilt in degrees in the body's frontal plane
+    (st > 0 drops the right shoulder). `sl` alone slides the rib cage sideways under level
+    shoulders; a real side bend also drops the near shoulder (Dynamic lateral reaches use
+    sl 20 + st 16). Blends; zero/absent is the old engine exactly.
+  - World targets are WORLD targets: an `ikF`/`ik{w}` point or a pelvis offset written as if
+    the figure faced +z is skewed by the movement's yaw (feet "under the hips" at yaw 24 sit
+    24 deg off the hip line; "hips back" slides sideways). Lay targets out in the body frame
+    and rotate by the yaw (qa/fig/probe.js prints the solved joints). Found in a dozen
+    movements by the 2026-11-12 audit.
   - Floor clamp (2026-11-12): a knee, ankle, elbow or hand that would be drawn more than
     0.6 under the floor is hinged back up about its parent joint (bone length and compass
     direction kept). Poses that stay above the floor are bit-identical. It is a safety net,

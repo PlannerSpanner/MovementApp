@@ -104,7 +104,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='c25f6970a1';
+const BUILDV='3fee922153';
 const MOVES=[
 {n:"Seated breathing",pos:'chair',cue:"Sit tall, breathe wide into the ribs",dur:60,bil:false,cyc:4.0,belly:1,pin:"LR", prop:[{l:[[-8,76,-4],[8,76,-4]]},{l:[[-7,76,-4],[-7,93,-4]]},{l:[[7,76,-4],[7,93,-4]]}],
  A:{p:[0,74,0],yaw:-18,tw:0,s:[6,2],hf:0,ikL:{w:[-8,72.5,10]},ikR:{w:[8,72.5,10]},
@@ -214,7 +214,12 @@ function solve(p){
   const twist=(v,k)=>tw?rotAxis(v,d1,-R(tw*k)):v;
   const neck =add(chest, twist(rotR(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
   const head =add(neck,  twist(rotR(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
-  const axS=twist(rotR([1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
+  // st (2026-11-12) = shoulder-line tilt in degrees, in the body's frontal plane: st > 0
+  // drops the right shoulder and lifts the left. A side bend (sl) alone slides the rib cage
+  // sideways with the shoulders level; a real one drops the near shoulder. Absent/zero =
+  // the old level shoulder line exactly.
+  const st=p.st||0;
+  const axS=twist(rotR(st?rotZb([1,0,0],st):[1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
   const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
   const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
   const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
@@ -439,7 +444,7 @@ function normalise(m){
   });
 }
 function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
-  swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),
+  swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),st:lerp(A.st||0,B.st||0,t),
   p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
   s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};

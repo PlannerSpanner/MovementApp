@@ -61,6 +61,24 @@ movements needed direction-change *wording* (fixed 2026-08-02); nothing else is 
 
 # Morning Flow — 13 movements: standing flow → ground finish (TR_ALL)
 
+> **Figure audit, 2026-11-12.** Every pose below was re-checked against `docs/rubrics/flow.md`
+> (executable form: `qa/fig/rubric.js`, in the gauntlet) and reviewed twice by a fresh
+> reviewer. What changed in the figure, not in the exercise: Bouncing is a small bounce with
+> long airborne legs (was a tucked squat-jump); Arm sweeps fold at the hips with a knee dip
+> (was a squat) and bow forward at the top; Punching is a true horse stance with the
+> retracting fist at the ribs and a chambered crossover; Lateral reaches drop the near
+> shoulder and rest the hand on the hip; Knee drives turn the trunk toward the lifted knee
+> with the opposite elbow, standing leg straight; Chest opener is seen 3/4 from above so the
+> horizontal swing reads; Hip circles show hands on hips and stations inside real hip range,
+> 3/4 front; Bent rotation sweeps keep the planted hand planted; Cat-cows hold straight
+> vertical arms (Will); Cobra starts flat with elbows back along the ribs and stops short of
+> end range; Down dog is a true inverted V with a shallow pedal; Thread the needle
+> straightens the support arm in the reach, drops the shoulder and head in the thread and
+> passes the arm behind the planted hand; 90/90 is seen from 30 degrees up so the Z reads.
+> Known limits: heel-up feet (authored foot contact is a later step), and Chest opener
+> cannot alternate the top arm between cycles.
+
+
 Eight standing movements, continuous and rhythmic — nothing held — then a
 five-movement ground block moved in verbatim from the retired Morning Movement app
 (2026-08-26). Every movement doubles as warmup plus targeted rehab.

@@ -45,7 +45,12 @@ function solve(p){
   const twist=(v,k)=>tw?rotAxis(v,d1,-R(tw*k)):v;
   const neck =add(chest, twist(rotR(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
   const head =add(neck,  twist(rotR(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
-  const axS=twist(rotR([1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
+  // st (2026-11-12) = shoulder-line tilt in degrees, in the body's frontal plane: st > 0
+  // drops the right shoulder and lifts the left. A side bend (sl) alone slides the rib cage
+  // sideways with the shoulders level; a real one drops the near shoulder. Absent/zero =
+  // the old level shoulder line exactly.
+  const st=p.st||0;
+  const axS=twist(rotR(st?rotZb([1,0,0],st):[1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
   const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
   const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
   const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
