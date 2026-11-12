@@ -18,10 +18,11 @@ const WK_A=[
  // 2026-11-12: FK arms. The forearm is straight up in both keys, so the wrist stays over the
  // elbow by construction; the upper arm sweeps from the floor, 45 deg out from the trunk (it
  // was a T at 86 deg with the elbows hovering 6 up), to vertical.
+ // Foot contact authored (2026-11-12): both feet flat on the floor, toes pointing away from the head.
  A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[63.8,-41.9,180,0],aR:[63.8,41.9,180,0],
-    ikFL:[0.5,93,27.6],ikFR:[11.1,93,25]},
+    ikFL:[0.5,93,27.6],ikFR:[11.1,93,25],fpL:0,fpR:0},
  B:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[180,0,180,0],aR:[180,0,180,0],ikFL:[0.5,93,27.6],
-    ikFR:[11.1,93,25]}},
+    ikFR:[11.1,93,25],fpL:0,fpR:0}},
 
 {n:"Single-arm DB row",sets:3,reps:"10",each:true,cyc:2.5,cam:296,pitch:20,
  how:"Left hand and knee on the bench, back flat and level. Let the dumbbell hang, then drive the elbow up and back toward your hip. Lower with control.",
@@ -36,9 +37,10 @@ const WK_A=[
  // both keys: straight down at the bottom, elbow up and back past the ribs at the top.
  // Seen from the rowing side (camera 296) so the support arm never covers the working arm;
  // pL 75.5 = the bench top the support hand lies flat on.
- A:{p:[0,55,-8],yaw:0,tw:0,s:[77,77],hf:4,aL:[0,-2,0,-2],aR:[6,9,0,9],lL:[0,0,-90,0],ikFR:[6.5,93,-9.5],pL:75.5},
+ // Foot contact authored (2026-11-12): the kneeling foot lies along the bench in line with the shin; the standing foot is flat.
+ A:{p:[0,55,-8],yaw:0,tw:0,s:[77,77],hf:4,aL:[0,-2,0,-2],aR:[6,9,0,9],lL:[0,0,-90,0],ikFR:[6.5,93,-9.5],pL:75.5,fpL:4,fyL:180,fpR:0},
  B:{p:[0,55,-8],yaw:0,tw:0,s:[77,77],hf:4,aL:[0,-2,0,-2],aR:[-118,4,0,4],lL:[0,0,-90,0],
-    ikFR:[6.5,93,-9.5],pL:75.5}},
+    ikFR:[6.5,93,-9.5],pL:75.5,fpL:4,fyL:180,fpR:0}},
 
 {n:"Romanian deadlift",sets:2,reps:"8",cyc:3.2,cam:46,pin:"LR",
  how:"Soft knees, bar at the thighs. Push your hips straight back and slide the bar down your legs to just below the knee, back flat, then stand tall by squeezing the glutes.",

@@ -41,10 +41,11 @@ const WK_B=[
        {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
  // 2026-11-12: body and bench squared (yaw 0, camera 82 keeps the view); both arms hang
  // straight at the bottom (the right was bent to 155) and the elbows stay close at the top.
+ // Foot contact authored (2026-11-12): braced on the balls of the feet, toes tucked, heels up.
  A:{p:[0,72,-6],yaw:0,tw:0,s:[52,50],hf:-10,ikL:{w:[-8,81.5,14.2]},ikR:{w:[8,81.5,14.2]},swAL:-96,
-    swAR:96,ikFL:[-5.5,93,-37],ikFR:[5.5,93,-37]},
+    swAR:96,ikFL:[-5.5,89.5,-39],ikFR:[5.5,89.5,-39],fpL:33,fpR:33,fyL:0,fyR:0},
  B:{p:[0,72,-6],yaw:0,tw:0,s:[52,50],hf:-10,ikL:{w:[-8.5,71,1.1]},ikR:{w:[8.5,71,1.1]},swAL:-96,swAR:96,
-    ikFL:[-5.5,93,-37],ikFR:[5.5,93,-37]}},
+    ikFL:[-5.5,89.5,-39],ikFR:[5.5,89.5,-39],fpL:33,fpR:33,fyL:0,fyR:0}},
 
 {n:"Neutral-grip lat pulldown",sets:3,reps:"8",cyc:2.9,cam:94,
  how:"Sit tall, hands on the neutral handles overhead, lean back a touch. Drive the elbows down and back to bring the handles to your upper chest, then control the way back up.",

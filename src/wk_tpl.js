@@ -119,7 +119,8 @@ function figMarkup(m,fit,ph){
     if(!m._held){const ps=JSON.stringify(m.prop||'');m._held={L:ps.indexOf('gpL')>=0,R:ps.indexOf('gpR')>=0};}
     const held=m._held;
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
-      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:(P['ft'+sd].d+P['toe'+sd].d)/2+0.01,w:0.9*parts[il].k}));
+      // the foot paints OVER the end of its own shin, which it encloses
+      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.9*parts[il].k}));
       parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
     });
   }else{

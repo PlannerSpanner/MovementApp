@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='202f417f95';
+const BUILDV='bec723c771';
 // Daily 13 — postural maintenance (renamed from Daily 10, 2026-08-26). tdur = length
 // of the GET SET UP gap BEFORE the movement (TR_ALL builds); setup = authored
 // transition script, spoken as "Next: <name>. <setup>". Position flow: standing (1-2)
@@ -150,10 +150,11 @@ const MOVES=[
 // the top position is the straight knee-hip-shoulder diagonal — no extra arch.
 {n:"Glute bridge",pos:'supine',cue:"Tuck first, drive through the heels, squeeze tall",dur:45,bil:false,cyc:3.2,cam:52,tdur:10,
  setup:"Stay on your back. Feet flat on the floor, hip width, heels close to your hands.",
+ // Foot contact authored (2026-11-12): both feet flat on the floor, toes pointing away from the head.
  A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
-    aL:[88,-8,88,-6],aR:[88,8,88,6]},
+    aL:[88,-8,88,-6],aR:[88,8,88,6],fpL:0,fpR:0},
  B:{p:[0,79.6,3],yaw:14,tw:0,s:[-110,-110],hf:8,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
-    aL:[88,-8,88,-6],aR:[88,8,88,6]}},
+    aL:[88,-8,88,-6],aR:[88,8,88,6],fpL:0,fpR:0}},
 
 // Ported from the Birth Prep clamshell (proven read): bottom leg static, top foot
 // pinned at the heels, and the top knee opens by swiveling about the hip→ankle axis —
@@ -182,12 +183,13 @@ const MOVES=[
  // M = the low forward slide (hand low and ahead, thigh half-way back): without it the hand
  // cut the corner past the shoulder and the elbow winged out. Camera 52: at 70 (pure
  // profile) the reaching far arm passed behind the head.
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[15.1,93,21.1]},swAR:90,
-    lL:[3,-5,-90,-5],lR:[3,5,-90,5]},
+    lL:[3,-5,-90,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  M:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[21.8,84,39.4]},swAR:90,
-    lL:[-44,-6,-91,-5],lR:[3,5,-90,5]},
+    lL:[-44,-6,-91,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[24,67.8,45.4]},swAR:90,
-    lL:[-91,-6,-91,-5],lR:[3,5,-90,5]}},
+    lL:[-91,-6,-91,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 // A=Y, M=T, B=W: the cycle sweeps Y->T->W->T->Y. Tiny floats — the work is the
 // scapular squeeze, not elevation. cam 72: the only view where the letters open.
@@ -203,12 +205,13 @@ const MOVES=[
  // little above shoulder height (flex 94): Y = 35 deg off the spine, T = square, W = upper
  // arms 45 deg below the T line with the forearms 45 deg above it (elbows 90 deg). FK keeps
  // the arms dead straight through the Y-to-T sweep; hand targets cut the corner and bent them.
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-35,94,-35],aR:[94,35,94,35],
-    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5]},
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
  M:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-90,94,-90],aR:[94,90,94,90],
-    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5]},
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-135,94,-45],aR:[94,135,94,45],
-    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5]}},
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 {n:"Side plank",pos:'sidelying',cue:"One straight line — push the floor away, hips high",dur:40,bil:true,cyc:4.2,cam:18,tdur:10,pin:"LR",
  setup:"Roll onto your side. Prop up on your forearm, elbow under your shoulder, feet stacked.",
@@ -257,9 +260,9 @@ const MOVES=[
        {l:[[-11,74,-6.5],[-11,93,-6.5]]},{l:[[11,74,-6.5],[11,93,-6.5]]}],
  setup:"Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.",
  A:{p:[0,75.05,6],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},swAL:-92,swAR:92,
-    ikFL:[-5.5,93,27],ikFR:[5.5,93,27]},
+    ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0},
  B:{p:[0,86,7],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},
-    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27]}},
+    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0}},
 
 // Static hold: the fight is grip + anti-shrug + anti-lean. Barely-visible sway.
 {n:"Dumbbell farmer hold",pos:'standing',cue:"Ribs stacked over pelvis — don't let the weights win",dur:35,bil:false,cyc:4.6,cam:40,tdur:15,pin:"LR",
@@ -492,30 +495,51 @@ function farK(dThis,dOther){
   return 1-(1-S.far)*smooth(Math.max(0,Math.min(1,(dOther-dThis)/4)));
 }
 // ---- feet and hands as small 3D objects (drawn only with a skin) ----
-// The foot is built in its own frame -- f heel-to-ball, up toward the shin, side -- as two
-// flat outlines: a PROFILE wedge (heel, arch, ball, toe) and a PLAN footprint (narrow
-// rounded heel widening to the forefoot). Both are projected by the camera and filled, so
-// side-on the wedge shows, from above the footprint shows, and in between you get both:
-// the shape comes from the foot's orientation, not from a fixed glyph. The ankle joint
-// (ft) is the heel on the floor and the toe joint is the BALL of the foot, exactly as the
-// authored contact numbers (fp/fy) place them; the toes beyond the ball lie flat when the
-// ball is on the floor, so a heel-up foot pivots about its ball.
-function footPolys(J,s){
-  const ft=J['ft'+s],ball=J['toe'+s],kn=J['kn'+s];
+// The foot is built in its own frame and then projected by the camera, as two flat outlines
+// through one small volume: a PROFILE wedge (heel, arch, ball, toes) and a PLAN footprint
+// (narrow rounded heel widening to the forefoot). Side-on the wedge shows, from above the
+// footprint shows, in between both: the shape comes from the foot's orientation.
+// ORIENTATION IS ANATOMICAL, not "sole toward the floor" (Will, 2026-11-12). The shin has a
+// front: the side away from the folded thigh (for a straight leg, the body's own front).
+// The top of the foot continues the FRONT of the shin and the sole continues the back. So:
+// standing, the sole is down; on all fours or lying prone, with the foot in line with the
+// shin, the TOP of the foot is on the floor and the sole faces up; lying on the back the
+// toes point at the ceiling. footFrame returns f (ankle to ball), n (out of the top of the
+// foot), sd (across it).
+// The ankle joint (ft) sits INSIDE the volume, 1.4 above the sole and 2.2 in front of the
+// back of the heel, so the foot encloses the end of the shin. The toe joint is the BALL of
+// the foot, as the authored contact numbers (fp/fy) place it; with the sole down and the
+// ball on the floor the toes lie flat beyond it, so a heel-up foot pivots about its ball.
+// (A limb drawn with thickness already reaches about 1.4 below its joints, so a planted
+// sole sits level with a planted knee or shin.)
+function footFrame(J,s){
+  const ft=J['ft'+s],ball=J['toe'+s],kn=J['kn'+s],hp=J['hp'+s];
+  const d3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2], perp=(v,a)=>{const d=d3(v,a);return [v[0]-a[0]*d,v[1]-a[1]*d,v[2]-a[2]*d];};
   let f=sub(ball,ft); if(len(f)<1e-3) f=[0,0,1]; f=nrm(f);
-  const perp=(v,a)=>{const d=v[0]*a[0]+v[1]*a[1]+v[2]*a[2];return [v[0]-a[0]*d,v[1]-a[1]*d,v[2]-a[2]*d];};
-  let up=perp(sub(kn,ft),f); if(len(up)<2) up=perp([0,-1,0],f); if(len(up)<1e-3) up=perp([0,0,1],f); up=nrm(up);
-  const sd=cross(f,up);
-  const k=Math.max(0,Math.min(1,(ball[1]-91.4)/1.2));                 // ball on the floor -> toes flat
+  let us=sub(ft,kn); us=len(us)<1e-3?[0,1,0]:nrm(us);                       // down the shin
+  const lat=nrm(sub(J.hpR,J.hpL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);   // the body's own front
+  const back=perp(sub(hp,kn),us),bf=perp(fw,us);                            // the folded thigh is behind the shin
+  let sa=[bf[0]*0.35-back[0]/19,bf[1]*0.35-back[1]/19,bf[2]*0.35-back[2]/19];
+  if(len(sa)<1e-3) sa=perp([0,0,1],us); if(len(sa)<1e-3) sa=perp([1,0,0],us); sa=nrm(sa);   // front of the shin
+  const a=d3(f,us),b=d3(f,sa);
+  let n=[sa[0]*a-us[0]*b,sa[1]*a-us[1]*b,sa[2]*a-us[2]*b];
+  if(len(n)<0.3){n=perp([-us[0],-us[1],-us[2]],f); if(len(n)<1e-3) n=perp([0,-1,0],f);}
+  n=nrm(n);
+  return {ft,ball,f,n,sd:cross(f,n)};
+}
+function footPolys(J,s){
+  const {ft,ball,f,n,sd}=footFrame(J,s);
+  // toes: flat on the floor beyond the ball when the sole is down and the ball is planted
+  const k=n[1]<0.4?Math.max(0,Math.min(1,(ball[1]-91.4)/1.2)):0;
   let fh=[f[0],0,f[2]]; fh=len(fh)<1e-3?f:nrm(fh);
   const td=nrm([f[0]+(fh[0]-f[0])*k,f[1]+(fh[1]-f[1])*k,f[2]+(fh[2]-f[2])*k]);
-  let tu=perp(up,td); tu=len(tu)<1e-3?up:nrm(tu);
-  const P=(a,n,w)=>[ft[0]+f[0]*a+up[0]*n+sd[0]*(w||0),ft[1]+f[1]*a+up[1]*n+sd[1]*(w||0),ft[2]+f[2]*a+up[2]*n+sd[2]*(w||0)];
-  const T=(a,n,w)=>[ball[0]+td[0]*a+tu[0]*n+sd[0]*(w||0),ball[1]+td[1]*a+tu[1]*n+sd[1]*(w||0),ball[2]+td[2]*a+tu[2]*n+sd[2]*(w||0)];
-  const profile=[P(-1.5,0),P(-1.6,1.5),P(-0.5,2.9),P(1.1,2.9),P(3.4,1.9),P(6.4,1.05),T(1.7,0.6),T(2.2,0.25),T(1.8,0),
-                 P(6.4,0),P(4.7,0.2),P(2.9,0.65),P(1.0,0.15)];
-  const plan=[P(-1.5,0.1,0),P(-1.1,0.1,0.95),P(0.6,0.1,1.25),P(2.6,0.1,1.05),P(4.6,0.1,1.7),P(6.4,0.1,1.75),T(1.5,0.1,1.35),T(2.2,0.1,0.5),
-              T(2.2,0.1,-0.5),T(1.5,0.1,-1.35),P(6.4,0.1,-1.75),P(4.6,0.1,-1.7),P(2.6,0.1,-1.05),P(0.6,0.1,-1.25),P(-1.1,0.1,-0.95)];
+  const dt=n[0]*td[0]+n[1]*td[1]+n[2]*td[2]; let tu=[n[0]-td[0]*dt,n[1]-td[1]*dt,n[2]-td[2]*dt]; tu=len(tu)<1e-3?n:nrm(tu);
+  const P=(a,h,w)=>[ft[0]+f[0]*a+n[0]*h+sd[0]*(w||0),ft[1]+f[1]*a+n[1]*h+sd[1]*(w||0),ft[2]+f[2]*a+n[2]*h+sd[2]*(w||0)];
+  const T=(a,h,w)=>[ball[0]+td[0]*a+tu[0]*h+sd[0]*(w||0),ball[1]+td[1]*a+tu[1]*h+sd[1]*(w||0),ball[2]+td[2]*a+tu[2]*h+sd[2]*(w||0)];
+  const profile=[P(-2.0,-1.4),P(-2.3,-0.3),P(-1.6,1.25),P(0.9,1.7),P(3.2,1.05),P(6.4,0.35),T(1.7,0.25),T(2.3,-0.35),T(1.8,-1.0),
+                 P(6.4,-1.15),P(5.0,-1.4),P(2.8,-0.8),P(0.5,-1.4)];
+  const plan=[P(-2.2,-0.4,0),P(-1.7,-0.4,1.0),P(0.6,-0.4,1.3),P(2.6,-0.4,1.1),P(4.6,-0.4,1.75),P(6.4,-0.4,1.8),T(1.5,-0.4,1.4),T(2.3,-0.4,0.5),
+              T(2.3,-0.4,-0.5),T(1.5,-0.4,-1.4),P(6.4,-0.4,-1.8),P(4.6,-0.4,-1.75),P(2.6,-0.4,-1.1),P(0.6,-0.4,-1.3),P(-1.7,-0.4,-1.0)];
   return [profile,plan];
 }
 // The hand is one flat mitten continuing the forearm, with the thumb as a bulge on one edge.
@@ -790,7 +814,8 @@ function figMarkup(m,fit,ph,v){
     if(!m._held){const ps=JSON.stringify(m.prop||'');m._held={L:ps.indexOf('gpL')>=0,R:ps.indexOf('gpR')>=0};}
     const held=m._held;
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
-      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:(P['ft'+sd].d+P['toe'+sd].d)/2+0.01,w:0.9*parts[il].k}));
+      // the foot paints OVER the end of its own shin, which it encloses
+      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.9*parts[il].k}));
       parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
     });
   }else{

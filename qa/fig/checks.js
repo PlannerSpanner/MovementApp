@@ -9,11 +9,23 @@
 //  hidden     a limb segment behind the torso and fully covered by it for 1/8 of the cycle or more
 //  merged     left and right of the same limb drawn on top of each other for 1/4 of the cycle or more
 //  short      a limb that MOVES during the cycle but is foreshortened below 35% of its length
+// With a figure skin (feet are drawn shapes), three more, added after Will found on his phone what
+// the audit and a reviewer had both passed (2026-11-12):
+//  ankle      the ankle joint is outside the drawn foot outline in some frame
+//  shinPast   the end of the shin stroke pokes out past the foot outline
+//  sole       the foot faces the wrong way for its contact: sole down when the shin stands on it,
+//             TOP of the foot down when the shin lies along the floor (kneeling, prone), toes
+//             tucked only for the movements in TUCKED
 // floor / miss / pop are faults. The other five are judgement flags: each must be either fixed
 // or waived with a reason in waivers.json.
 const {N,FLOOR,sub,dot,len,nrm,cross,deg,angV:ang,sample}=require('./lib');
 const SEG=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
-const HARD=['floor','miss','pop','supinated'];
+const HARD=['floor','miss','pop','supinated','ankle','shinPast','sole'];
+// feet whose toes are tucked under (ball on the floor, heel up) while the shin is near the floor
+const TUCKED=['Plank hold','Reverse lunges','Split squat','Chest-supported row'];
+// floor poses where the shins lie on their sides, so neither sole-down nor top-down applies
+const SIDEWAYS=['90/90 with a fold'];
+const dSeg2=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l2));return Math.hypot(a.x+dx*t-p.x,a.y+dy*t-p.y);};
 const inPoly=(p,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
   const a=poly[i],b=poly[j]; if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)c=!c;}return c;};
 function audit(E,m){
@@ -50,6 +62,29 @@ function audit(E,m){
   [['elL','haL','elR','haR','arms'],['knL','ftL','knR','ftR','legs']].forEach(([b,c,e,g,nm])=>{
     const mg=fr.filter(f=>[[b,e],[c,g]].every(([p,q])=>{const P=scr(f,p),Q=scr(f,q);return Math.hypot(P.x-Q.x,P.y-Q.y)<1.6*m.fit.sc;}));
     if(mg.length>=N/4)add('merged',nm,`left and right ${nm} are drawn on top of each other for ${(100*mg.length/N).toFixed(0)}% of the cycle`);});
+  if(E.getSkin&&E.getSkin()){const sc=m.fit.sc,grow=0.45*sc;
+    const sp=v=>{const q=E.project(v);return {x:q.x*sc+m.fit.ox,y:q.y*sc+m.fit.oy};};
+    const inAny=(p,polys,g)=>polys.some(pl=>inPoly(p,pl)||pl.some((c,i)=>dSeg2(p,c,pl[(i+1)%pl.length])<g));
+    ['L','R'].forEach(sd=>{let out=0,outPh=0,past=0,pastPh=0,bad=0,badPh=0,why='';
+      fr.forEach(f=>{const polys=E.footPolys(f.j,sd).map(pl=>pl.map(sp)),A=sp(f.j['ft'+sd]),K=sp(f.j['kn'+sd]);
+        if(!inAny(A,polys,0)){if(!out)outPh=f.ph;out++;}
+        const dx=A.x-K.x,dy=A.y-K.y,l=Math.hypot(dx,dy),r=E.limbHalf('shin',1,1)*sc;
+        if(l>0.5){const ux=dx/l,uy=dy/l;for(let a=-80;a<=80;a+=20){const c=Math.cos(a*Math.PI/180),s2=Math.sin(a*Math.PI/180);
+          const pt={x:A.x+r*(ux*c-uy*s2),y:A.y+r*(ux*s2+uy*c)};
+          if(!inAny(pt,polys,grow+0.2)){const d=Math.min(...polys.map(pl=>Math.min(...pl.map((c2,i)=>dSeg2(pt,c2,pl[(i+1)%pl.length])))));if(d>past){past=d;pastPh=f.ph;}}}}
+        // contact type
+        const ft=f.j['ft'+sd],kn=f.j['kn'+sd],gap=FLOOR-ft[1];
+        if(gap<3.2&&!(f.pose.roll)&&!SIDEWAYS.includes(m.n)){const n=E.footFrame(f.j,sd).n,sh=sub(kn,ft),tilt=ang(sh,[0,-1,0]);
+          let w='';
+          if(tilt<55){if(n[1]>-0.4)w='shin stands on the foot but the sole is not down';
+            else if(gap<0.8&&E.footFrame(f.j,sd).f[1]<-0.2)w='the heel is planted but the toes are in the air';}
+          else if(tilt>=62){if(TUCKED.includes(m.n)){if(n[1]>0.5)w='toes should be tucked but the top of the foot is down';}
+            else if(n[1]<0.5)w='shin lies along the floor but the top of the foot is not down (sole should face up)';}
+          if(w){if(!bad){badPh=f.ph;why=w;}bad++;}}
+      });
+      if(out)add('ankle',sd,`ft${sd} is outside its foot outline in ${out} of ${N} frames (first at ph ${outPh.toFixed(2)})`);
+      if(past>0.25)add('shinPast',sd,`the ${sd==='L'?'left':'right'} shin end pokes ${past.toFixed(1)} screen units past the foot outline at ph ${pastPh.toFixed(2)}`);
+      if(bad)add('sole',sd,`${sd==='L'?'left':'right'} foot: ${why} (${bad} of ${N} frames, first at ph ${badPh.toFixed(2)})`);});}
   for(const k in fr[0].j){const st=fr.map((f,i)=>len(sub(fr[(i+1)%N].j[k],f.j[k])));
     const nz=st.filter(x=>x>1e-3).sort((x,y)=>x-y); if(!nz.length)continue; const med=nz[nz.length>>1];
     const mx=Math.max(...st), at=st.indexOf(mx);

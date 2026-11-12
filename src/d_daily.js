@@ -45,10 +45,11 @@ const MOVES=[
 // the top position is the straight knee-hip-shoulder diagonal — no extra arch.
 {n:"Glute bridge",pos:'supine',cue:"Tuck first, drive through the heels, squeeze tall",dur:45,bil:false,cyc:3.2,cam:52,tdur:10,
  setup:"Stay on your back. Feet flat on the floor, hip width, heels close to your hands.",
+ // Foot contact authored (2026-11-12): both feet flat on the floor, toes pointing away from the head.
  A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
-    aL:[88,-8,88,-6],aR:[88,8,88,6]},
+    aL:[88,-8,88,-6],aR:[88,8,88,6],fpL:0,fpR:0},
  B:{p:[0,79.6,3],yaw:14,tw:0,s:[-110,-110],hf:8,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
-    aL:[88,-8,88,-6],aR:[88,8,88,6]}},
+    aL:[88,-8,88,-6],aR:[88,8,88,6],fpL:0,fpR:0}},
 
 // Ported from the Birth Prep clamshell (proven read): bottom leg static, top foot
 // pinned at the heels, and the top knee opens by swiveling about the hip→ankle axis —
@@ -77,12 +78,13 @@ const MOVES=[
  // M = the low forward slide (hand low and ahead, thigh half-way back): without it the hand
  // cut the corner past the shoulder and the elbow winged out. Camera 52: at 70 (pure
  // profile) the reaching far arm passed behind the head.
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[15.1,93,21.1]},swAR:90,
-    lL:[3,-5,-90,-5],lR:[3,5,-90,5]},
+    lL:[3,-5,-90,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  M:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[21.8,84,39.4]},swAR:90,
-    lL:[-44,-6,-91,-5],lR:[3,5,-90,5]},
+    lL:[-44,-6,-91,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[24,67.8,45.4]},swAR:90,
-    lL:[-91,-6,-91,-5],lR:[3,5,-90,5]}},
+    lL:[-91,-6,-91,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 // A=Y, M=T, B=W: the cycle sweeps Y->T->W->T->Y. Tiny floats — the work is the
 // scapular squeeze, not elevation. cam 72: the only view where the letters open.
@@ -98,12 +100,13 @@ const MOVES=[
  // little above shoulder height (flex 94): Y = 35 deg off the spine, T = square, W = upper
  // arms 45 deg below the T line with the forearms 45 deg above it (elbows 90 deg). FK keeps
  // the arms dead straight through the Y-to-T sweep; hand targets cut the corner and bent them.
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-35,94,-35],aR:[94,35,94,35],
-    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5]},
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
  M:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-90,94,-90],aR:[94,90,94,90],
-    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5]},
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-135,94,-45],aR:[94,135,94,45],
-    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5]}},
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 {n:"Side plank",pos:'sidelying',cue:"One straight line — push the floor away, hips high",dur:40,bil:true,cyc:4.2,cam:18,tdur:10,pin:"LR",
  setup:"Roll onto your side. Prop up on your forearm, elbow under your shoulder, feet stacked.",
@@ -152,9 +155,9 @@ const MOVES=[
        {l:[[-11,74,-6.5],[-11,93,-6.5]]},{l:[[11,74,-6.5],[11,93,-6.5]]}],
  setup:"Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.",
  A:{p:[0,75.05,6],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},swAL:-92,swAR:92,
-    ikFL:[-5.5,93,27],ikFR:[5.5,93,27]},
+    ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0},
  B:{p:[0,86,7],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},
-    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27]}},
+    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0}},
 
 // Static hold: the fight is grip + anti-shrug + anti-lean. Barely-visible sway.
 {n:"Dumbbell farmer hold",pos:'standing',cue:"Ribs stacked over pelvis — don't let the weights win",dur:35,bil:false,cyc:4.6,cam:40,tdur:15,pin:"LR",

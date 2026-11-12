@@ -75,6 +75,14 @@ APPS.forEach(([k,label])=>{const B=MK['B_'+k](),A=MK['A_'+k]();const h=document.
     cards.appendChild(card);});});
 // ---- close-ups: same engines, a cropped viewBox, optionally another camera ----
 const CLOSE=[
+ ['Feet on all fours: Cat-cows','flow','Cat-cows','0 0 100 100',null,'Top of the foot on the floor, sole up, toes straight back. The ankle is inside the foot and the foot is drawn over the end of the shin.'],
+ ['Cat-cows, feet close up','flow','Cat-cows','0 50 42 42',null,'The foot is a slim wedge continuing the shin.'],
+ ['Feet on all fours: Thread the needle','flow','Thread the needle','0 0 100 100',null,'Same kneeling contact.'],
+ ['Feet on all fours: Bird dog','daily','Bird dog','0 0 100 100',null,'Kneeling foot top-down; the extended leg ends in a foot in line with the shin.'],
+ ['Prone feet: Cobra press-ups','flow','Cobra press-ups','0 0 100 100',null,'Lying prone the foot is in line with the shin, top down, sole up.'],
+ ['Cobra, feet close up','flow','Cobra press-ups','0 40 38 38',null,'A slim wedge continuing the leg.'],
+ ['Toes tucked: Plank hold','daily','Plank hold','0 0 100 100',null,'The only floor poses with tucked toes are Plank hold, the rear foot of Reverse lunges and Split squat, and Chest-supported row. The build checks that list.'],
+ ['Standing feet close up','daily','Deep squats','22 60 44 44',null,'Sole down. The ankle sits inside the foot, above and forward of the heel; the shin end no longer pokes out.'],
  ['Hands on a farmer hold','daily','Dumbbell farmer hold','22 38 38 38',null,'Dumbbells now sit in the fist, 3.3 units (7 cm) below the hip joint; before, they hung from the wrist joint at hip height. Handles run front to back: a neutral grip.'],
  ['Hands on a row','daily','Dumbbell bent-over row','22 22 50 50',null,'Neutral grip: handles front to back all the way up.'],
  ['Hands on the Romanian deadlift','strength','Romanian deadlift','20 30 55 55',null,'Overhand (pronated) grip on the bar. The bar is in the fist, so the arms hang 5 degrees back of plumb (11 before the hand was added).'],

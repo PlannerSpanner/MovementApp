@@ -140,10 +140,11 @@ const MOVES=[
 // thighs vertical.
 {n:"Cat-cows",pos:'quadruped',cue:"Round the spine, then arch and open the chest",dur:30,bil:false,cyc:3.4,tdur:15,
  setup:"Time to get on the ground. Hands and knees, wrists under your shoulders.",
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,72.5,0],yaw:22,tw:0,bend:60,s:[62,92],hf:44,ikL:{w:[2.7,93,25.3]},ikR:{w:[15.7,93,20.1]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[3,-5,-90,-5],lR:[3,5,-90,5]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[3,-5,-90,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,72.5,0],yaw:22,tw:0,bend:-60,s:[92,62],hf:-34,ikL:{w:[2.7,93,25.3]},ikR:{w:[15.7,93,20.1]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[3,-5,-90,-5],lR:[3,5,-90,5]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[3,-5,-90,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 // 40s since 2026-10-15 (was 60); the press carries a real arch (bend -45).
 // Rebuilt 2026-11-12: A lies FLAT (chest near the floor; it started half-raised), both legs
@@ -154,10 +155,11 @@ const MOVES=[
 // still bent, hips not hyper-extended (they were 46 to 50 deg behind the trunk line).
 {n:"Cobra press-ups",pos:'prone',cue:"Press the chest up, hips stay down",dur:40,bil:false,cyc:3.2,tdur:15,
  setup:"Lie face down, hands under your shoulders, elbows in.",
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,90.5,4],yaw:30,tw:0,bend:0,s:[84,80],hf:8,ikL:{w:[6.1,93,30.5]},ikR:{w:[19.9,93,22.5]},swAL:-92,swAR:92,
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-85.5,-6,-88,-5],lR:[-85.5,6,-88,5]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-85.5,-6,-88,-5],lR:[-85.5,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,90.5,4],yaw:30,tw:0,bend:-40,s:[66,34],hf:-8,ikL:{w:[6.1,93,30.5]},ikR:{w:[19.9,93,22.5]},swAL:-92,swAR:92,
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-85.5,-6,-88,-5],lR:[-85.5,6,-88,5]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-85.5,-6,-88,-5],lR:[-85.5,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 // Rebuilt 2026-11-12 as a true inverted V: hands, shoulders and hips on one straight line
 // (39 deg to the floor), legs about 60 deg, hips the highest point. The hands reach their
@@ -188,12 +190,13 @@ const MOVES=[
 // the screen instead of into the lens.
 {n:"Thread the needle",pos:'quadruped',cue:"Reach up, then slide the arm under",dur:60,bil:true,cyc:3.6,tdur:15,
  setup:"Drop your knees and come to hands and knees, wrists under shoulders.",
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
  A:{p:[0,74,0],yaw:0,tw:55,s:[64,62],hf:-24,ikL:{w:[-7,93,23.5]},
-    aR:[0,125,0,125],lL:[7,-6,-90,-5],lR:[7,6,-90,5]},
+    aR:[0,125,0,125],lL:[7,-6,-90,-5],lR:[7,6,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  M:{p:[0,74,0],yaw:0,tw:-20,s:[80,84],hf:10,ikL:{w:[-7,93,23.5]},
-    aR:[-14,30,-20,-60],lL:[7,-6,-90,-5],lR:[7,6,-90,5]},
+    aR:[-14,30,-20,-60],lL:[7,-6,-90,-5],lR:[7,6,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
  B:{p:[0,74,0],yaw:0,tw:-66,s:[104,118],hf:40,ikL:{w:[-7,93,23.5]},
-    aR:[-26,-10,-26,-10],lL:[7,-6,-90,-5],lR:[7,6,-90,5]}},
+    aR:[-26,-10,-26,-10],lL:[7,-6,-90,-5],lR:[7,6,-90,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 // 2026-11-12: camera raised to pitch 30 so the Z of the legs, which lies in the floor
 // plane, opens up on screen (from 13 deg the back leg read as nearly straight). Upright,

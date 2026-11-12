@@ -84,6 +84,16 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     `handPoly` (a flat mitten, thumb bulge on one edge). `far` (0.8) narrows whichever limb of
     a left/right pair is farther from the camera (`farK`, eased over 4 units of depth). Delete
     skin.json and everything renders as the old constant-width strokes. No joint moves either way.
+  - FOOT ORIENTATION IS ANATOMICAL (rebuilt 2026-11-12 after Will found, on his phone, feet the
+    audit and a reviewer had both passed). `footFrame`: the top of the foot continues the FRONT of
+    the shin (the side away from the folded thigh; for a straight leg, the body's own front), the
+    sole continues the back. Standing = sole down; kneeling or prone, foot in line with the shin =
+    TOP of the foot down, sole up; supine = toes at the ceiling. The ankle joint sits INSIDE the
+    drawn foot (1.4 above the sole) and the foot paints over the shin end. Never orient a foot by
+    "sole toward the floor". The legacy toe guess points a prone toe back toward the knee, so
+    prone and kneeling feet carry authored contact (`fp 4, fy 180`), planted supine feet `fp 0`.
+    qa/fig/checks.js enforces: ankle inside the outline, shin end not past it, sole direction
+    matching the contact, planted heel = flat foot, toes tucked only for the TUCKED list.
   - Grip: pose `gL`/`gR` in degrees about the forearm, 0 = neutral (thumb on the upper-arm side
     of the elbow's bend plane), 90 = pronated. NEGATIVE = SUPINATED = FORBIDDEN (Will's distal
     bicep rule); qa/fig/checks.js fails the build on it. At phone size grip reads from the

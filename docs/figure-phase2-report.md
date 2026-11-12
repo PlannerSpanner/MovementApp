@@ -4,6 +4,18 @@
 
 Your skin is applied to both templates, with feet and hands as small 3D shapes, the two-camera Y-T-W and the 4-in, 6-out posture reset. The full audit passes with it. The skin has a measured cost at Live Activity size, listed below. Hands do not show grip direction at phone size; the implement does.
 
+## Foot fixes after your phone check
+
+You found three foot bugs that the audit and the reviewer had both passed. All three had one cause: the foot was built from "toe direction plus sole toward the floor", with the ankle on the sole line.
+
+- **Ankle inside the foot.** The ankle joint now sits 1.4 units above the sole and 2.2 forward of the back of the heel. The foot encloses the end of the shin and is painted over it.
+- **Real orientation.** The top of the foot continues the front of the shin and the sole continues the back. Standing, the sole is down. On all fours and prone, the foot is in line with the shin with its top on the floor and the sole up. On the back, toes point at the ceiling.
+- **Prone and kneeling feet are authored**, not guessed: toes straight back. The old guess pointed the prone toe back along the shin toward the knee, which is the blob you saw in Cobra.
+- **Three new checks, in the gauntlet:** the ankle must be inside the foot outline in every frame; the shin end must not extend past the outline; the sole direction must match the contact (sole down when the shin stands on the foot, top of foot down when the shin lies on the floor, toes tucked only for Plank hold, Reverse lunges, Split squat and Chest-supported row).
+- **Would they have caught it?** Run against the previous commit's foot they raise 75 failures: 62 for the shin poking past the foot, 5 for the ankle outside it, 8 for the sole direction (Cobra and Y-T-W among them). On the new foot all three pass in all 37 movements. One limit: for the old Cat-cows foot only the shin check fired; my reconstruction of the old foot's "which way is up" was not exact enough to say the sole check would have.
+- The quadruped and prone movements are the first cards under Close-ups on the review page.
+- **A fresh reviewer, looking only at feet in enlarged close-ups,** confirmed all three of your bugs fixed and found three more, now fixed: the Single-arm row's kneeling foot hung through the bench (it now lies along it), and Floor press and Glute bridge had the toes in the air on planted heels (now flat, with a check for it). Left as they are, and visible if you look for them: side-plank feet point at the camera and read as a lump; the tucked Plank foot is folded more sharply than a real ankle; kneeling and prone feet show a slight double bulge at ankle and forefoot.
+
 ## Update after your answers (same day)
 
 - **Joint width 3.0** (was 4.4), below the narrowest swell (forearm 3.1), so every limb tapers into the shoulder and hip. Of the 12 accepted regressions, **2 went away and 10 remain**. Gone: the Arm sweeps fold thumbnail (back to 3 of 8 limbs, same as the old skin) and Plank's hidden far thigh. The 10 that remain are a far arm lying along the trunk or thigh in standing poses (5), a far limb behind a near one (3) and two thumbnails that follow from those. They come from limb thickness, not the joint caps.
