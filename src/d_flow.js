@@ -14,9 +14,9 @@ const MOVES=[
  // 2026-11-12: a BOUNCE, not a squat-jump. Airborne legs are long (knees about 172 deg, they
  // were tucked to 144), the feet clear the floor by an inch (ankles 2.5 up, toes hanging),
  // and the dip is a soft 30 deg of knee bend (was 65) with the pelvis travelling 3.3, not 9.
- A:{p:[0,52.65,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[10,-11,16,-9],aR:[10,11,16,9],ikFL:[-5,90.5,-0.5],ikFR:[5,90.5,-0.5]},
- M:{p:[0,55.5,0],yaw:22,tw:0,s:[4,4],hf:0,aL:[8,-11,14,-9],aR:[8,11,14,9],ikFL:[-5,93,1],ikFR:[5,93,1]},
- B:{p:[0,56.4,0],yaw:22,tw:0,s:[5,5],hf:0,aL:[14,-12,22,-10],aR:[14,12,22,10],ikFL:[-5,93,1],ikFR:[5,93,1]}},
+ A:{p:[0,52.65,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[10,-11,16,-9],aR:[10,11,16,9],ikFL:[-5,90.5,-0.5],ikFR:[5,90.5,-0.5],fpL:38,fpR:38},
+ M:{p:[0,55.5,0],yaw:22,tw:0,s:[4,4],hf:0,aL:[8,-11,14,-9],aR:[8,11,14,9],ikFL:[-5,93,1],ikFR:[5,93,1],fpL:0,fpR:0},
+ B:{p:[0,56.4,0],yaw:22,tw:0,s:[5,5],hf:0,aL:[14,-12,22,-10],aR:[14,12,22,10],ikFL:[-5,93,1],ikFR:[5,93,1],fpL:0,fpR:0}},
 
 // Large pendulum (Will, 2026-10-12): A = top, arms overhead and back with the whole body
 // arcing into extension; B = bottom, folded with the head toward the floor and the arms
@@ -163,13 +163,14 @@ const MOVES=[
 // (39 deg to the floor), legs about 60 deg, hips the highest point. The hands reach their
 // floor targets (they missed by 2.4) and both feet are IK-planted, squared to the body.
 // The pedal: A = left knee bent with that heel lifted, right leg straight with its heel
-// down; B = the reverse.
+// down; B = the reverse. Foot contact is authored (fp): the lifted heel pitches 25 deg onto
+// the ball of the foot, the other foot is flat.
 {n:"Pedaling down dog",pos:'downdog',cue:"Alternate pressing each heel down",dur:60,bil:false,cyc:2.2,tdur:15,
  setup:"Tuck your toes and press up and back into down dog, hips high.",
  A:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-10.9,90.3,-15.4],ikFR:[-1.85,93,-19.7]},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-10.9,90.3,-15.4],ikFR:[-1.85,93,-19.7],fpL:25,fpR:0},
  B:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-11.25,93,-16.3],ikFR:[-1.5,90.3,-18.8]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-11.25,93,-16.3],ikFR:[-1.5,90.3,-18.8],fpL:0,fpR:25}},
 
 // Rebuilt 2026-10-12 in the standard quadruped frame (torso along +z, shins trailing
 // -z like Bird dog / Cat-cows). The trunk ROLLS about the spine (tw): A = right shoulder

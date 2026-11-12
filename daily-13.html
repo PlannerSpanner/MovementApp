@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='f262907298';
+const BUILDV='30aa9398f1';
 // Daily 13 — postural maintenance (renamed from Daily 10, 2026-08-26). tdur = length
 // of the GET SET UP gap BEFORE the movement (TR_ALL builds); setup = authored
 // transition script, spoken as "Next: <name>. <setup>". Position flow: standing (1-2)
@@ -118,11 +118,11 @@ const MOVES=[
  // off) and the arms are FK in both keys, reaching forward as the counterweight: the old
  // bottom-only hand target made the standing arms strain toward a point 14 units away.
  // M = halfway: hips already back, thighs about 45 deg, trunk and shins both leaning 14 deg.
- A:{p:[0,55.2,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[4,-10,4,-8],aR:[4,10,4,8],lL:[-3,-5,3,-4],lR:[3,5,-3,4]},
+ A:{p:[0,55.2,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[4,-10,4,-8],aR:[4,10,4,8],lL:[-3,-5,3,-4],lR:[3,5,-3,4],fpL:0,fpR:0,fyL:-12,fyR:12},
  M:{p:[-3.3,61.1,-8.2],yaw:22,tw:0,s:[14,14],hf:-4,aL:[34,-8,42,-6],aR:[34,8,42,6],
-    lL:[0,0,0,0],lR:[0,0,0,0]},
+    lL:[0,0,0,0],lR:[0,0,0,0],fpL:0,fpR:0,fyL:-12,fyR:12},
  B:{p:[-4.05,78.4,-10],yaw:22,tw:0,s:[25,25],hf:-8,aL:[62,-6,74,-4],aR:[62,6,74,4],
-    lL:[0,0,0,0],lR:[0,0,0,0]}},
+    lL:[0,0,0,0],lR:[0,0,0,0],fpL:0,fpR:0,fyL:-12,fyR:12}},
 
 {n:"Reverse lunges",pos:'standing',cue:"Step back, front shin stays vertical",dur:30,bil:true,cyc:3.2,pin:"R",tdur:10,
  setup:"Stay standing, feet under your hips. You'll step back one leg at a time.",
@@ -130,9 +130,11 @@ const MOVES=[
  // world axis, 24 deg off, which tipped the front shin 12 deg), so the front shin is vertical.
  // The rear foot is an IK target: beside the front foot in A, planted at full step length by
  // M (back leg long, hips half-way down), and it stays there while the hips finish the drop.
- A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,2],aL:[-6,-10,-6,-8],aR:[6,10,6,8],ikFL:[-5.8,93,2.6],lR:[4,2,-4,2]},
- M:{p:[-5.7,64,-12.8],yaw:24,tw:0,s:[5,3],aL:[-2,-10,-2,-8],aR:[2,10,2,8],ikFL:[-22,89.3,-35.9],lR:[4,2,-4,2]},
- B:{p:[-7.7,72,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,89.3,-35.9],lR:[4,2,-4,2]}},
+ // Foot contact is authored: the rear foot lands on its BALL with the heel up (fp 58, ankle
+ // 5.4 above the floor) and the front foot stays flat, so no toe flips direction.
+ A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,2],aL:[-6,-10,-6,-8],aR:[6,10,6,8],ikFL:[-5.8,93,2.6],lR:[4,2,-4,2],fpL:0,fpR:0},
+ M:{p:[-5.7,64,-12.8],yaw:24,tw:0,s:[5,3],aL:[-2,-10,-2,-8],aR:[2,10,2,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0},
+ B:{p:[-7.7,72,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0}},
 
 // Contralateral reach: right arm sweeps overhead while the left leg lengthens; the
 // mirror at halfway swaps the lead pair (punching-rotations precedent). Low back
@@ -164,9 +166,9 @@ const MOVES=[
  // swivelling about the hip-to-ankle axis, so the heels stay welded by construction. Before
  // this it was a prone body seen from an angle, with the opening knee hidden behind the trunk.
  A:{p:[-6,87.2,0],yaw:0,roll:90,tw:0,sl:-3,s:[0,0],hf:0,aR:[176,0,150,0],ikL:{w:[15,92.5,11]},swAL:8,
-    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:22},
+    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:22,fpL:45,fpR:45},
  B:{p:[-6,87.2,0],yaw:0,roll:90,tw:0,sl:-3,s:[0,0],hf:0,aR:[176,0,150,0],ikL:{w:[15,92.5,11]},swAL:8,
-    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:-33}},
+    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:-33,fpL:45,fpR:45}},
 
 // Contralateral reach on all fours (cat-cow's quadruped base): right arm and LEFT leg
 // extend to horizontal while the planted hand and kneeling leg never move; the mirror
@@ -220,9 +222,9 @@ const MOVES=[
  // 2026-11-12 (Will): a FOREARM plank. Elbows on the floor under the shoulders, forearms
  // pointing forward, shoulders-hips-ankles one line. B is a breath, not a sag.
  A:{p:[0,83.45,0],yaw:24,tw:0,s:[82.4,82.4],hf:6,ikL:{w:[9.4,92.6,38.3]},ikR:{w:[22.2,92.6,32.6]},swAL:-90,swAR:90,
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3],fpL:45,fpR:45},
  B:{p:[0,83.7,0],yaw:24,tw:0,s:[82.4,82.4],hf:7,ikL:{w:[9.4,92.6,38.3]},ikR:{w:[22.2,92.6,32.6]},swAL:-90,swAR:90,
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3],fpL:45,fpR:45}},
 
 // Hinge held constant; elbows drive up and back toward the hips. Neutral grip:
 // dumbbell handles run front-to-back. Arm world targets in both frames (blendable).
@@ -387,7 +389,22 @@ function solve(p){
     }
     return add(ft,d,L.ft);
   };
-  J.toeL=footOf(knL,ftL); J.toeR=footOf(knR,ftR);
+  // Authored foot contact (2026-11-12). Without it the toe direction is the heuristic above,
+  // which guesses from the shin and can flip in one frame. A pose may instead say how each
+  // foot sits: fpL/fpR = foot pitch in degrees (0 = flat, toes level with the ankle; 60 =
+  // heel up on the ball of the foot, toes 60 deg below the ankle) and fyL/fyR = toe-out in
+  // degrees about the body's own facing (0 = straight ahead, 180 = toes trailing behind).
+  // The ankle (ft) stays the authored joint: for a heel-up foot, author the ankle
+  // L.ft*sin(fp) above the floor and the toe lands on it. Both numbers blend, so a foot can
+  // roll from flat to the ball with no flip. A toe is never drawn under the floor.
+  const footAt=(ft,fp,fy)=>{
+    const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
+    return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
+  };
+  J.toeL=p.fpL==null?footOf(knL,ftL):footAt(ftL,p.fpL,p.fyL);
+  J.toeR=p.fpR==null?footOf(knR,ftR):footAt(ftR,p.fpR,p.fyR);
   const tgt=s=>!s?null:(s.k?J[s.k]:s.w);
   const tL=tgt(p.ikL), tR=tgt(p.ikR);
   let elL,haL,elR,haR;
@@ -569,6 +586,8 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
+  // authored foot contact (eng2.js footAt): blend when either key carries it
+  ['fpL','fpR','fyL','fyR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}

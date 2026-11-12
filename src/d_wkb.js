@@ -23,11 +23,12 @@ const WK_B=[
  how:"Long staggered stance, back heel up. Drop the hips straight down until the back knee hovers just off the floor, then press through the whole front foot to stand.",
  cues:["Front shin near vertical","Back knee hovers — never rests","A slight forward lean is fine","Back foot stays light"],
  // 2026-11-12: squared to the camera axis (yaw 0), hips travel straight down (they slid 4.7
- // back), back knee hovers under the hip. No mid key is needed any more.
+ // back), back knee hovers under the hip. No mid key is needed any more. Foot contact is
+ // authored: back foot on its ball, heel up (fp 45), front foot flat.
  A:{p:[0,60.6,-6],yaw:0,tw:0,s:[6,6],hf:0,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
-    ikFR:[5,93,12.8],swL:0,swR:0},
+    ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0},
  B:{p:[0,71.4,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
-    ikFR:[5,93,12.8],swL:0,swR:0}},
+    ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0}},
 
 {n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:82,
  how:"Chest on an incline bench, arms hanging, palms facing each other. Row both dumbbells by driving the elbows back, squeeze between the shoulder blades, then lower slowly.",

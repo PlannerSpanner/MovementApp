@@ -13,11 +13,11 @@ const MOVES=[
  // off) and the arms are FK in both keys, reaching forward as the counterweight: the old
  // bottom-only hand target made the standing arms strain toward a point 14 units away.
  // M = halfway: hips already back, thighs about 45 deg, trunk and shins both leaning 14 deg.
- A:{p:[0,55.2,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[4,-10,4,-8],aR:[4,10,4,8],lL:[-3,-5,3,-4],lR:[3,5,-3,4]},
+ A:{p:[0,55.2,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[4,-10,4,-8],aR:[4,10,4,8],lL:[-3,-5,3,-4],lR:[3,5,-3,4],fpL:0,fpR:0,fyL:-12,fyR:12},
  M:{p:[-3.3,61.1,-8.2],yaw:22,tw:0,s:[14,14],hf:-4,aL:[34,-8,42,-6],aR:[34,8,42,6],
-    lL:[0,0,0,0],lR:[0,0,0,0]},
+    lL:[0,0,0,0],lR:[0,0,0,0],fpL:0,fpR:0,fyL:-12,fyR:12},
  B:{p:[-4.05,78.4,-10],yaw:22,tw:0,s:[25,25],hf:-8,aL:[62,-6,74,-4],aR:[62,6,74,4],
-    lL:[0,0,0,0],lR:[0,0,0,0]}},
+    lL:[0,0,0,0],lR:[0,0,0,0],fpL:0,fpR:0,fyL:-12,fyR:12}},
 
 {n:"Reverse lunges",pos:'standing',cue:"Step back, front shin stays vertical",dur:30,bil:true,cyc:3.2,pin:"R",tdur:10,
  setup:"Stay standing, feet under your hips. You'll step back one leg at a time.",
@@ -25,9 +25,11 @@ const MOVES=[
  // world axis, 24 deg off, which tipped the front shin 12 deg), so the front shin is vertical.
  // The rear foot is an IK target: beside the front foot in A, planted at full step length by
  // M (back leg long, hips half-way down), and it stays there while the hips finish the drop.
- A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,2],aL:[-6,-10,-6,-8],aR:[6,10,6,8],ikFL:[-5.8,93,2.6],lR:[4,2,-4,2]},
- M:{p:[-5.7,64,-12.8],yaw:24,tw:0,s:[5,3],aL:[-2,-10,-2,-8],aR:[2,10,2,8],ikFL:[-22,89.3,-35.9],lR:[4,2,-4,2]},
- B:{p:[-7.7,72,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,89.3,-35.9],lR:[4,2,-4,2]}},
+ // Foot contact is authored: the rear foot lands on its BALL with the heel up (fp 58, ankle
+ // 5.4 above the floor) and the front foot stays flat, so no toe flips direction.
+ A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,2],aL:[-6,-10,-6,-8],aR:[6,10,6,8],ikFL:[-5.8,93,2.6],lR:[4,2,-4,2],fpL:0,fpR:0},
+ M:{p:[-5.7,64,-12.8],yaw:24,tw:0,s:[5,3],aL:[-2,-10,-2,-8],aR:[2,10,2,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0},
+ B:{p:[-7.7,72,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0}},
 
 // Contralateral reach: right arm sweeps overhead while the left leg lengthens; the
 // mirror at halfway swaps the lead pair (punching-rotations precedent). Low back
@@ -59,9 +61,9 @@ const MOVES=[
  // swivelling about the hip-to-ankle axis, so the heels stay welded by construction. Before
  // this it was a prone body seen from an angle, with the opening knee hidden behind the trunk.
  A:{p:[-6,87.2,0],yaw:0,roll:90,tw:0,sl:-3,s:[0,0],hf:0,aR:[176,0,150,0],ikL:{w:[15,92.5,11]},swAL:8,
-    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:22},
+    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:22,fpL:45,fpR:45},
  B:{p:[-6,87.2,0],yaw:0,roll:90,tw:0,sl:-3,s:[0,0],hf:0,aR:[176,0,150,0],ikL:{w:[15,92.5,11]},swAL:8,
-    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:-33}},
+    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:-33,fpL:45,fpR:45}},
 
 // Contralateral reach on all fours (cat-cow's quadruped base): right arm and LEFT leg
 // extend to horizontal while the planted hand and kneeling leg never move; the mirror
@@ -115,9 +117,9 @@ const MOVES=[
  // 2026-11-12 (Will): a FOREARM plank. Elbows on the floor under the shoulders, forearms
  // pointing forward, shoulders-hips-ankles one line. B is a breath, not a sag.
  A:{p:[0,83.45,0],yaw:24,tw:0,s:[82.4,82.4],hf:6,ikL:{w:[9.4,92.6,38.3]},ikR:{w:[22.2,92.6,32.6]},swAL:-90,swAR:90,
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3],fpL:45,fpR:45},
  B:{p:[0,83.7,0],yaw:24,tw:0,s:[82.4,82.4],hf:7,ikL:{w:[9.4,92.6,38.3]},ikR:{w:[22.2,92.6,32.6]},swAL:-90,swAR:90,
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3],fpL:45,fpR:45}},
 
 // Hinge held constant; elbows drive up and back toward the hips. Neutral grip:
 // dumbbell handles run front-to-back. Arm world targets in both frames (blendable).

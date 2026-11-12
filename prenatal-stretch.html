@@ -104,7 +104,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='ad43ee0d14';
+const BUILDV='d170f9b8a5';
 const MOVES=[
 {n:"Seated breathing",pos:'chair',cue:"Sit tall, breathe wide into the ribs",dur:60,bil:false,cyc:4.0,belly:1,pin:"LR", prop:[{l:[[-8,76,-4],[8,76,-4]]},{l:[[-7,76,-4],[-7,93,-4]]},{l:[[7,76,-4],[7,93,-4]]}],
  A:{p:[0,74,0],yaw:-18,tw:0,s:[6,2],hf:0,ikL:{w:[-8,72.5,10]},ikR:{w:[8,72.5,10]},
@@ -274,7 +274,22 @@ function solve(p){
     }
     return add(ft,d,L.ft);
   };
-  J.toeL=footOf(knL,ftL); J.toeR=footOf(knR,ftR);
+  // Authored foot contact (2026-11-12). Without it the toe direction is the heuristic above,
+  // which guesses from the shin and can flip in one frame. A pose may instead say how each
+  // foot sits: fpL/fpR = foot pitch in degrees (0 = flat, toes level with the ankle; 60 =
+  // heel up on the ball of the foot, toes 60 deg below the ankle) and fyL/fyR = toe-out in
+  // degrees about the body's own facing (0 = straight ahead, 180 = toes trailing behind).
+  // The ankle (ft) stays the authored joint: for a heel-up foot, author the ankle
+  // L.ft*sin(fp) above the floor and the toe lands on it. Both numbers blend, so a foot can
+  // roll from flat to the ball with no flip. A toe is never drawn under the floor.
+  const footAt=(ft,fp,fy)=>{
+    const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
+    return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
+  };
+  J.toeL=p.fpL==null?footOf(knL,ftL):footAt(ftL,p.fpL,p.fyL);
+  J.toeR=p.fpR==null?footOf(knR,ftR):footAt(ftR,p.fpR,p.fyR);
   const tgt=s=>!s?null:(s.k?J[s.k]:s.w);
   const tL=tgt(p.ikL), tR=tgt(p.ikR);
   let elL,haL,elR,haR;
@@ -450,6 +465,8 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
+  // authored foot contact (eng2.js footAt): blend when either key carries it
+  ['fpL','fpR','fyL','fyR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}

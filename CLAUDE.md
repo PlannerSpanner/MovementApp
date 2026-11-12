@@ -69,6 +69,13 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     the right side. Blends like `yaw`. Zero/absent is the old engine exactly. This is what
     lets a figure be genuinely side-lying (side plank, clamshell); joint-attached prop
     offsets roll with it.
+  - Foot contact (added 2026-11-12): `fpL`/`fpR` = foot pitch in degrees (0 = flat, 60 = heel
+    up on the ball of the foot) and `fyL`/`fyR` = toe-out about the body's facing (180 =
+    toes trailing). When a pose carries `fp` the toe is placed from those numbers and the
+    old shin-based guess (which can flip the toe in one frame) is not used for that foot.
+    The ankle stays the authored joint: for a heel-up foot put the ankle `6.4*sin(fp)` above
+    the floor. Both blend, so a foot rolls from flat onto its ball. Used by Reverse lunges,
+    Split squat, Down dog, Deep squats, Clamshell, Plank hold, Bouncing. Absent = legacy.
   - `st` (added 2026-11-12) = shoulder-line tilt in degrees in the body's frontal plane
     (st > 0 drops the right shoulder). `sl` alone slides the rib cage sideways under level
     shoulders; a real side bend also drops the near shoulder (Dynamic lateral reaches use

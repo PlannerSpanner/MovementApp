@@ -86,7 +86,7 @@ h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase
   <div id="listB"></div>
 </div>
 <script>
-const BUILDV='6a21f40e9c';
+const BUILDV='bbb983647b';
 const WK_A=[
 {n:"Goblet squat",sets:3,reps:"8",cyc:3.0,pin:"LR",
  how:"Hold one dumbbell vertically against your chest, elbows tucked under it. Sit down and back until your elbows brush the insides of your knees, then drive back up through the whole foot.",
@@ -182,11 +182,12 @@ const WK_B=[
  how:"Long staggered stance, back heel up. Drop the hips straight down until the back knee hovers just off the floor, then press through the whole front foot to stand.",
  cues:["Front shin near vertical","Back knee hovers — never rests","A slight forward lean is fine","Back foot stays light"],
  // 2026-11-12: squared to the camera axis (yaw 0), hips travel straight down (they slid 4.7
- // back), back knee hovers under the hip. No mid key is needed any more.
+ // back), back knee hovers under the hip. No mid key is needed any more. Foot contact is
+ // authored: back foot on its ball, heel up (fp 45), front foot flat.
  A:{p:[0,60.6,-6],yaw:0,tw:0,s:[6,6],hf:0,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
-    ikFR:[5,93,12.8],swL:0,swR:0},
+    ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0},
  B:{p:[0,71.4,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
-    ikFR:[5,93,12.8],swL:0,swR:0}},
+    ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0}},
 
 {n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:82,
  how:"Chest on an incline bench, arms hanging, palms facing each other. Row both dumbbells by driving the elbows back, squeeze between the shoulder blades, then lower slowly.",
@@ -348,7 +349,22 @@ function solve(p){
     }
     return add(ft,d,L.ft);
   };
-  J.toeL=footOf(knL,ftL); J.toeR=footOf(knR,ftR);
+  // Authored foot contact (2026-11-12). Without it the toe direction is the heuristic above,
+  // which guesses from the shin and can flip in one frame. A pose may instead say how each
+  // foot sits: fpL/fpR = foot pitch in degrees (0 = flat, toes level with the ankle; 60 =
+  // heel up on the ball of the foot, toes 60 deg below the ankle) and fyL/fyR = toe-out in
+  // degrees about the body's own facing (0 = straight ahead, 180 = toes trailing behind).
+  // The ankle (ft) stays the authored joint: for a heel-up foot, author the ankle
+  // L.ft*sin(fp) above the floor and the toe lands on it. Both numbers blend, so a foot can
+  // roll from flat to the ball with no flip. A toe is never drawn under the floor.
+  const footAt=(ft,fp,fy)=>{
+    const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
+    return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
+  };
+  J.toeL=p.fpL==null?footOf(knL,ftL):footAt(ftL,p.fpL,p.fyL);
+  J.toeR=p.fpR==null?footOf(knR,ftR):footAt(ftR,p.fpR,p.fyR);
   const tgt=s=>!s?null:(s.k?J[s.k]:s.w);
   const tL=tgt(p.ikL), tR=tgt(p.ikR);
   let elL,haL,elR,haR;
@@ -500,6 +516,8 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
+  // authored foot contact (eng2.js footAt): blend when either key carries it
+  ['fpL','fpR','fyL','fyR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}

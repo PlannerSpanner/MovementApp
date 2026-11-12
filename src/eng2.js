@@ -105,7 +105,22 @@ function solve(p){
     }
     return add(ft,d,L.ft);
   };
-  J.toeL=footOf(knL,ftL); J.toeR=footOf(knR,ftR);
+  // Authored foot contact (2026-11-12). Without it the toe direction is the heuristic above,
+  // which guesses from the shin and can flip in one frame. A pose may instead say how each
+  // foot sits: fpL/fpR = foot pitch in degrees (0 = flat, toes level with the ankle; 60 =
+  // heel up on the ball of the foot, toes 60 deg below the ankle) and fyL/fyR = toe-out in
+  // degrees about the body's own facing (0 = straight ahead, 180 = toes trailing behind).
+  // The ankle (ft) stays the authored joint: for a heel-up foot, author the ankle
+  // L.ft*sin(fp) above the floor and the toe lands on it. Both numbers blend, so a foot can
+  // roll from flat to the ball with no flip. A toe is never drawn under the floor.
+  const footAt=(ft,fp,fy)=>{
+    const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
+    return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
+  };
+  J.toeL=p.fpL==null?footOf(knL,ftL):footAt(ftL,p.fpL,p.fyL);
+  J.toeR=p.fpR==null?footOf(knR,ftR):footAt(ftR,p.fpR,p.fyR);
   const tgt=s=>!s?null:(s.k?J[s.k]:s.w);
   const tL=tgt(p.ikL), tR=tgt(p.ikR);
   let elL,haL,elR,haR;

@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='537918fb8d';
+const BUILDV='53ea013c77';
 // Morning Flow — 13 movements: eight standing (continuous and rhythmic), then a
 // five-movement ground finish moved in from the retired Morning Movement app
 // (2026-08-26; poses verbatim). TR_ALL build: tdur = length of the GET SET UP gap
@@ -119,9 +119,9 @@ const MOVES=[
  // 2026-11-12: a BOUNCE, not a squat-jump. Airborne legs are long (knees about 172 deg, they
  // were tucked to 144), the feet clear the floor by an inch (ankles 2.5 up, toes hanging),
  // and the dip is a soft 30 deg of knee bend (was 65) with the pelvis travelling 3.3, not 9.
- A:{p:[0,52.65,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[10,-11,16,-9],aR:[10,11,16,9],ikFL:[-5,90.5,-0.5],ikFR:[5,90.5,-0.5]},
- M:{p:[0,55.5,0],yaw:22,tw:0,s:[4,4],hf:0,aL:[8,-11,14,-9],aR:[8,11,14,9],ikFL:[-5,93,1],ikFR:[5,93,1]},
- B:{p:[0,56.4,0],yaw:22,tw:0,s:[5,5],hf:0,aL:[14,-12,22,-10],aR:[14,12,22,10],ikFL:[-5,93,1],ikFR:[5,93,1]}},
+ A:{p:[0,52.65,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[10,-11,16,-9],aR:[10,11,16,9],ikFL:[-5,90.5,-0.5],ikFR:[5,90.5,-0.5],fpL:38,fpR:38},
+ M:{p:[0,55.5,0],yaw:22,tw:0,s:[4,4],hf:0,aL:[8,-11,14,-9],aR:[8,11,14,9],ikFL:[-5,93,1],ikFR:[5,93,1],fpL:0,fpR:0},
+ B:{p:[0,56.4,0],yaw:22,tw:0,s:[5,5],hf:0,aL:[14,-12,22,-10],aR:[14,12,22,10],ikFL:[-5,93,1],ikFR:[5,93,1],fpL:0,fpR:0}},
 
 // Large pendulum (Will, 2026-10-12): A = top, arms overhead and back with the whole body
 // arcing into extension; B = bottom, folded with the head toward the floor and the arms
@@ -268,13 +268,14 @@ const MOVES=[
 // (39 deg to the floor), legs about 60 deg, hips the highest point. The hands reach their
 // floor targets (they missed by 2.4) and both feet are IK-planted, squared to the body.
 // The pedal: A = left knee bent with that heel lifted, right leg straight with its heel
-// down; B = the reverse.
+// down; B = the reverse. Foot contact is authored (fp): the lifted heel pitches 25 deg onto
+// the ball of the foot, the other foot is flat.
 {n:"Pedaling down dog",pos:'downdog',cue:"Alternate pressing each heel down",dur:60,bil:false,cyc:2.2,tdur:15,
  setup:"Tuck your toes and press up and back into down dog, hips high.",
  A:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-10.9,90.3,-15.4],ikFR:[-1.85,93,-19.7]},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-10.9,90.3,-15.4],ikFR:[-1.85,93,-19.7],fpL:25,fpR:0},
  B:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
-    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-11.25,93,-16.3],ikFR:[-1.5,90.3,-18.8]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-11.25,93,-16.3],ikFR:[-1.5,90.3,-18.8],fpL:0,fpR:25}},
 
 // Rebuilt 2026-10-12 in the standard quadruped frame (torso along +z, shins trailing
 // -z like Bird dog / Cat-cows). The trunk ROLLS about the spine (tw): A = right shoulder
@@ -418,7 +419,22 @@ function solve(p){
     }
     return add(ft,d,L.ft);
   };
-  J.toeL=footOf(knL,ftL); J.toeR=footOf(knR,ftR);
+  // Authored foot contact (2026-11-12). Without it the toe direction is the heuristic above,
+  // which guesses from the shin and can flip in one frame. A pose may instead say how each
+  // foot sits: fpL/fpR = foot pitch in degrees (0 = flat, toes level with the ankle; 60 =
+  // heel up on the ball of the foot, toes 60 deg below the ankle) and fyL/fyR = toe-out in
+  // degrees about the body's own facing (0 = straight ahead, 180 = toes trailing behind).
+  // The ankle (ft) stays the authored joint: for a heel-up foot, author the ankle
+  // L.ft*sin(fp) above the floor and the toe lands on it. Both numbers blend, so a foot can
+  // roll from flat to the ball with no flip. A toe is never drawn under the floor.
+  const footAt=(ft,fp,fy)=>{
+    const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
+    return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
+  };
+  J.toeL=p.fpL==null?footOf(knL,ftL):footAt(ftL,p.fpL,p.fyL);
+  J.toeR=p.fpR==null?footOf(knR,ftR):footAt(ftR,p.fpR,p.fyR);
   const tgt=s=>!s?null:(s.k?J[s.k]:s.w);
   const tL=tgt(p.ikL), tR=tgt(p.ikR);
   let elL,haL,elR,haR;
@@ -596,6 +612,8 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
+  // authored foot contact (eng2.js footAt): blend when either key carries it
+  ['fpL','fpR','fyL','fyR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}

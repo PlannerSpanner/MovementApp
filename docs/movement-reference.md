@@ -75,8 +75,8 @@ movements needed direction-change *wording* (fixed 2026-08-02); nothing else is 
 > end range; Down dog is a true inverted V with a shallow pedal; Thread the needle
 > straightens the support arm in the reach, drops the shoulder and head in the thread and
 > passes the arm behind the planted hand; 90/90 is seen from 30 degrees up so the Z reads.
-> Known limits: heel-up feet (authored foot contact is a later step), and Chest opener
-> cannot alternate the top arm between cycles.
+> Known limit: Chest opener cannot alternate the top arm between cycles. (Foot contact is
+> authored since the same date: Down dog lifts the bent leg's heel, Bouncing hangs the toes.)
 
 
 Eight standing movements, continuous and rhythmic — nothing held — then a
@@ -518,7 +518,8 @@ movement's duration before starting; locked mid-session, unlocked by Reset.
 > supported row and Pulldown hang from straight arms; Band pull-apart faces the viewer so
 > the band stretches across the screen; Side plank is the Daily 13 pose (held, on its side).
 > Known limits: the figure's arm is as long as its trunk, so in both deadlifts the arms sit
-> 11 to 17 degrees back of plumb to keep the bar near the legs; heel-up feet are a later step.
+> 11 to 17 degrees back of plumb to keep the bar near the legs. Split squat's back foot is
+> on its ball with the heel up (authored foot contact).
 
 Sourced 2026-08-10 from coaching references (StrengthLog, BarBend, Breaking Muscle,
 E3 Rehab, NASM, PureGym et al.). Session-wide constraints baked into the on-page rules
@@ -681,8 +682,8 @@ grip loads the distal bicep tendon at the radial tuberosity (in rehab).
 > has elbows under the shoulders and forearms on the floor; Bench dips stop 1.5 units short
 > of parallel (margin on the AC-joint rule) with straight arms at the top; Farmer hold hangs
 > straight arms; Posture reset starts from a rib flare and settles to the stack.
-> Known limits: heel-up feet and toe direction (authored foot contact is a later step);
-> seen from above, Y-T-W reads as lying flat but nothing in a stick figure says face-down;
+> Foot contact is authored (Reverse lunges land on the ball of the rear foot, heel up).
+> Known limits: seen from above, Y-T-W reads as lying flat but nothing in a stick figure says face-down;
 > the figure's arm is as long as its trunk, so hanging dumbbells end at the hip joint.
 
 Renamed from Daily 10 on 2026-08-26 (daily-10.html lives on as a redirect stub for
