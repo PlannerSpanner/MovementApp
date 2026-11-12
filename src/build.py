@@ -16,6 +16,12 @@ if not os.path.exists(CUES_PATH):
 CUES_JSON = json.dumps(json.load(open(CUES_PATH, encoding='utf-8'))['clips'], ensure_ascii=False, separators=(',', ':'))
 TPL  = open('app_tpl.js', encoding='utf-8').read()
 ENG  = open('eng2.js', encoding='utf-8').read()
+# Figure skin: when Will has approved a profile it lives in src/skin.json and is stamped into
+# the engine here (and into strength.html by rebuild.py, which reuses ENG). No file = SKIN
+# stays null = today's constant-width strokes, byte for byte.
+if os.path.exists('skin.json'):
+    assert ENG.count('let SKIN=null;') == 1
+    ENG = ENG.replace('let SKIN=null;', 'let SKIN=' + json.dumps(json.load(open('skin.json', encoding='utf-8')), separators=(',', ':')) + ';')
 
 def build(out, data_file, extra, title, sub, icon, theme, colors, intro, done_msg, banner=None, x2=False, trall=False):
     head = HEAD

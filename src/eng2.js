@@ -167,6 +167,14 @@ function torsoEdges(J,bend,n){
 //                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
 let SKIN=null;
 const smooth=x=>x*x*(3-2*x);
+// half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
+// with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
+function limbHalf(seg,t){
+  const S=SKIN; if(!S) return 1.5;
+  const pr=S[seg],prox=seg==='upper'||seg==='thigh',r0=(prox?S.joint:S.mid)/2,r1=(prox?S.mid:S.tip)/2,rm=pr.w/2;
+  const at=Math.max(0.05,Math.min(0.95,pr.at));
+  return t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+}
 // screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
 function limbD(a,b,seg,sc){
   const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';

@@ -96,8 +96,8 @@ open(os.path.join(OUT,'daily-10.html'),'w',encoding='utf-8',newline='\n').write(
 # (wk_head.html + wk_tpl.js): no timer, no audio; same engine, same BUILDV scheme.
 import hashlib, re as _re
 _wk_head = open('wk_head.html', encoding='utf-8').read()
-_wk_js = '\n'.join(open(f, encoding='utf-8').read() for f in
-                   ('d_wka.js', 'd_wkb.js', 'eng2.js', 'wk_tpl.js'))
+_wk_js = '\n'.join([open('d_wka.js', encoding='utf-8').read(), open('d_wkb.js', encoding='utf-8').read(),
+                    ENG, open('wk_tpl.js', encoding='utf-8').read()])   # ENG (build.py) carries the approved skin, if any
 _wk = _wk_head.replace('</body>', '<script>\n' + _wk_js + '</script>\n</body>', 1)
 _wv = hashlib.sha1(_wk.encode('utf-8')).hexdigest()[:10]
 _wk = _wk.replace('<script>\n', "<script>\nconst BUILDV='%s';\n" % _wv, 1)

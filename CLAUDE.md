@@ -287,6 +287,13 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
                        # todo.json = known faults pending (may only shrink: an entry that
                        # stops firing must be removed); waivers.json = judgement flags
                        # accepted with a written reason.
+    node qa/fig/skin.js [--preset=2 | --file=review/skin-export.json]
+                       # what a thicker figure skin can break, against today's skin: limbs
+                       # newly hidden, left/right pairs newly merged, limbs that still read at
+                       # 28 pt at the WORST phase, contrast on every stage (qa/fig/theme.js).
+                       # In the gauntlet it checks the APPROVED profile, src/skin.json (stamped
+                       # into the engine by build.py; no file = today's skin, nothing to check).
+                       # Tuning page: node proto/skin/build.js -> review/tune.html.
     npm run cues       # after editing any spoken text: enumerate strings + generate missing clips
     node tools/dump.js && python3 tools/strips.py   # fallback PIL contact sheets (needs Pillow)
     python3 tools/ascii.py <app> "<movement>" 0,3    # text-mode pose render

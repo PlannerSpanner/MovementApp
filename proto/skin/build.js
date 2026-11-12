@@ -19,13 +19,7 @@ const STANDIN=`{
  'Thread the needle':m=>{if(m.A.s[0]!==84)return false;m.A.s=[62,60];m.M.s=[80,84];m.B.s=[104,118];m.B.hf=40;m.B.tw=-66;return true;}
 }`;
 const CARDS=[['flow','Thread the needle'],['flow','Bent rotation sweeps'],['flow','Arm sweeps with knee dip'],['daily','Side plank'],['daily','Deep squats']];
-const DEF={joint:2.5,mid:2.3,tip:2.0,upper:{w:3.6,at:0.40},fore:{w:3.1,at:0.30},thigh:{w:4.3,at:0.38},shin:{w:3.5,at:0.30},torso:{chest:1.10,waist:0.88,at:0.50,stroke:2.6}};
-const PRESETS={
- '1 · today':{joint:3,mid:3,tip:3,upper:{w:3,at:0.5},fore:{w:3,at:0.5},thigh:{w:3,at:0.5},shin:{w:3,at:0.5},torso:{chest:1,waist:1,at:0.5,stroke:2.6}},
- '2 · suggested':DEF,
- '3 · more':{joint:2.6,mid:2.3,tip:1.9,upper:{w:4.2,at:0.40},fore:{w:3.5,at:0.28},thigh:{w:5.2,at:0.36},shin:{w:4.1,at:0.28},torso:{chest:1.16,waist:0.82,at:0.48,stroke:2.8}},
- '4 · most':{joint:2.8,mid:2.3,tip:1.8,upper:{w:4.9,at:0.40},fore:{w:3.9,at:0.27},thigh:{w:6.2,at:0.35},shin:{w:4.7,at:0.27},torso:{chest:1.22,waist:0.78,at:0.46,stroke:3.0}},
-};
+const {DEF,PRESETS}=require('./presets');
 // slider table: [group, key path, label, min, max, step]
 const SL=[
  ['Thigh','thigh.w','max width',1.5,8,0.1],['Thigh','thigh.at','where the max sits (0 hip, 1 knee)',0.1,0.9,0.01],

@@ -104,7 +104,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='d170f9b8a5';
+const BUILDV='58f8150df5';
 const MOVES=[
 {n:"Seated breathing",pos:'chair',cue:"Sit tall, breathe wide into the ribs",dur:60,bil:false,cyc:4.0,belly:1,pin:"LR", prop:[{l:[[-8,76,-4],[8,76,-4]]},{l:[[-7,76,-4],[-7,93,-4]]},{l:[[7,76,-4],[7,93,-4]]}],
  A:{p:[0,74,0],yaw:-18,tw:0,s:[6,2],hf:0,ikL:{w:[-8,72.5,10]},ikR:{w:[8,72.5,10]},
@@ -336,6 +336,14 @@ function torsoEdges(J,bend,n){
 //                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
 let SKIN=null;
 const smooth=x=>x*x*(3-2*x);
+// half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
+// with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
+function limbHalf(seg,t){
+  const S=SKIN; if(!S) return 1.5;
+  const pr=S[seg],prox=seg==='upper'||seg==='thigh',r0=(prox?S.joint:S.mid)/2,r1=(prox?S.mid:S.tip)/2,rm=pr.w/2;
+  const at=Math.max(0.05,Math.min(0.95,pr.at));
+  return t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+}
 // screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
 function limbD(a,b,seg,sc){
   const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';

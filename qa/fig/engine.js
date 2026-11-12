@@ -22,13 +22,16 @@ function source(app,opts){
   let tpl=rd(a.tpl); const i=tpl.indexOf(a.cut); if(i<0) throw new Error('marker missing in '+a.tpl);
   tpl=tpl.slice(0,i);
   if(a.trall) tpl=tpl.replace('const PROPFIT=false;','const PROPFIT=true;');   // build.py trall=True
-  let code=rd('eng2.js')+'\n'+a.data.map(rd).join('\n')+'\n'+tpl;
+  let eng=rd('eng2.js');
+  // an approved skin (src/skin.json) is stamped in exactly as build.py does it
+  if(fs.existsSync(path.join(SRC,'skin.json'))&&!(opts&&opts.noSkin))eng=eng.replace('let SKIN=null;','let SKIN='+JSON.stringify(JSON.parse(rd('skin.json')))+';');
+  let code=eng+'\n'+a.data.map(rd).join('\n')+'\n'+tpl;
   if(opts&&opts.patch) code=opts.patch(code);
   return code;
 }
 const EXPORTS=a=>`\n;({MOVES:${a.moves},poseAt,solve,figMarkup,fitOf,project,propShapes,torsoEdges,L,`+
   `setCam,getCam:()=>CAM,getPitch:()=>PITCH,`+
-  `setSkin:s=>{if(typeof SKIN!=='undefined')SKIN=s;},INK,LIMB_L,TORSO,PROP})`;
+  `setSkin:s=>{SKIN=s;},getSkin:()=>SKIN,limbHalf,INK,LIMB_L,TORSO,PROP})`;
 function load(app,opts){
   const a=APPS[app];
   const E=vm.runInNewContext(source(app,opts)+EXPORTS(a),{Math,console,Object,Array,JSON,isFinite},{filename:app});

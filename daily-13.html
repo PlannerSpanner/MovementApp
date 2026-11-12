@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='30aa9398f1';
+const BUILDV='6650f65fe8';
 // Daily 13 — postural maintenance (renamed from Daily 10, 2026-08-26). tdur = length
 // of the GET SET UP gap BEFORE the movement (TR_ALL builds); setup = authored
 // transition script, spoken as "Next: <name>. <setup>". Position flow: standing (1-2)
@@ -451,6 +451,14 @@ function torsoEdges(J,bend,n){
 //                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
 let SKIN=null;
 const smooth=x=>x*x*(3-2*x);
+// half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
+// with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
+function limbHalf(seg,t){
+  const S=SKIN; if(!S) return 1.5;
+  const pr=S[seg],prox=seg==='upper'||seg==='thigh',r0=(prox?S.joint:S.mid)/2,r1=(prox?S.mid:S.tip)/2,rm=pr.w/2;
+  const at=Math.max(0.05,Math.min(0.95,pr.at));
+  return t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+}
 // screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
 function limbD(a,b,seg,sc){
   const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';
