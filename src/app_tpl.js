@@ -55,6 +55,7 @@ function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
   return {x,y:v[1]*Math.cos(R(PITCH))+z*Math.sin(R(PITCH)),d:z};}
 const LIMBS=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],
              ['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
+const SEGS_SKIN=['upper','fore','upper','fore','thigh','shin','thigh','shin'];   // skin profile per limb (eng2.js SKIN)
 const INK='#6d4f1c',LIMB_L='#c2a473',TORSO='#7d5a1e',BELLY='#7d5a1e',PROP='#b9a98b';
 // A prop point may be a world [x,y,z], a joint name ('haL'), a joint plus a
 // body-frame offset ({j:'haR',o:[x,y,z]} — o is rotated by the pose yaw), or the
@@ -124,12 +125,14 @@ function figMarkup(m,fit,ph){
   };
   const propMk=shapes.filter(s=>!s.att).map(mkProp).join('');
   const side=n=>n.endsWith('L')?LIMB_L:INK;
-  const parts=LIMBS.map(([x,y])=>({t:'l',a:P[x],b:P[y],d:(P[x].d+P[y].d)/2,col:side(y),w:1}));
+  const parts=LIMBS.map(([x,y],i)=>({t:'l',a:P[x],b:P[y],d:(P[x].d+P[y].d)/2,col:side(y),w:1,seg:SEGS_SKIN[i]}));
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
   parts.push({t:'l',a:P.ftR,b:P.toeR,d:(P.ftR.d+P.toeR.d)/2,col:INK,w:0.8});
   // torso: the legacy quad, or -- when the pose carries a spine bend -- a path whose
   // side edges bow with the curvature (torsoEdges in eng2.js; corners unchanged)
-  if(pose.bend){const e=torsoEdges(j,pose.bend,6),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
+  if(SKIN&&SKIN.torso){const e=torsoSkin(j,pose.bend,8),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
+    parts.push({t:'qp',sw:SKIN.torso.stroke,pts:[...e.L.slice().reverse().map(Q),...e.R.map(Q)],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});}
+  else if(pose.bend){const e=torsoEdges(j,pose.bend,6),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
     parts.push({t:'qp',pts:[...e.L.slice().reverse().map(Q),...e.R.map(Q)],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});}
   else parts.push({t:'q',pts:[P.shL,P.shR,P.hpR,P.hpL],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});
   if(m.belly){
@@ -171,9 +174,10 @@ function figMarkup(m,fit,ph){
   parts.sort((x,y)=>x.d-y.d);
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
+    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc)}" fill="${p.col}"/>`;
     if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${p.col}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
     if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
-    if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+    if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='bp')return `<polygon points="${p.pts.join(' ')}" fill="${BELLY}"/>`;
     if(p.t==='bc')return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${p.r.toFixed(2)}" fill="${BELLY}"/>`;
     return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${INK}"/>`;}).join('');

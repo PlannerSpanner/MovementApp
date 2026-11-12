@@ -1,9 +1,18 @@
-// Serves ONLY the built /review folder on the LAN (0.0.0.0), read-only, no caching, so the
+// Serves ONLY the built /review folder on the LAN (0.0.0.0), no caching, so the
 // assessment can be read and the loops watched on the phone.   node proto/review/serve.js [port]
 const http=require('http'),fs=require('fs'),path=require('path'),os=require('os');
 const ROOT=path.join(__dirname,'..','..','review'),PORT=+process.argv[2]||8377;
-const MIME={'.html':'text/html; charset=utf-8','.png':'image/png','.js':'text/javascript','.css':'text/css'};
+// Read-only except POST /export-skin, which writes review/skin-export.json (tuning page).
+const MIME={'.json':'application/json','.html':'text/html; charset=utf-8','.png':'image/png','.js':'text/javascript','.css':'text/css'};
 http.createServer((req,rsp)=>{
+  // the one write: the skin tuning page's Export button. JSON only, 20 KB cap, fixed file name.
+  if(req.method==='POST'&&req.url.split('?')[0].replace(/^\/+/,'')==='export-skin'){
+    let body='';req.on('data',c=>{body+=c;if(body.length>20000)req.destroy();});
+    req.on('end',()=>{try{const j=JSON.parse(body);if(!j||typeof j.skin!=='object')throw 0;
+        fs.writeFileSync(path.join(ROOT,'skin-export.json'),JSON.stringify(j,null,1)+'\n');
+        console.log('skin export saved '+new Date().toISOString());rsp.writeHead(200,{'Content-Type':'application/json'});rsp.end('{"ok":true}');}
+      catch(e){rsp.writeHead(400);rsp.end('bad json');}});
+    return;}
   if(req.method!=='GET'&&req.method!=='HEAD'){rsp.writeHead(405);rsp.end();return;}
   const rel=decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/,'')||'index.html',p=path.resolve(ROOT,rel);
   if(!(p===ROOT||p.startsWith(ROOT+path.sep))||!fs.existsSync(p)||fs.statSync(p).isDirectory()){rsp.writeHead(404);rsp.end('not found');return;}

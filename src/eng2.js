@@ -134,6 +134,47 @@ function torsoEdges(J,bend,n){
   return {L,R:Rr};
 }
 
+// ---- figure skin (2026-11-12) ----
+// SKIN=null draws the legacy constant-width strokes, byte for byte. A skin object turns
+// each limb segment into a filled, variable-width shape (Illustrator's Width Tool): narrow
+// at the joints so bend angles stay crisp, swelling to `w` at fraction `at` along the bone.
+// The torso gets a waist and a slightly wider chest. It is a SKIN only: it is drawn from
+// the solved joints and moves none of them. Widths are in the same units as the legacy
+// stroke (3.0 = today's limb).
+//   {joint,mid,tip,                      width at shoulder/hip, elbow/knee, wrist/ankle
+//    upper:{w,at},fore:{w,at},thigh:{w,at},shin:{w,at},
+//    torso:{chest,waist,at,stroke}}      width factors at the shoulder line and the waist,
+//                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
+let SKIN=null;
+const smooth=x=>x*x*(3-2*x);
+// screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
+function limbD(a,b,seg,sc){
+  const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';
+  const r0=(prox?S.joint:S.mid)*sc/2, r1=(prox?S.mid:S.tip)*sc/2, rm=pr.w*sc/2;
+  const at=Math.max(0.05,Math.min(0.95,pr.at));
+  const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
+  if(l<0.05){const r=Math.max(r0,r1,rm).toFixed(2);
+    return `M${(a.x-r).toFixed(2)},${a.y.toFixed(2)}a${r},${r} 0 1 0 ${(2*r).toFixed(2)},0a${r},${r} 0 1 0 ${(-2*r).toFixed(2)},0Z`;}
+  const nx=-dy/l,ny=dx/l,n=8,Lp=[],Rp=[];
+  for(let i=0;i<=n;i++){const t=i/n;
+    const h=t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+    const cx=a.x+dx*t,cy=a.y+dy*t;
+    Lp.push((cx+nx*h).toFixed(2)+','+(cy+ny*h).toFixed(2));
+    Rp.unshift((cx-nx*h).toFixed(2)+','+(cy-ny*h).toFixed(2));}
+  return 'M'+Lp.join('L')+`A${r1.toFixed(2)},${r1.toFixed(2)} 0 0 0 ${Rp[0]}L`+Rp.slice(1).join('L')
+    +`A${r0.toFixed(2)},${r0.toFixed(2)} 0 0 0 ${Lp[0]}Z`;
+}
+// the torso's two side edges with the skin's waist and chest factors applied about the
+// trunk's centre line (3D, before projection). n samples; works with or without bend.
+function torsoSkin(J,bend,n){
+  const T=SKIN.torso,e=torsoEdges(J,bend||0,n),at=Math.max(0.05,Math.min(0.95,T.at));
+  const k=t=>t<at?1+(T.waist-1)*smooth(t/at):T.waist+(T.chest-T.waist)*smooth((t-at)/(1-at));
+  const Lp=[],Rp=[];
+  for(let i=0;i<=n;i++){const l=e.L[i],r=e.R[i],c=add(l,sub(r,l),0.5),h=sub(r,c),f=k(i/n);
+    Lp.push(add(c,h,-f));Rp.push(add(c,h,f));}
+  return {L:Lp,R:Rp};
+}
+
 // circular-path helper: knees or hips orbit while feet stay pinned
 function orbitPose(base,o,ph){
   const p=Object.assign({},base);
