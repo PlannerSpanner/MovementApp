@@ -75,6 +75,12 @@ APPS.forEach(([k,label])=>{const B=MK['B_'+k](),A=MK['A_'+k]();const h=document.
     cards.appendChild(card);});});
 // ---- close-ups: same engines, a cropped viewBox, optionally another camera ----
 const CLOSE=[
+ ['Both feet from the side','daily','Standing posture reset','feet:26',{cam:74,pitch:6},'After only (the old engine had one camera). Near foot: its outer edge, flat on the floor. A modest heel behind and below the ankle; the shin is narrowest just above it.'],
+ ['Both feet from the other side','daily','Standing posture reset','feet:26',{cam:254,pitch:6},'After only.'],
+ ['Both feet from the front','daily','Standing posture reset','feet:30',{cam:344,pitch:10},'After only.'],
+ ['Both feet, three-quarter','daily','Standing posture reset','feet:30',{cam:30,pitch:18},'After only. The far foot shows its inner side, so its arch lifts off the floor; the near foot shows its outer edge, which stays flat.'],
+ ['Both feet from above','daily','Standing posture reset','feet:30',{cam:344,pitch:60},'After only, from 60 degrees up (straight down, the body hides the feet). Narrow heel, wide across the toe joints, big toe on the inside.'],
+ ['Both feet, three-quarter from above','daily','Standing posture reset','feet:30',{cam:300,pitch:45},'After only.'],
  ['Feet on all fours: Cat-cows','flow','Cat-cows','0 0 100 100',null,'Top of the foot on the floor, sole up, toes straight back. The ankle is inside the foot and the foot is drawn over the end of the shin.'],
  ['Cat-cows, feet close up','flow','Cat-cows','0 50 42 42',null,'The foot is a slim wedge continuing the shin.'],
  ['Feet on all fours: Thread the needle','flow','Thread the needle','0 0 100 100',null,'Same kneeling contact.'],
@@ -100,7 +106,11 @@ const CLOSE=[
     const hold=view==='tview';
     if(view){const v=hold?m.tview:view;m=Object.assign({},m,v);delete m.fit;}
     m.fit=E.fitOf(m);
-    const cell=document.createElement('div');cell.className='cell';cell.innerHTML='<svg viewBox="'+vb+'"></svg><div class="lab">'+l+'</div>';
+    let box=vb;
+    if(vb.indexOf('feet:')===0){E.figMarkup(m,m.fit,0);const j=E.solve(E.poseAt(m,0)),pp=k=>{const q=E.project(j[k]);return [q.x*m.fit.sc+m.fit.ox,q.y*m.fit.sc+m.fit.oy];};
+      const P4=['ftL','ftR','toeL','toeR'].map(pp),xs=P4.map(p=>p[0]),ys=P4.map(p=>p[1]),cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
+      const wd=Math.max(+vb.slice(5),Math.max(...xs)-Math.min(...xs)+12,Math.max(...ys)-Math.min(...ys)+12);box=(cx-wd/2)+' '+(cy-wd/2)+' '+wd+' '+wd;}
+    const cell=document.createElement('div');cell.className='cell';cell.innerHTML='<svg viewBox="'+box+'"></svg><div class="lab">'+l+'</div>';
     row.appendChild(cell);views.push({E,m,svg:cell.querySelector('svg'),cell,vis:false,after:w==='A',hold});});
   host.appendChild(card);});}
 const io=new IntersectionObserver(es=>es.forEach(e=>{const v=views.find(x=>x.cell===e.target);if(v)v.vis=e.isIntersecting;}),{rootMargin:'200px'});

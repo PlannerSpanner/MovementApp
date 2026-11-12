@@ -13,6 +13,9 @@
 // the audit and a reviewer had both passed (2026-11-12):
 //  ankle      the ankle joint is outside the drawn foot outline in some frame
 //  shinPast   the end of the shin stroke pokes out past the foot outline
+//  footShape  the foot outline crosses itself, or has a corner sharper than TURN_LIMIT
+//  heel       heel length is outside 18-30% of the foot, or the foot is not 11-13 units long
+//  arch       the raised arch is not on the medial (big-toe) side of that foot
 //  sole       the foot faces the wrong way for its contact: sole down when the shin stands on it,
 //             TOP of the foot down when the shin lies along the floor (kneeling, prone), toes
 //             tucked only for the movements in TUCKED
@@ -20,7 +23,9 @@
 // or waived with a reason in waivers.json.
 const {N,FLOOR,sub,dot,len,nrm,cross,deg,angV:ang,sample}=require('./lib');
 const SEG=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
-const HARD=['floor','miss','pop','supinated','ankle','shinPast','sole'];
+const HARD=['floor','miss','pop','supinated','ankle','shinPast','sole','footShape','heel','arch'];
+// sharpest corner allowed anywhere on a foot outline, in degrees of turning between two edges
+const TURN_LIMIT=50;
 // feet whose toes are tucked under (ball on the floor, heel up) while the shin is near the floor
 const TUCKED=['Plank hold','Reverse lunges','Split squat','Chest-supported row'];
 // floor poses where the shins lie on their sides, so neither sole-down nor top-down applies
@@ -62,29 +67,50 @@ function audit(E,m){
   [['elL','haL','elR','haR','arms'],['knL','ftL','knR','ftR','legs']].forEach(([b,c,e,g,nm])=>{
     const mg=fr.filter(f=>[[b,e],[c,g]].every(([p,q])=>{const P=scr(f,p),Q=scr(f,q);return Math.hypot(P.x-Q.x,P.y-Q.y)<1.6*m.fit.sc;}));
     if(mg.length>=N/4)add('merged',nm,`left and right ${nm} are drawn on top of each other for ${(100*mg.length/N).toFixed(0)}% of the cycle`);});
-  if(E.getSkin&&E.getSkin()){const sc=m.fit.sc,grow=0.45*sc;
-    const sp=v=>{const q=E.project(v);return {x:q.x*sc+m.fit.ox,y:q.y*sc+m.fit.oy};};
-    const inAny=(p,polys,g)=>polys.some(pl=>inPoly(p,pl)||pl.some((c,i)=>dSeg2(p,c,pl[(i+1)%pl.length])<g));
-    ['L','R'].forEach(sd=>{let out=0,outPh=0,past=0,pastPh=0,bad=0,badPh=0,why='';
-      fr.forEach(f=>{const polys=E.footPolys(f.j,sd).map(pl=>pl.map(sp)),A=sp(f.j['ft'+sd]),K=sp(f.j['kn'+sd]);
-        if(!inAny(A,polys,0)){if(!out)outPh=f.ph;out++;}
-        const dx=A.x-K.x,dy=A.y-K.y,l=Math.hypot(dx,dy),r=E.limbHalf('shin',1,1)*sc;
-        if(l>0.5){const ux=dx/l,uy=dy/l;for(let a=-80;a<=80;a+=20){const c=Math.cos(a*Math.PI/180),s2=Math.sin(a*Math.PI/180);
+  if(E.getSkin&&E.getSkin()){const sc=m.fit.sc;
+    const sp=v=>{const q=E.project(v);return {x:q.x*sc+m.fit.ox,y:q.y*sc+m.fit.oy,d:q.d};};
+    const near=(p,pl)=>Math.min(...pl.map((c,i)=>dSeg2(p,c,pl[(i+1)%pl.length])));
+    const inside=(p,pl,g)=>inPoly(p,pl)||near(p,pl)<g;
+    const segX=(a,b,c,d)=>{const o=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);const d1=o(a,b,c),d2=o(a,b,d),d3=o(c,d,a),d4=o(c,d,b);return d1*d2<-1e-9&&d3*d4<-1e-9;};
+    ['L','R'].forEach((sd,si)=>{let out=0,outPh=0,past=0,pastPh=0,bad=0,badPh=0,why='',xs=0,crossPh=0,turn=0,turnPh=0,archBad=0,heelBad='';
+      fr.forEach(f=>{const od=si?'L':'R',dS=(E.project(f.j['kn'+sd]).d+E.project(f.j['ft'+sd]).d)/2,dO=(E.project(f.j['kn'+od]).d+E.project(f.j['ft'+od]).d)/2,k=E.farK(dS,dO);
+        const pl=E.footOutline(f.j,sd,sp,sc,k),A=sp(f.j['ft'+sd]),K=sp(f.j['kn'+sd]),n0=pl.length;
+        // 1. a simple shape: no self-crossing, no corner sharper than the turning limit
+        let x=false;for(let a=0;a<n0&&!x;a++)for(let b=a+2;b<n0;b++){if(a===0&&b===n0-1)continue;if(segX(pl[a],pl[(a+1)%n0],pl[b],pl[(b+1)%n0])){x=true;break;}}
+        if(x){if(!xs)crossPh=f.ph;xs++;}
+        for(let a=0;a<n0;a++){const p0=pl[(a+n0-1)%n0],p1=pl[a],p2=pl[(a+1)%n0],l1=Math.hypot(p1.x-p0.x,p1.y-p0.y),l2=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+          if(l1<0.02*sc||l2<0.02*sc)continue;const t=ang([p1.x-p0.x,p1.y-p0.y,0],[p2.x-p1.x,p2.y-p1.y,0]);if(t>turn){turn=t;turnPh=f.ph;}}
+        // 2. the ankle and the whole end of the shin stroke, cap included, are inside the foot
+        if(!inside(A,pl,0)){if(!out)outPh=f.ph;out++;}
+        const dx=A.x-K.x,dy=A.y-K.y,l=Math.hypot(dx,dy),r=E.limbHalf('shin',1,k)*sc;
+        if(l>0.5){const ux=dx/l,uy=dy/l;for(let a=-180;a<180;a+=15){const c=Math.cos(a*Math.PI/180),s2=Math.sin(a*Math.PI/180);
           const pt={x:A.x+r*(ux*c-uy*s2),y:A.y+r*(ux*s2+uy*c)};
-          if(!inAny(pt,polys,grow+0.2)){const d=Math.min(...polys.map(pl=>Math.min(...pl.map((c2,i)=>dSeg2(pt,c2,pl[(i+1)%pl.length])))));if(d>past){past=d;pastPh=f.ph;}}}}
-        // contact type
+          if((pt.x-A.x)*ux+(pt.y-A.y)*uy<-0.02*r)continue;              // the half of the cap that is shin body, not end
+          if(!inside(pt,pl,0.12*sc)){const d=near(pt,pl);if(d>past){past=d;pastPh=f.ph;}}}}
+        // 3. proportions and the arch, from the landmarks themselves
+        const L=E.footLandmarks(f.j,sd,k),F=L.F,al=p=>dot(sub(p,F.ft),F.f),hh=p=>dot(sub(p,F.ft),F.n),ww=p=>dot(sub(p,F.ft),cross(F.f,F.n))*(sd==='L'?1:-1);
+        const rear=Math.min(...L.pts.map(q=>al(q.p)-q.r)),front=Math.max(...L.pts.map(q=>al(q.p)+q.r)),ratio=-rear/(front-rear);
+        if(ratio<0.18||ratio>0.30||front-rear<11||front-rear>13)heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
+        const g=id=>L.pts.find(q=>q.id===id),aT=g('archT'),eL=g('edgeL');
+        if(!(ww(aT.p)>0.5&&ww(eL.p)<-0.5&&ww(g('mtp1').p)>0&&ww(g('mtp5').p)<0&&(hh(aT.p)-aT.r)-(hh(eL.p)-eL.r)>0.5))archBad++;
+        // 4. contact type
         const ft=f.j['ft'+sd],kn=f.j['kn'+sd],gap=FLOOR-ft[1];
-        if(gap<3.2&&!(f.pose.roll)&&!SIDEWAYS.includes(m.n)){const n=E.footFrame(f.j,sd).n,sh=sub(kn,ft),tilt=ang(sh,[0,-1,0]);
+        if(gap<3.2&&!(f.pose.roll)&&!SIDEWAYS.includes(m.n)){const n=F.n,sh=sub(kn,ft),tilt=ang(sh,[0,-1,0]);
           let w='';
           if(tilt<55){if(n[1]>-0.4)w='shin stands on the foot but the sole is not down';
-            else if(gap<0.8&&E.footFrame(f.j,sd).f[1]<-0.2)w='the heel is planted but the toes are in the air';}
+            else if(gap<0.8&&F.f[1]<-0.2)w='the heel is planted but the toes are in the air';}
           else if(tilt>=62){if(TUCKED.includes(m.n)){if(n[1]>0.5)w='toes should be tucked but the top of the foot is down';}
             else if(n[1]<0.5)w='shin lies along the floor but the top of the foot is not down (sole should face up)';}
           if(w){if(!bad){badPh=f.ph;why=w;}bad++;}}
       });
+      const nm=sd==='L'?'left':'right';
+      if(xs)add('footShape',sd+':cross',`the ${nm} foot outline crosses itself in ${xs} of ${N} frames (first at ph ${crossPh.toFixed(2)})`);
+      if(turn>TURN_LIMIT)add('footShape',sd+':corner',`the ${nm} foot outline has a ${turn.toFixed(0)} deg corner at ph ${turnPh.toFixed(2)} (limit ${TURN_LIMIT})`);
       if(out)add('ankle',sd,`ft${sd} is outside its foot outline in ${out} of ${N} frames (first at ph ${outPh.toFixed(2)})`);
-      if(past>0.25)add('shinPast',sd,`the ${sd==='L'?'left':'right'} shin end pokes ${past.toFixed(1)} screen units past the foot outline at ph ${pastPh.toFixed(2)}`);
-      if(bad)add('sole',sd,`${sd==='L'?'left':'right'} foot: ${why} (${bad} of ${N} frames, first at ph ${badPh.toFixed(2)})`);});}
+      if(past>0.05*sc)add('shinPast',sd,`the ${nm} shin end, cap included, pokes ${past.toFixed(2)} screen units out of the foot at ph ${pastPh.toFixed(2)}`);
+      if(heelBad)add('heel',sd,`${nm} foot: ${heelBad} (published: heel about a quarter of a 12-unit foot)`);
+      if(archBad)add('arch',sd,`${nm} foot: the raised arch is not on the medial (big-toe) side, or the outer edge is not low, in ${archBad} of ${N} frames`);
+      if(bad)add('sole',sd,`${nm} foot: ${why} (${bad} of ${N} frames, first at ph ${badPh.toFixed(2)})`);});}
   for(const k in fr[0].j){const st=fr.map((f,i)=>len(sub(fr[(i+1)%N].j[k],f.j[k])));
     const nz=st.filter(x=>x>1e-3).sort((x,y)=>x-y); if(!nz.length)continue; const med=nz[nz.length>>1];
     const mx=Math.max(...st), at=st.indexOf(mx);

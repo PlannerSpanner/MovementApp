@@ -92,6 +92,11 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     drawn foot (1.4 above the sole) and the foot paints over the shin end. Never orient a foot by
     "sole toward the floor". The legacy toe guess points a prone toe back toward the knee, so
     prone and kneeling feet carry authored contact (`fp 4, fy 180`), planted supine feet `fp 0`.
+    THE FOOT IS 14 3D LANDMARKS (`footLandmarks`: ankle, malleoli, heel, inner arch raised, outer
+    edge low, toe joints, toe tips), projected each frame; `footOutline` draws the hull of the
+    projected balls and lifts the sole edge to the arch only when that foot's MEDIAL side faces
+    the camera (medial by handedness). Never go back to a fixed 2D glyph or two flat polygons:
+    Will rejected both on his phone (jagged, shin cap escaping, arch on both sides).
     qa/fig/checks.js enforces: ankle inside the outline, shin end not past it, sole direction
     matching the contact, planted heel = flat foot, toes tucked only for the TUCKED list.
   - Grip: pose `gL`/`gR` in degrees about the forearm, 0 = neutral (thumb on the upper-arm side

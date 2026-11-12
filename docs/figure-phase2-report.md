@@ -4,6 +4,24 @@
 
 Your skin is applied to both templates, with feet and hands as small 3D shapes, the two-camera Y-T-W and the 4-in, 6-out posture reset. The full audit passes with it. The skin has a measured cost at Live Activity size, listed below. Hands do not show grip direction at phone size; the implement does.
 
+## Feet, third pass: built from 3D landmarks
+
+You sent back the close-ups: jagged outline, a line end sticking out, a heel far too big, and an arch on both sides.
+
+- **The foot is now 14 landmarks in its own frame**: ankle, inner and outer ankle bones, back of heel, heel pad, top of the inner arch, the outside edge, instep, big-toe and little-toe joints, three toe tips. Each is a small ball. They are projected every frame and one outline is drawn round them, so the same foot gives the side, top, front and oblique silhouettes.
+- **Smooth.** The outline is the hull of the projected balls, resampled evenly and relaxed into one soft curve of 64 points, drawn as a curve, not a polygon. No turn between neighbouring points exceeds 50° in any frame. Hands are drawn through the same curve.
+- **Arch on the inside only.** The inner arch landmark is raised 0.8 units off the sole; the outer edge is low and nearly flat. The sole edge lifts to the arch only when the inner side of that foot faces the camera. Medial is set by handedness (big-toe side), so it is right for both feet in every pose.
+- **Heel and shin.** The heel is 2.9 units behind the ankle and 1.6 below it. The shin is narrowest at the ankle, and the ankle landmark is always a little larger than the shin's end cap, so the cap cannot escape.
+- **Proportions.** Foot length 12.0 units and breadth 4.6, from Drillis and Contini's 0.152 and 0.055 of stature at this figure's 79 units. Heel 24% of foot length, ball of the foot at 73%, arch about 6% of length. Those three ratios are from memory of standard foot anthropometry; I did not open a source for them today. One deliberate departure: ankle height is 1.6, half the published 0.039 of stature, because the skeleton's ankle joint sits on the floor line and a taller foot would be drawn under the floor. That goes with the hip-joint note for the UX refresh.
+- **New checks, in the gauntlet, every frame of every movement:**
+  - the outline does not cross itself and has no corner over 50°;
+  - the ankle and the whole end of the shin stroke, cap included, are inside the foot;
+  - the heel is 18 to 30% of a foot 11 to 13 units long;
+  - the raised arch is on the big-toe side and the outer edge is low, for both feet.
+- **Against the previous foot:** every one of the 37 movements had a corner over 50° (the sharpest was a full fold-back), and one had an outline that crossed itself. The new foot passes all of the above.
+- **Where to look:** the first cards under Close-ups are both feet from the side, the other side, the front, three-quarter, above and three-quarter from above, then the quadruped and prone poses.
+- **Not done:** no fresh reviewer on this pass. The last one passed the feet you then rejected, so your eye on the phone is the test.
+
 ## Foot fixes after your phone check
 
 You found three foot bugs that the audit and the reviewer had both passed. All three had one cause: the foot was built from "toe direction plus sole toward the floor", with the ankle on the sole line.

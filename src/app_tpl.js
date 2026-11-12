@@ -146,7 +146,7 @@ function figMarkup(m,fit,ph,v){
     const held=m._held;
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
       // the foot paints OVER the end of its own shin, which it encloses
-      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.9*parts[il].k}));
+      parts.push({t:'pg',pts:footOutline(j,sd,v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[il].k),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.35});
       parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
     });
   }else{
@@ -200,7 +200,10 @@ function figMarkup(m,fit,ph,v){
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
     if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k)}" fill="${p.col}"/>`;
-    if(p.t==='pg')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${p.col}" stroke="${p.col}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+    if(p.t==='pg'){   // feet and hands: a smooth closed curve through the edge midpoints, each vertex a control point
+      const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
+      let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);
+      return `<path d="${d}Z" fill="${p.col}" stroke="${p.col}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;}
     if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${p.col}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
     if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
