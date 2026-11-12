@@ -31,7 +31,7 @@ const GRIP={
  'Neutral-grip DB floor press':[{i:0,hands:['haL'],max:2.6},{i:1,hands:['haR'],max:2.6}],
  'Single-arm DB row':[{i:3,hands:['haR'],max:2.6}],
  'Romanian deadlift':[{i:0,hands:['haL','haR'],max:1.2,seg:true}],
- 'Trap-bar deadlift':[{i:0,hands:['haL','haR'],max:1.2,seg:true}],
+ 'Trap-bar deadlift':[{i:0,hands:['haL'],max:1.2,seg:true},{i:1,hands:['haR'],max:1.2,seg:true}],   // hex frame: one side handle per hand (2026-11-12)
  'Chest-supported row':[{i:3,hands:['haL'],max:2.6},{i:4,hands:['haR'],max:2.6}],
  'Neutral-grip lat pulldown':[{i:4,hands:['haL','haR'],max:1.6,seg:true}],
  'Band pull-apart':[{i:0,hands:['haL','haR'],max:0.5,ends:true}],

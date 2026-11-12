@@ -505,6 +505,21 @@ movement's duration before starting; locked mid-session, unlocked by Reset.
 
 # Strength — two-workout gym reference (strength.html), no timer, looping demos
 
+> **Figure audit, 2026-11-12.** Every card's figure was re-checked against
+> `docs/rubrics/strength.md` (executable form: `qa/fig/rubric.js`, in the gauntlet) and
+> reviewed by a fresh reviewer until every lift came back shippable. No set, rep, how-to
+> or cue text changed. What changed in the figure: Goblet squat reaches knee height with
+> the elbows hanging under the bell, inside the knees; Floor press has elbows 45 degrees
+> from the trunk, resting on the floor, wrists over elbows; Single-arm row kneels on the
+> bench (the knee was folded backwards) with a vertical rowing forearm; RDL and Trap-bar
+> use hanging arms and ring plates so the hips and knees show, and the trap bar is drawn as
+> a frame around the body; Face pull is seen 3/4 from above with elbows flaring at shoulder
+> height and hands finishing beside the head; Split squat drops straight down; Chest-
+> supported row and Pulldown hang from straight arms; Band pull-apart faces the viewer so
+> the band stretches across the screen; Side plank is the Daily 13 pose (held, on its side).
+> Known limits: the figure's arm is as long as its trunk, so in both deadlifts the arms sit
+> 11 to 17 degrees back of plumb to keep the bar near the legs; heel-up feet are a later step.
+
 Sourced 2026-08-10 from coaching references (StrengthLog, BarBend, Breaking Muscle,
 E3 Rehab, NASM, PureGym et al.). Session-wide constraints baked into the on-page rules
 card: every set stops 3–4 reps short of failure (a slowing rep means the set ended one
