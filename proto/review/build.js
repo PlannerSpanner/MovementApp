@@ -118,6 +118,7 @@ let sh='<h1>Eight-phase sheets, before and after</h1><p>App camera above; small 
 for(const a in LABEL){sh+=`<h2>${LABEL[a]}</h2>`;after.filter(f=>f.startsWith('after-'+a+'-')).forEach(f=>{const b='before-'+f.slice(6);
   sh+=`<div class="pair"><p>${f.slice(6).replace(/\.png$/,'')} · before</p>${before.includes(b)?img(b):'<p>(no before sheet)</p>'}<p>after</p>${img(f)}</div>`;});}
 if(has('qa/screenshots/fig/audit.md'))sh+=md(rd('qa/screenshots/fig/audit.md'));
+['skin-dryrun-preset2.md','skin-dryrun-preset3.md','skin.md'].forEach(f=>{if(has('qa/screenshots/fig/'+f))sh+='<h2 id="'+f.replace(/\W/g,'-')+'">'+f+'</h2>'+md(rd('qa/screenshots/fig/'+f));});
 fs.writeFileSync(path.join(OUT,'sheets.html'),page('Sheets and audit',sh));
 // ---- Phase 1 documents, static ----
 let as=md(rd('docs/figure-system-assessment.md'))+'<h2>Strips from Phase 1</h2>'+strips.filter(f=>f.startsWith('strip-')).map(f=>`<p class="note">${f}</p>`+img(f)).join('')+md(rd('docs/pose-critique.md'));
