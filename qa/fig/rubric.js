@@ -211,6 +211,7 @@ const RUBRIC={
   ['7.5','hands off the floor, and above it, in all frames',C=>all(C,f=>ok(C.gap(f,'haL')>=1.5&&C.gap(f,'haR')>=1.5&&C.gap(f,'haL')<=9,`hand ${f1(C.gap(f,'haL'))} above the floor`))],
   ['7.6','head stays down (no craning)',C=>all(C,f=>ok(C.gap(f,'head')<=7,`head ${f1(C.gap(f,'head'))} up`))],
   ['7.x1','DECISION 1 / critique S4: the letters open on screen. At the Y the two arms diverge by at least 35 deg on screen, at the T by at least 120',C=>{const sa=f=>{const a=C.scr(f,'shL'),b=C.scr(f,'haL'),c=C.scr(f,'shR'),d=C.scr(f,'haR');return angV([b.x-a.x,b.y-a.y,0],[d.x-c.x,d.y-c.y,0]);};const y=sa(C.at(0)),t=sa(C.at(0.25));return ok(y>=35&&t>=120,`Y opens ${f1(y)} deg on screen, T ${f1(t)}`);}],
+  ['7.x3','Will 2026-11-12: two cameras. The setup preview is side-on (pitch 20 or less, body across the lens) and there is a mat on the floor',C=>{const v=C.m.tview,f=C.F[0],yaw=f.pose.yaw||0;return ok(!!v&&(v.pitch==null?13:v.pitch)<=20&&Math.abs(Math.cos((yaw+(v.cam||40))*Math.PI/180))<=0.2&&(C.m.prop||[]).some(p=>p.q&&p.q.every(v=>v[1]>=92.5)),'no side-on setup view or no mat');}],
   ['7.x2','no joint under the floor (head included)',C=>noSink(C,['head','haL','haR','elL','elR'])],
  ],
  'Side plank':sidePlank('8'),
@@ -242,7 +243,7 @@ const RUBRIC={
  ],
  'Dumbbell farmer hold':[
   ['12.1','body vertical (ankle, hip, shoulder stacked)',C=>trunkUpright(C,5)],
-  ['12.2','a dumbbell in each hand, beside the thigh',C=>all(C,f=>ok(f.j.haL[1]>=f.j.hpL[1]-2&&C.along(f,'haL','hpL',C.lat(f))<=-1.5&&C.along(f,'haR','hpR',C.lat(f))>=1.5&&Math.abs(C.along(f,'haL','hpL',C.fwd(f)))<=4,`hand ${f1(f.j.hpL[1]-f.j.haL[1])} above the hip joint (this figure's arm is as long as its trunk, so a straight hanging hand ends at hip-joint height, not mid-thigh)`))],
+  ['12.2','a dumbbell in each hand, beside the thigh (the handle sits in the fist, below the hip joint)',C=>all(C,f=>{const g=C.J(f,'gpL'),d=g[1]-f.j.hpL[1];return ok(d>=2.5&&C.along(f,'gpL','hpL',C.lat(f))<=-1.5&&C.along(f,'gpR','hpR',C.lat(f))>=1.5&&Math.abs(C.along(f,'gpL','hpL',C.fwd(f)))<=4,`handle ${f1(d)} below the hip joint`);})],
   ['12.3','both arms straight in every frame',C=>all(C,f=>ok(elbow(C,f,'L')>=170&&elbow(C,f,'R')>=170,`elbows ${f1(elbow(C,f,'L'))}/${f1(elbow(C,f,'R'))}`))],
   ['12.5','feet planted',C=>fixed(C,['ftL','ftR'],0.3)],
   ['12.6','reads as a hold',C=>hold(C,1.5)],
@@ -250,10 +251,11 @@ const RUBRIC={
  'Standing posture reset':[
   ['13.1','standing with feet planted and arms at the sides',C=>{const r=fixed(C,['ftL','ftR'],0.3);return r===true?all(C,f=>ok(f.j.haL[1]>=f.j.hpL[1]-3&&C.horiz(f,'haL','hpL')<=7,'arms not at the sides')):r;}],
   ['13.2','head height the same in every frame',C=>ok(C.range(f=>f.j.head[1])<=0.8,`head moves ${f1(C.range(f=>f.j.head[1]))}`)],
-  ['13.3','rib cage flared at 0 (lower ribs forward, upper trunk back over them), stacked at 0.5; the head does not come from in front',C=>{const a=C.at(0),b=C.at(0.5);return ok(C.along(a,'chest',b.j.chest,C.fwd(a))>=0.8&&a.pose.s[1]<a.pose.s[0]-8&&Math.abs(C.along(a,'head',b.j.head,C.fwd(a)))<=1.5,`chest ${f1(C.along(a,'chest',b.j.chest,C.fwd(a)))} forward, head ${f1(C.along(a,'head',b.j.head,C.fwd(a)))} forward`);}],
-  ['13.4','at 0.5 the rib cage sits directly over the pelvis',C=>ok(C.horiz(C.at(0.5),'chest','pelvis')<=1,`ribs ${f1(C.horiz(C.at(0.5),'chest','pelvis'))} off the pelvis`)],
+  ['13.3','rib cage flared at the top of the inhale (lower ribs forward, upper trunk back over them); the head does not come from in front',C=>{const a=C.at(C.m.split||0.5),b=C.at(0);return ok(C.along(a,'chest',b.j.chest,C.fwd(a))>=0.8&&a.pose.s[1]<a.pose.s[0]-8&&Math.abs(C.along(a,'head',b.j.head,C.fwd(a)))<=1.5,`chest ${f1(C.along(a,'chest',b.j.chest,C.fwd(a)))} forward, head ${f1(C.along(a,'head',b.j.head,C.fwd(a)))} forward`);}],
+  ['13.4','at the end of the exhale the rib cage sits directly over the pelvis',C=>ok(C.horiz(C.at(0),'chest','pelvis')<=1,`ribs ${f1(C.horiz(C.at(0),'chest','pelvis'))} off the pelvis`)],
   ['13.5','trunk never bowed forward or rounded',C=>trunkUpright(C,8)],
   ['13.6','knees stay straight and the pelvis level',C=>all(C,f=>ok(knee(C,f,'L')>=170,'knees bend'))],
+  ['13.7','the exhale half takes longer than the inhale half (Will 2026-11-12: about 4 s in, 6 s out, three breaths in the 30 s)',C=>ok(C.m.split>=0.35&&C.m.split<=0.45&&C.m.cyc===10&&C.m.dur===30,`split ${C.m.split}, cycle ${C.m.cyc} s, ${C.m.dur} s`)],
  ],
 },
 'strength':{
@@ -287,8 +289,8 @@ const RUBRIC={
  'Romanian deadlift':[
   ['A4.1','knee angle about 130 deg or more in every frame',C=>all(C,f=>ok(knee(C,f,'L')>=130&&knee(C,f,'R')>=130,`knee ${f1(Math.min(knee(C,f,'L'),knee(C,f,'R')))}`))],
   ['A4.2','at the bottom the hips are clearly behind the heels',C=>ok(C.along(C.at(0.5),'pelvis','ftL+ftR',C.fwd(C.at(0.5)))<=-5,`hips ${f1(-C.along(C.at(0.5),'pelvis','ftL+ftR',C.fwd(C.at(0.5))))} behind the heels`)],
-  ['A4.3','the bar within a hand\'s width of the legs in every frame',C=>all(C,f=>{const d=s=>{const h=f.j['ha'+s],a=f.j['hp'+s],b=f.j['kn'+s],c=f.j['ft'+s];const seg=(p,q)=>{const pq=sub(q,p),t=Math.max(0,Math.min(1,dot(sub(h,p),pq)/dot(pq,pq)));const x=sub(h,[p[0]+pq[0]*t,p[1]+pq[1]*t,p[2]+pq[2]*t]);return Math.abs(dot(x,C.fwd(f)));};return Math.min(seg(a,b),seg(b,c));};return ok(d('L')<=5&&d('R')<=5,`bar ${f1(Math.max(d('L'),d('R')))} in front of the legs`);})],
-  ['A4.4','at the bottom the bar is just below the knees',C=>{const f=C.at(0.5),d=f.j.haL[1]-f.j.knL[1];return ok(d>=0.5&&d<=8,`bar ${f1(d)} below the knee`);}],
+  ['A4.3','the bar within a hand\'s width of the legs in every frame',C=>all(C,f=>{const d=s=>{const h=C.J(f,'gp'+s),a=f.j['hp'+s],b=f.j['kn'+s],c=f.j['ft'+s];const seg=(p,q)=>{const pq=sub(q,p),t=Math.max(0,Math.min(1,dot(sub(h,p),pq)/dot(pq,pq)));const x=sub(h,[p[0]+pq[0]*t,p[1]+pq[1]*t,p[2]+pq[2]*t]);return Math.abs(dot(x,C.fwd(f)));};return Math.min(seg(a,b),seg(b,c));};return ok(d('L')<=5&&d('R')<=5,`bar ${f1(Math.max(d('L'),d('R')))} in front of the legs`);})],
+  ['A4.4','at the bottom the bar is just below the knees',C=>{const f=C.at(0.5),d=C.J(f,'gpL')[1]-f.j.knL[1];return ok(d>=0.5&&d<=8,`bar ${f1(d)} below the knee`);}],
   ['A4.5','the back is a straight line in every frame',C=>straightBack(C,5)],
   ['A4.6','the arms are straight and hang vertically in every frame',C=>all(C,f=>ok(elbow(C,f,'L')>=168&&elbow(C,f,'R')>=168&&C.tilt(f,'shL','haL')<=12,`elbow ${f1(Math.min(elbow(C,f,'L'),elbow(C,f,'R')))}, arm ${f1(C.tilt(f,'shL','haL'))} deg off vertical`))],
   ['A4.7','shins stay near vertical',C=>all(C,f=>ok(C.tilt(f,'knL','ftL')<=12,`shin ${f1(C.tilt(f,'knL','ftL'))} deg`))],
@@ -306,7 +308,7 @@ const RUBRIC={
  ],
  'Trap-bar deadlift':[
   ['B1.1','plates touch the floor at the bottom and clear it at the top',C=>{const pl=f=>C.props(f).filter(s=>s.t==='c').map(s=>FLOOR-(s.c[1]+s.r));const b=Math.max(...pl(C.at(0.5)).map(Math.abs)),t=Math.min(...pl(C.at(0)));return ok(b<=1&&t>=8,`plates ${f1(b)} off the floor at the bottom, ${f1(t)} at the top`);}],
-  ['B1.2','hands beside the legs (not in front of the shins)',C=>all(C,f=>ok(C.along(f,'haL','hpL',C.lat(f))<=-1&&C.along(f,'haR','hpR',C.lat(f))>=1&&Math.abs(C.along(f,'haL+haR','ftL+ftR',C.fwd(f)))<=7,`hands ${f1(C.along(f,'haL+haR','ftL+ftR',C.fwd(f)))} ahead of the ankles`))],
+  ['B1.2','hands beside the legs (not in front of the shins)',C=>all(C,f=>ok(C.along(f,'gpL','hpL',C.lat(f))<=-1&&C.along(f,'gpR','hpR',C.lat(f))>=1&&Math.abs(C.along(f,'gpL+gpR','ftL+ftR',C.fwd(f)))<=7,`handles ${f1(C.along(f,'gpL+gpR','ftL+ftR',C.fwd(f)))} ahead of the ankles`))],
   ['B1.3','arms straight in every frame',C=>all(C,f=>ok(elbow(C,f,'L')>=168&&elbow(C,f,'R')>=168,`elbow ${f1(Math.min(elbow(C,f,'L'),elbow(C,f,'R')))}`))],
   ['B1.4','at the bottom the knees are clearly bent (about 100 to 105 deg)',C=>{const k=knee(C,C.at(0.5),'L');return ok(k>=92&&k<=115,`knee ${f1(k)}`);}],
   ['B1.5','the back is a straight line in every frame',C=>straightBack(C,5)],
@@ -354,7 +356,7 @@ const RUBRIC={
 // Checklist lines with no executable test: judged by eye on the phase sheets.
 const LOOK={
 'morning-flow':{'Chest opener swings':['6.6'],'Bent rotation sweeps':['8.3','8.7'],'Cat-cows':['9.6'],'Cobra press-ups':['10.7'],'Thread the needle':['12.7'],'Arm sweeps with knee dip':['2.4']},
-'daily-13':{'Deep squats':['1.7'],'Dead bug':['3.7'],'Glute bridge':['4.5'],'Side plank':['8.5 (superseded by decision 5)','8.6'],'Dumbbell bent-over row':['10.7'],'Dumbbell farmer hold':['12.4'],'Standing posture reset':['13.7 (needs a timing change Will has not approved)'],'Prone Y-T-W raise':['7.7']},
+'daily-13':{'Deep squats':['1.7'],'Dead bug':['3.7'],'Glute bridge':['4.5'],'Side plank':['8.5 (superseded by decision 5)','8.6'],'Dumbbell bent-over row':['10.7'],'Dumbbell farmer hold':['12.4'],'Prone Y-T-W raise':['7.7']},
 'strength':{'Goblet squat':['A1.7'],'Neutral-grip DB floor press':['A2.5'],'Single-arm DB row':['A3.8'],'Face pull':['A5.1'],'Trap-bar deadlift':['B1.6'],'Chest-supported row':['B3.7'],'Neutral-grip lat pulldown':['B4.1'],'Band pull-apart':['B5.1'],'Side plank':['B6.4','B6.5 (superseded by decision 5)','B6.7']},
 };
 module.exports={RUBRIC,LOOK};

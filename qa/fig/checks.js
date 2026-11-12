@@ -13,13 +13,15 @@
 // or waived with a reason in waivers.json.
 const {N,FLOOR,sub,dot,len,nrm,cross,deg,angV:ang,sample}=require('./lib');
 const SEG=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
-const HARD=['floor','miss','pop'];
+const HARD=['floor','miss','pop','supinated'];
 const inPoly=(p,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
   const a=poly[i],b=poly[j]; if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)c=!c;}return c;};
 function audit(E,m){
   const C=sample(E,m), fr=C.F, F=[]; const add=(k,id,msg)=>F.push({k,id:k+':'+id,msg});
   const worst=(fn)=>{let b=null;fr.forEach(f=>{const v=fn(f);if(v!=null&&(b==null||v.v>b.v))b=Object.assign({ph:f.ph},v);});return b;};
   const fl={};fr.forEach(f=>{for(const k in f.j){const d=f.j[k][1]-FLOOR;if(d>0.6&&(!fl[k]||d>fl[k].d))fl[k]={d,ph:f.ph};}});
+  // grip: a supinated (palm-up, underhand) grip must never be shown (Will's distal bicep rule)
+  {let w=0,wp=0;fr.forEach(f=>['gL','gR'].forEach(k=>{const g=f.pose[k]||0;if(g<w){w=g;wp=f.ph;}}));if(w<-10)add('supinated','grip',`a hand is turned ${(-w).toFixed(0)} deg toward supination at ph ${wp.toFixed(2)}`);}
   for(const k in fl)add('floor',k,`${k} ${fl[k].d.toFixed(1)} below the floor at ph ${fl[k].ph.toFixed(2)}`);
   [['ikL','haL'],['ikR','haR'],['ikFL','ftL'],['ikFR','ftR']].forEach(([t,jn])=>{
     const w=worst(f=>{let T=f.pose[t];if(!T)return null;T=Array.isArray(T)?T:(T.w||f.j[T.k]);if(!T)return null;

@@ -76,6 +76,20 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     The ankle stays the authored joint: for a heel-up foot put the ankle `6.4*sin(fp)` above
     the floor. Both blend, so a foot rolls from flat onto its ball. Used by Reverse lunges,
     Split squat, Down dog, Deep squats, Clamshell, Plank hold, Bouncing. Absent = legacy.
+  - FIGURE SKIN (applied 2026-11-12, Will's export): `src/skin.json` is stamped into the engine
+    as `SKIN` by build.py/rebuild.py (and by qa/fig/engine.js). Limbs are tapered filled shapes
+    (`limbD`), the torso has a waist (`torsoSkin`), and with a skin the feet and hands are small
+    3D objects projected by the camera: `footPolys` (profile wedge + plan footprint; the ankle
+    joint is the heel on the floor, the toe joint is the BALL, toes lie flat beyond it) and
+    `handPoly` (a flat mitten, thumb bulge on one edge). `far` (0.8) narrows whichever limb of
+    a left/right pair is farther from the camera (`farK`, eased over 4 units of depth). Delete
+    skin.json and everything renders as the old constant-width strokes. No joint moves either way.
+  - Grip: pose `gL`/`gR` in degrees about the forearm, 0 = neutral (thumb on the upper-arm side
+    of the elbow's bend plane), 90 = pronated. NEGATIVE = SUPINATED = FORBIDDEN (Will's distal
+    bicep rule); qa/fig/checks.js fails the build on it. At phone size grip reads from the
+    implement, not the hand: dumbbell handles fore-aft = neutral, a bar across = pronated.
+  - Implements sit in the fist: props name `gpL`/`gpR` (alone, in `{j:..,o:..}` or `{m:[..]}`),
+    resolved by `gripPt` to 3.4 beyond the wrist along the forearm. `haL`/`haR` stay the wrist.
   - `st` (added 2026-11-12) = shoulder-line tilt in degrees in the body's frontal plane
     (st > 0 drops the right shoulder). `sl` alone slides the rib cage sideways under level
     shoulders; a real side bend also drops the near shoulder (Dynamic lateral reaches use
@@ -213,7 +227,10 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
   - Movements: `{n, pos, posCue?, setup?, tdur?, cue, dur, bil, cyc, pin, belly, cam, prop,
     orb, A, B, M?}`. `M` = optional mid-keyframe (path A→M→B→M→A). `pin:'LR'` nails feet at
     their frame-A spots. `orb` = orbital pose (hip circles). `cam` = per-movement camera yaw
-    (default 40); `pitch` = per-movement camera pitch (default 13, added 2026-11-12, both
+    (default 40); `tview:{cam,pitch}` = a second camera used only for that movement's GET SET UP
+    preview (Prone Y-T-W: side-on preview, raised work view); `split` = fraction of the cycle
+    spent going A->B (default 0.5; Standing posture reset 0.4 = 4 s inhale, 6 s exhale, and
+    the breath tone follows it); `pitch` = per-movement camera pitch (default 13, added 2026-11-12, both
     templates; `setCam(m)` sets both). A-M-B is ONE eased sweep since 2026-11-12: M is
     passed through at speed, the figure no longer stops dead at the mid keyframe. Props use the same system as wk_tpl (ported 2026-08-12): points may be
     world `[xyz]`, joint names, `{j,o}`, `{m:[..],o}`; shapes `{l}`, `{c}` (+`f:1`),

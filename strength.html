@@ -86,12 +86,12 @@ h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase
   <div id="listB"></div>
 </div>
 <script>
-const BUILDV='b99185ccd7';
+const BUILDV='50f434607d';
 const WK_A=[
 {n:"Goblet squat",sets:3,reps:"8",cyc:3.0,pin:"LR",
  how:"Hold one dumbbell vertically against your chest, elbows tucked under it. Sit down and back until your elbows brush the insides of your knees, then drive back up through the whole foot.",
  cues:["Chest tall — the bell pulls you forward, fight it","Knees track over the toes","Elbows inside the knees at the bottom"],
- prop:[{db:[{m:['haL','haR'],o:[0,-4,0]},{m:['haL','haR'],o:[0,3.2,0]},2.6]}],
+ prop:[{db:[{m:['gpL','gpR'],o:[0,-4,0]},{m:['gpL','gpR'],o:[0,3.2,0]},2.6]}],
  // 2026-11-12: hips to knee height (they stopped 2 above), toes and knees turned out so the
  // elbows sit inside the knees, and the hands hold the bell on the sternum in both keys.
  A:{p:[0,55.3,0],yaw:22,tw:0,s:[4,4],hf:0,ikL:{w:[1.1,32.3,8]},ikR:{w:[4.8,32.3,6.5]},swAL:-54,swAR:54,
@@ -102,8 +102,8 @@ const WK_A=[
 {n:"Neutral-grip DB floor press",sets:3,reps:"8–10",cyc:2.7,cam:60,
  how:"Lie on the floor, knees bent, a dumbbell in each hand over the chest, palms facing each other. Lower until the upper arms rest on the floor, pause a beat, press back up.",
  cues:["Elbows about 45° from your sides","Touch down soft — no bounce","Wrists stacked over the elbows","Ribs down, no big arch"],
- prop:[{db:[{j:'haL',o:[0,0,-2.4]},{j:'haL',o:[0,0,2.4]},1.7]},
-       {db:[{j:'haR',o:[0,0,-2.4]},{j:'haR',o:[0,0,2.4]},1.7]}],
+ prop:[{db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.7]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
  // 2026-11-12: FK arms. The forearm is straight up in both keys, so the wrist stays over the
  // elbow by construction; the upper arm sweeps from the floor, 45 deg out from the trunk (it
  // was a T at 86 deg with the elbows hovering 6 up), to vertical.
@@ -112,41 +112,46 @@ const WK_A=[
  B:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[180,0,180,0],aR:[180,0,180,0],ikFL:[0.5,93,27.6],
     ikFR:[11.1,93,25]}},
 
-{n:"Single-arm DB row",sets:3,reps:"10",each:true,cyc:2.5,cam:80,pitch:20,
+{n:"Single-arm DB row",sets:3,reps:"10",each:true,cyc:2.5,cam:296,pitch:20,
  how:"Left hand and knee on the bench, back flat and level. Let the dumbbell hang, then drive the elbow up and back toward your hip. Lower with control.",
  cues:["Pull the elbow, not the hand","Hips square — no torso twist","Shoulder blade to the back pocket"],
  prop:[{l:[[-5,75.5,-30],[-5,75.5,24]]},
        {l:[[-5,75.5,-26],[-5,93,-26]]},
        {l:[[-5,75.5,20],[-5,93,20]]},
-       {db:[{j:'haR',o:[0,0,-2.4]},{j:'haR',o:[0,0,2.4]},1.7]}],
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
  // 2026-11-12: squared to the bench (yaw 0, camera 80 keeps the view). The bench leg KNEELS:
  // thigh straight down, shin back along the bench (the old fitted swivel folded the knee the
  // wrong way, shin toward the head). The rowing arm is FK with the forearm hanging vertical in
  // both keys: straight down at the bottom, elbow up and back past the ribs at the top.
- A:{p:[0,55,-8],yaw:0,tw:0,s:[77,77],hf:4,aL:[0,-2,0,-2],aR:[6,9,0,9],lL:[0,0,-90,0],ikFR:[6.5,93,-9.5]},
+ // Seen from the rowing side (camera 296) so the support arm never covers the working arm;
+ // pL 75.5 = the bench top the support hand lies flat on.
+ A:{p:[0,55,-8],yaw:0,tw:0,s:[77,77],hf:4,aL:[0,-2,0,-2],aR:[6,9,0,9],lL:[0,0,-90,0],ikFR:[6.5,93,-9.5],pL:75.5},
  B:{p:[0,55,-8],yaw:0,tw:0,s:[77,77],hf:4,aL:[0,-2,0,-2],aR:[-118,4,0,4],lL:[0,0,-90,0],
-    ikFR:[6.5,93,-9.5]}},
+    ikFR:[6.5,93,-9.5],pL:75.5}},
 
-{n:"Romanian deadlift",sets:2,reps:"8",cyc:3.2,cam:64,pin:"LR",
+{n:"Romanian deadlift",sets:2,reps:"8",cyc:3.2,cam:46,pin:"LR",
  how:"Soft knees, bar at the thighs. Push your hips straight back and slide the bar down your legs to just below the knee, back flat, then stand tall by squeezing the glutes.",
  cues:["Hips back, not chest down","Bar shaved against the legs","Shins stay vertical","Stop before the low back rounds"],
- prop:[{l:[{j:'haL',o:[-6.5,0,0]},{j:'haR',o:[6.5,0,0]}]},
-       {c:[{j:'haL',o:[-2.8,0,0]},6.5]},
-       {c:[{j:'haR',o:[2.8,0,0]},6.5]}],
+ prop:[{l:[{j:'gpL',o:[-6.5,0,0]},{j:'gpR',o:[6.5,0,0]}]},
+       {c:[{j:'gpL',o:[-2.8,0,0]},6.5]},
+       {c:[{j:'gpR',o:[2.8,0,0]},6.5]}],
  // 2026-11-12: FK arms that hang from the shoulders (the old hand targets were missed by 4.3
  // mid-rep), bar just below the knees at the bottom with the hips 14 behind the heels, shins
  // vertical. Plates drawn as rings: filled, they covered the hips and knees the lift is about.
- A:{p:[0,55.2,0],yaw:24,tw:0,s:[3,3],hf:0,aL:[7,-3,7,-3],aR:[7,3,7,3],lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
- B:{p:[-5.7,61.3,-12.9],yaw:24,tw:0,s:[64,64],hf:-20,aL:[-11,-3,-11,-3],aR:[-11,3,-11,3],lL:[0,0,0,0],
-    lR:[0,0,0,0]}},
+ // With the bar in the FIST (3.4 beyond the wrist) the bar reaches below the knee from a
+ // shallower hinge (53 deg, was 64) and the arms hang 5 deg back of plumb (was 11).
+ // Overhand grip: gL/gR 90 (pronated).
+ A:{p:[0,55.2,0],yaw:24,tw:0,s:[3,3],hf:0,aL:[7,-3,7,-3],aR:[7,3,7,3],lL:[-2,-6,2,-5],lR:[2,6,-2,5],gL:90,gR:90},
+ B:{p:[-5.7,61.3,-12.9],yaw:24,tw:0,s:[53.5,53.5],hf:-14,aL:[-5,-3,-5,-3],aR:[-5,3,-5,3],lL:[0,0,0,0],
+    lR:[0,0,0,0],gL:90,gR:90}},
 
 {n:"Face pull",sets:2,reps:"15",cyc:2.7,cam:60,pitch:22,
  how:"Cable at face height, one hand on each end of the rope. Pull toward your eyes, letting the elbows travel high and wide, and finish with knuckles pointing at the ceiling.",
  cues:["Elbows lead, hands follow","Elbows at shoulder height","Pull the ends apart as they reach your face","No lean-back momentum"],
  prop:[{l:[[0,10,48],[0,93,48]]},
        {c:[[0,21,47.4],1.5]},
-       {l:[[0,21,46.8],'haL']},
-       {l:[[0,21,46.8],'haR']}],
+       {l:[[0,21,46.8],'gpL']},
+       {l:[[0,21,46.8],'gpR']}],
  // 2026-11-12: seen from behind and to one side (camera 140) so the elbows flaring high and
  // wide and the hands finishing beside the head read; from the old 3/4 front a forearm
  // foreshortened to 4% and the finish looked like a salute. Arms reach full extension at the
@@ -158,24 +163,25 @@ const WK_A=[
 ];
 
 const WK_B=[
-{n:"Trap-bar deadlift",sets:3,reps:"6",cyc:3.2,cam:64,pin:"LR",
+{n:"Trap-bar deadlift",sets:3,reps:"6",cyc:3.2,cam:48,pin:"LR",
  how:"Stand centered in the bar, hips back until the hamstrings load, shoulders over the handles, back flat. Push the floor away and stand tall — every rep fast and clean.",
  cues:["Flat back before you pull","Push the floor, don't yank the bar","Hips and shoulders rise together","Finish tall, glutes squeezed"],
- prop:[{l:[{j:'haL',o:[0,0,-6]},{j:'haL',o:[0,0,6]}]},
-       {l:[{j:'haR',o:[0,0,-6]},{j:'haR',o:[0,0,6]}]},
-       {l:[{j:'haL',o:[0,0,6]},{j:'haR',o:[0,0,6]}]},
-       {l:[{j:'haL',o:[0,0,-6]},{j:'haR',o:[0,0,-6]}]},
-       {l:[{j:'haL',o:[0,4,0]},{j:'haL',o:[-9,4,0]}]},
-       {l:[{j:'haR',o:[0,4,0]},{j:'haR',o:[9,4,0]}]},
-       {l:[{j:'haL',o:[0,0,0]},{j:'haL',o:[0,4,0]}]},
-       {l:[{j:'haR',o:[0,0,0]},{j:'haR',o:[0,4,0]}]},
-       {c:[{j:'haL',o:[-9,4,0]},9.2]},
-       {c:[{j:'haR',o:[9,4,0]},9.2]}],
+ prop:[{l:[{j:'gpL',o:[0,0,-6]},{j:'gpL',o:[0,0,6]}]},
+       {l:[{j:'gpR',o:[0,0,-6]},{j:'gpR',o:[0,0,6]}]},
+       {l:[{j:'gpL',o:[0,0,6]},{j:'gpR',o:[0,0,6]}]},
+       {l:[{j:'gpL',o:[0,0,-6]},{j:'gpR',o:[0,0,-6]}]},
+       {l:[{j:'gpL',o:[0,4,0]},{j:'gpL',o:[-9,4,0]}]},
+       {l:[{j:'gpR',o:[0,4,0]},{j:'gpR',o:[9,4,0]}]},
+       {l:[{j:'gpL',o:[0,0,0]},{j:'gpL',o:[0,4,0]}]},
+       {l:[{j:'gpR',o:[0,0,0]},{j:'gpR',o:[0,4,0]}]},
+       {c:[{j:'gpL',o:[-9,4,0]},9.2]},
+       {c:[{j:'gpR',o:[9,4,0]},9.2]}],
  // 2026-11-12: FK arms at the sides (old hand targets missed by 4 mid-rep), plates on the floor
  // at the bottom with the handles 4 above the plate centre (a trap bar's raised handles), knees
- // about 100 deg. Plates drawn as rings so the legs show through.
+ // about 100 deg. Plates drawn as rings so the legs show through. With the handles in the
+ // fist the trunk is at 54 deg (was 65) and the arms 10 deg back of plumb (was 17).
  A:{p:[0,55.2,0],yaw:20,tw:0,s:[3,3],hf:0,aL:[0,-4,0,-4],aR:[0,4,0,4],lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
- B:{p:[-3.4,66,-9.3],yaw:20,tw:0,s:[65.5,65.5],hf:-18,aL:[-17,-4,-17,-4],aR:[-17,4,-17,4],lL:[0,0,0,0],
+ B:{p:[-3.4,66,-9.3],yaw:20,tw:0,s:[54.4,54.4],hf:-12,aL:[-10,-4,-10,-4],aR:[-10,4,-10,4],lL:[0,0,0,0],
     lR:[0,0,0,0]}},
 
 {n:"Split squat",sets:3,reps:"8",each:true,cyc:3.0,cam:62,
@@ -186,17 +192,17 @@ const WK_B=[
  // authored: back foot on its ball, heel up (fp 45), front foot flat.
  A:{p:[0,60.6,-6],yaw:0,tw:0,s:[6,6],hf:0,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
     ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0},
- B:{p:[0,71.4,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
+ B:{p:[0,70.6,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
     ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0}},
 
-{n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:82,
+{n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:66,
  how:"Chest on an incline bench, arms hanging, palms facing each other. Row both dumbbells by driving the elbows back, squeeze between the shoulder blades, then lower slowly.",
  cues:["Chest glued to the pad","Elbows back, not straight up","One-beat pause at the top","No neck craning"],
  prop:[{l:[[0,74.5,-8],[0,58,16.9]]},
        {l:[[0,74.5,-8],[0,93,-8]]},
        {l:[[0,58,16.9],[0,93,16.9]]},
-       {db:[{j:'haL',o:[0,0,-2.4]},{j:'haL',o:[0,0,2.4]},1.7]},
-       {db:[{j:'haR',o:[0,0,-2.4]},{j:'haR',o:[0,0,2.4]},1.7]}],
+       {db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.7]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
  // 2026-11-12: body and bench squared (yaw 0, camera 82 keeps the view); both arms hang
  // straight at the bottom (the right was bent to 155) and the elbows stay close at the top.
  A:{p:[0,72,-6],yaw:0,tw:0,s:[52,50],hf:-10,ikL:{w:[-8,81.5,14.2]},ikR:{w:[8,81.5,14.2]},swAL:-96,
@@ -210,8 +216,8 @@ const WK_B=[
  prop:[{l:[[-4.8,76.5,-1.4],[4.8,76.5,1.4]]},
        {l:[[-4,76.5,-1.2],[-4,93,-1.2]]},
        {l:[[4,76.5,1.2],[4,93,1.2]]},
-       {l:[[-3,4,12],{m:['haL','haR']}]},
-       {l:[{j:'haL',o:[-1.2,0,0]},{j:'haR',o:[1.2,0,0]}]}],
+       {l:[[-3,4,12],{m:['gpL','gpR']}]},
+       {l:[{j:'gpL',o:[-1.2,0,0]},{j:'gpR',o:[1.2,0,0]}]}],
  // 2026-11-12: arms fully extended toward the pulley at the top (they were bent to 134-146),
  // one constant 12 deg lean (it rocked from 0 to 12), handle to the upper chest. Seen from the
  // side (camera 94) so the cable runs in front of the face instead of across it.
@@ -223,13 +229,13 @@ const WK_B=[
 {n:"Band pull-apart",sets:2,reps:"15",cyc:2.7,cam:40,pitch:22,
  how:"Arms straight out in front at shoulder height, band taut between your hands. Pull it apart until it touches your chest, arms wide, then return without letting it go slack.",
  cues:["Shoulder blades slide back first","Arms dead straight","Keep tension both directions","Ribs down"],
- prop:[{l:['haL','haR']}],
+ prop:[{l:['gpL','gpR']}],
  // 2026-11-12: faces the lens (yaw -40) from slightly above so the pull to a T happens ACROSS
  // the screen (in near-profile it folded into the chest). FK arms stay dead straight through
  // the whole arc.
- A:{p:[0,55.4,0],yaw:-15,tw:0,s:[1,0],hf:0,aL:[90,3,90,3],aR:[90,-3,90,-3],lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
+ A:{p:[0,55.4,0],yaw:-15,tw:0,s:[1,0],hf:0,aL:[90,3,90,3],aR:[90,-3,90,-3],lL:[-2,-6,2,-5],lR:[2,6,-2,5],gL:90,gR:90},
  B:{p:[0,55.4,0],yaw:-15,tw:0,s:[1,0],hf:0,aL:[90,-86,90,-86],aR:[90,86,90,86],lL:[-2,-6,2,-5],
-    lR:[2,6,-2,5]}},
+    lR:[2,6,-2,5],gL:90,gR:90}},
 
 {n:"Side plank",sets:2,reps:"30 sec",each:true,cyc:4.2,cam:18,pin:"LR",
  how:"On your forearm, elbow under the shoulder, feet stacked. Lift the hips until head to heels is one straight line, and hold — keep breathing.",
@@ -409,19 +415,20 @@ function torsoEdges(J,bend,n){
 //    upper:{w,at},fore:{w,at},thigh:{w,at},shin:{w,at},
 //    torso:{chest,waist,at,stroke}}      width factors at the shoulder line and the waist,
 //                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
-let SKIN=null;
+let SKIN={"joint":4.4,"mid":3.2,"tip":2.3,"upper":{"w":3.6,"at":0.4},"fore":{"w":3.1,"at":0.3},"thigh":{"w":4.3,"at":0.38},"shin":{"w":3.5,"at":0.3},"torso":{"chest":1.01,"waist":0.85,"at":0.47,"stroke":3.2},"far":0.8};
 const smooth=x=>x*x*(3-2*x);
 // half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
 // with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
-function limbHalf(seg,t){
+function limbHalf(seg,t,k){
   const S=SKIN; if(!S) return 1.5;
   const pr=S[seg],prox=seg==='upper'||seg==='thigh',r0=(prox?S.joint:S.mid)/2,r1=(prox?S.mid:S.tip)/2,rm=pr.w/2;
   const at=Math.max(0.05,Math.min(0.95,pr.at));
-  return t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+  return (k||1)*(t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at)));
 }
 // screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
-function limbD(a,b,seg,sc){
+function limbD(a,b,seg,sc,k){
   const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';
+  sc*=(k||1);   // k = far-limb narrowing (farK); the centre line is untouched
   const r0=(prox?S.joint:S.mid)*sc/2, r1=(prox?S.mid:S.tip)*sc/2, rm=pr.w*sc/2;
   const at=Math.max(0.05,Math.min(0.95,pr.at));
   const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
@@ -436,6 +443,83 @@ function limbD(a,b,seg,sc){
   return 'M'+Lp.join('L')+`A${r1.toFixed(2)},${r1.toFixed(2)} 0 0 0 ${Rp[0]}L`+Rp.slice(1).join('L')
     +`A${r0.toFixed(2)},${r0.toFixed(2)} 0 0 0 ${Lp[0]}Z`;
 }
+// Far-limb narrowing (Will, 2026-11-12): of each left/right pair, the limb FARTHER from the
+// camera is drawn narrower (SKIN.far, e.g. 0.78), so two thighs seen side-on stay two limbs
+// instead of merging into one. The factor eases in over 4 units of depth difference, so
+// nothing pops as limbs trade places. dThis/dOther = camera depth of this limb and its twin.
+function farK(dThis,dOther){
+  const S=SKIN; if(!S||!S.far||S.far>=1) return 1;
+  return 1-(1-S.far)*smooth(Math.max(0,Math.min(1,(dOther-dThis)/4)));
+}
+// ---- feet and hands as small 3D objects (drawn only with a skin) ----
+// The foot is built in its own frame -- f heel-to-ball, up toward the shin, side -- as two
+// flat outlines: a PROFILE wedge (heel, arch, ball, toe) and a PLAN footprint (narrow
+// rounded heel widening to the forefoot). Both are projected by the camera and filled, so
+// side-on the wedge shows, from above the footprint shows, and in between you get both:
+// the shape comes from the foot's orientation, not from a fixed glyph. The ankle joint
+// (ft) is the heel on the floor and the toe joint is the BALL of the foot, exactly as the
+// authored contact numbers (fp/fy) place them; the toes beyond the ball lie flat when the
+// ball is on the floor, so a heel-up foot pivots about its ball.
+function footPolys(J,s){
+  const ft=J['ft'+s],ball=J['toe'+s],kn=J['kn'+s];
+  let f=sub(ball,ft); if(len(f)<1e-3) f=[0,0,1]; f=nrm(f);
+  const perp=(v,a)=>{const d=v[0]*a[0]+v[1]*a[1]+v[2]*a[2];return [v[0]-a[0]*d,v[1]-a[1]*d,v[2]-a[2]*d];};
+  let up=perp(sub(kn,ft),f); if(len(up)<2) up=perp([0,-1,0],f); if(len(up)<1e-3) up=perp([0,0,1],f); up=nrm(up);
+  const sd=cross(f,up);
+  const k=Math.max(0,Math.min(1,(ball[1]-91.4)/1.2));                 // ball on the floor -> toes flat
+  let fh=[f[0],0,f[2]]; fh=len(fh)<1e-3?f:nrm(fh);
+  const td=nrm([f[0]+(fh[0]-f[0])*k,f[1]+(fh[1]-f[1])*k,f[2]+(fh[2]-f[2])*k]);
+  let tu=perp(up,td); tu=len(tu)<1e-3?up:nrm(tu);
+  const P=(a,n,w)=>[ft[0]+f[0]*a+up[0]*n+sd[0]*(w||0),ft[1]+f[1]*a+up[1]*n+sd[1]*(w||0),ft[2]+f[2]*a+up[2]*n+sd[2]*(w||0)];
+  const T=(a,n,w)=>[ball[0]+td[0]*a+tu[0]*n+sd[0]*(w||0),ball[1]+td[1]*a+tu[1]*n+sd[1]*(w||0),ball[2]+td[2]*a+tu[2]*n+sd[2]*(w||0)];
+  const profile=[P(-1.5,0),P(-1.6,1.5),P(-0.5,2.9),P(1.1,2.9),P(3.4,1.9),P(6.4,1.05),T(1.7,0.6),T(2.2,0.25),T(1.8,0),
+                 P(6.4,0),P(4.7,0.2),P(2.9,0.65),P(1.0,0.15)];
+  const plan=[P(-1.5,0.1,0),P(-1.1,0.1,0.95),P(0.6,0.1,1.25),P(2.6,0.1,1.05),P(4.6,0.1,1.7),P(6.4,0.1,1.75),T(1.5,0.1,1.35),T(2.2,0.1,0.5),
+              T(2.2,0.1,-0.5),T(1.5,0.1,-1.35),P(6.4,0.1,-1.75),P(4.6,0.1,-1.7),P(2.6,0.1,-1.05),P(0.6,0.1,-1.25),P(-1.1,0.1,-0.95)];
+  return [profile,plan];
+}
+// The hand is one flat mitten continuing the forearm, with the thumb as a bulge on one edge.
+// Grip (pose gL/gR, degrees about the forearm): 0 = NEUTRAL, thumb on the upper-arm side of
+// the elbow's bend plane (thumb up in a handshake, thumbs forward with the arms hanging);
+// 90 = PRONATED, thumb turned toward the body's midline; negative would be supinated, which
+// Will's distal-bicep rule forbids and the audit rejects. Because the mitten is flat, its
+// drawn width and the side its thumb sits on both change with the grip.
+function handFrame(J,s,g,surf){
+  const el=J['el'+s],ha=J['ha'+s],sh=J['sh'+s]; let u=nrm(sub(ha,el));
+  const lat=nrm(sub(J.shR,J.shL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);
+  const med=s==='L'?lat:[-lat[0],-lat[1],-lat[2]];
+  // A hand that would poke through the surface it rests on (the floor, or pose pL/pR = the
+  // height of a bench top) is laid FLAT on it instead: fingers along the surface in the
+  // forearm's compass direction (or the body's facing when the forearm is vertical), palm down.
+  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0;
+  if(over>0&&ha[1]<=S0+1.5){
+    let h=[u[0],0,u[2]]; if(len(h)<0.35) h=[fw[0],0,fw[2]]; if(len(h)<1e-3) h=[0,0,1]; h=nrm(h);
+    const dy=Math.max(0,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
+    u=[h[0]*k,dy,h[2]*k];
+    let t=[med[0],0,med[2]]; const d=t[0]*u[0]+t[2]*u[2]; t=[t[0]-u[0]*d,0,t[2]-u[2]*d]; if(len(t)<1e-3) t=cross(u,[0,1,0]);
+    return {ha,u,t:nrm(t)};
+  }
+  const perp=(v)=>{const d=v[0]*u[0]+v[1]*u[1]+v[2]*u[2];return [v[0]-u[0]*d,v[1]-u[1]*d,v[2]-u[2]*d];};
+  let w=perp(sub(sh,el)); const b=perp(fw); w=[w[0]+b[0]*0.35,w[1]+b[1]*0.35,w[2]+b[2]*0.35];
+  if(len(w)<1e-3) w=perp([0,-1,0]); if(len(w)<1e-3) w=perp([1,0,0]); w=nrm(w);
+  const c=cross(u,w),sg=(c[0]*med[0]+c[1]*med[1]+c[2]*med[2])>=0?1:-1;
+  return {ha,u,t:g?rotAxis(w,u,sg*R(g)):w};
+}
+// opt.fist: the hand is closed round an implement (a short rounded fist that the handle passes
+// through at the grip point) instead of the open mitten; opt.surf: see handFrame.
+function handPoly(J,s,g,opt){
+  const {ha,u,t}=handFrame(J,s,g||0,opt&&opt.surf);
+  const H=(a,b)=>[ha[0]+u[0]*a+t[0]*b,ha[1]+u[1]*a+t[1]*b,ha[2]+u[2]*a+t[2]*b];
+  if(opt&&opt.fist) return [H(-0.2,-1.2),H(1.4,-1.9),H(3.5,-1.9),H(4.6,-0.8),H(4.6,0.7),H(3.7,1.8),H(2.4,2.5),H(1.1,1.9),H(-0.2,1.2)];
+  return [H(-0.2,-1.0),H(1.3,-1.55),H(3.5,-1.6),H(5.3,-1.1),H(6.1,0),H(5.5,0.95),H(4.1,1.5),H(3.2,1.75),H(2.9,3.0),H(1.9,2.9),H(0.9,1.5),H(-0.2,1.0)];
+}
+// where an implement sits in the fist: 3.4 beyond the wrist along the forearm. Props may name
+// 'gpL'/'gpR' (alone or as {j:'gpL',o:[..]}) to hang from the grip instead of the wrist joint.
+function gripPt(J,k){
+  const s=k.slice(-1),el=J['el'+s],ha=J['ha'+s],u=nrm(sub(ha,el));
+  return [ha[0]+u[0]*3.4,ha[1]+u[1]*3.4,ha[2]+u[2]*3.4];
+}
+
 // the torso's two side edges with the skin's waist and chest factors applied about the
 // trunk's centre line (3D, before projection). n samples; works with or without bend.
 function torsoSkin(J,bend,n){
@@ -525,14 +609,16 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
   // authored foot contact (eng2.js footAt): blend when either key carries it
-  ['fpL','fpR','fyL','fyR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
+  ['fpL','fpR','fyL','fyR','gL','gR','pL','pR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}
 const easeQ=t=>t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 function poseAt(m,ph){
   normalise(m);
-  const tri=ph<0.5?ph*2:(1-ph)*2;
+  // m.split (2026-11-12) = the fraction of the cycle spent going A -> B (default one half).
+  // Standing posture reset uses 0.4: a 4 s inhale out to B, a 6 s exhale back to A.
+  const sp=m.split||0.5, tri=ph<sp?ph/sp:(1-ph)/(1-sp);
   // A-M-B is ONE eased sweep (2026-11-12): the ease runs over the whole half cycle and M is
   // passed through at speed. Easing each segment separately stopped the figure dead at M.
   if(m.M){const e=easeQ(tri); return e<0.5 ? blend(m.A,m.M,e*2) : blend(m.M,m.B,(e-0.5)*2);}
@@ -556,10 +642,10 @@ const INK='#42591f',LIMB_L='#a8bc85',TORSO='#5c7d34',PROP='#b9a98b';
 // never drift out of them.
 function resPt(P,j,yaw,roll){
   if(Array.isArray(P))return P;
-  if(typeof P==='string')return j[P];
+  if(typeof P==='string')return j[P]||gripPt(j,P);
   let b;
-  if(P.m){const a=j[P.m[0]],c=j[P.m[1]];b=[(a[0]+c[0])/2,(a[1]+c[1])/2,(a[2]+c[2])/2];}
-  else b=j[P.j];
+  if(P.m){const a=j[P.m[0]]||gripPt(j,P.m[0]),c=j[P.m[1]]||gripPt(j,P.m[1]);b=[(a[0]+c[0])/2,(a[1]+c[1])/2,(a[2]+c[2])/2];}
+  else b=j[P.j]||gripPt(j,P.j);
   const o=P.o?rotY(roll?rotZb(P.o,roll):P.o,yaw||0):[0,0,0];
   return [b[0]+o[0],b[1]+o[1],b[2]+o[2]];
 }
@@ -611,8 +697,20 @@ function figMarkup(m,fit,ph){
   const propMk=shapes.filter(s=>!s.att).map(mkProp).join('');
   const side=n=>n.endsWith('L')?LIMB_L:INK;
   const parts=LIMBS.map(([x,y],i)=>({t:'l',a:P[x],b:P[y],d:(P[x].d+P[y].d)/2,col:side(y),w:1,seg:SEGS_SKIN[i]}));
+  if(SKIN){
+    // far-limb narrowing, then feet and hands as projected 3D shapes (eng2.js)
+    parts.forEach((p,i)=>{p.k=farK(p.d,parts[i<4?(i+2)%4:4+(i-2)%4].d);});
+    // a hand closes into a fist when the movement hangs an implement from its grip point
+    if(!m._held){const ps=JSON.stringify(m.prop||'');m._held={L:ps.indexOf('gpL')>=0,R:ps.indexOf('gpR')>=0};}
+    const held=m._held;
+    [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
+      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:(P['ft'+sd].d+P['toe'+sd].d)/2+0.01,w:0.9*parts[il].k}));
+      parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
+    });
+  }else{
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
   parts.push({t:'l',a:P.ftR,b:P.toeR,d:(P.ftR.d+P.toeR.d)/2,col:INK,w:0.8});
+  }
   // torso: the legacy quad, or -- when the pose carries a spine bend -- a path whose
   // side edges bow with the curvature (torsoEdges in eng2.js; corners unchanged)
   if(SKIN&&SKIN.torso){const e=torsoSkin(j,pose.bend,8),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
@@ -636,7 +734,8 @@ function figMarkup(m,fit,ph){
   parts.sort((x,y)=>x.d-y.d);
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
-    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc)}" fill="${p.col}"/>`;
+    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k)}" fill="${p.col}"/>`;
+    if(p.t==='pg')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${p.col}" stroke="${p.col}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${p.col}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
     if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;

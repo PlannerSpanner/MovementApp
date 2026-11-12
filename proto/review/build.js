@@ -46,13 +46,15 @@ const APPS=[['flow','Morning Flow',['d_flow.js'],'app_tpl.js','const layer=docum
             ['strength','Strength',['d_wka.js','d_wkb.js'],'wk_tpl.js','// ---- DOM ----','WK_A.concat(WK_B)',false,'strength']];
 const mk=(get,[k,label,data,tplF,cut,moves,trall])=>{let tpl=get(tplF);tpl=tpl.slice(0,tpl.indexOf(cut));if(trall)tpl=tpl.replace('const PROPFIT=false;','const PROPFIT=true;');
   return `function(){${get('eng2.js')}\n${data.map(get).join('\n')}\n${tpl}\n;return {MOVES:${moves},poseAt,solve,figMarkup,fitOf,project,pitch:()=>PITCH,setSkin:s=>{if(typeof SKIN!=='undefined')SKIN=s;}};}`;};
-const now=f=>rd('src/'+f);
+const SKINJ=has('src/skin.json')?JSON.stringify(JSON.parse(rd('src/skin.json'))):null;
+const now=f=>f==='eng2.js'&&SKINJ?rd('src/'+f).replace('let SKIN=null;','let SKIN='+SKINJ+';'):rd('src/'+f);
 const ENG='const MK={'+APPS.map(a=>`B_${a[0]}:${mk(old,a)},A_${a[0]}:${mk(now,a)}`).join(',\n')+'};';
 const NOTES=has('docs/figure-phase2-notes.json')?JSON.parse(rd('docs/figure-phase2-notes.json')):{};
-const SKIN=has('review/skin-export.json')?JSON.parse(rd('review/skin-export.json')).skin:null;
+const SKIN=null;   // the approved skin is stamped into the AFTER engines above
 const LIVE_HTML=`<section id="live"><h2>Before and after, live</h2>
 <p>Each pair runs in this page. <b>Before</b> is the engine and pose data shipped on <code>main</code>. <b>After</b> is this branch. Same loop length, same phase. Bilateral movements show one side; the app mirrors at half time.</p>
 <div id="bar"><div id="chips"></div><div id="ctl"><button id="pp">Pause</button><button id="sp">1×</button><input id="scrub" type="range" min="0" max="1000" value="0"><span id="phv"></span></div></div>
+<div id="close"></div>
 <div id="cards"></div></section>`;
 const LIVE_JS=`${ENG}
 const APPS=${JSON.stringify(APPS.map(a=>[a[0],a[1]]))},NOTES=${JSON.stringify(NOTES)},TUNED=${JSON.stringify(SKIN)};
@@ -71,10 +73,32 @@ APPS.forEach(([k,label])=>{const B=MK['B_'+k](),A=MK['A_'+k]();const h=document.
     [[B,mb,'before'],[A,ma,'after']].forEach(([E,m,l])=>{const cell=document.createElement('div');cell.className='cell';cell.innerHTML='<svg viewBox="0 0 100 100"></svg><div class="lab">'+l+'</div>';
       row.appendChild(cell);views.push({E,m,svg:cell.querySelector('svg'),cell,vis:false,after:l==='after'});});
     cards.appendChild(card);});});
+// ---- close-ups: same engines, a cropped viewBox, optionally another camera ----
+const CLOSE=[
+ ['Hands on a farmer hold','daily','Dumbbell farmer hold','22 38 38 38',null,'Dumbbells now sit in the fist, 3.3 units (7 cm) below the hip joint; before, they hung from the wrist joint at hip height. Handles run front to back: a neutral grip.'],
+ ['Hands on a row','daily','Dumbbell bent-over row','22 22 50 50',null,'Neutral grip: handles front to back all the way up.'],
+ ['Hands on the Romanian deadlift','strength','Romanian deadlift','20 30 55 55',null,'Overhand (pronated) grip on the bar. The bar is in the fist, so the arms hang 5 degrees back of plumb (11 before the hand was added).'],
+ ['Feet from above: squat stance','daily','Deep squats','0 0 100 100',{cam:40,pitch:74},'After only: the old engine had one fixed camera height. From above each foot is a footprint, toes a little out.'],
+ ['Feet from above: lunge','daily','Reverse lunges','0 0 100 100',{cam:40,pitch:68},'After only. Front foot flat, rear foot on its ball.'],
+ ['Feet from the side: lunge','daily','Reverse lunges','0 55 45 45',null,'Flat front foot, rear foot heel-up pivoting on the ball.'],
+ ['Prone Y-T-W: the setup preview','daily','Prone Y-T-W raise','0 0 100 100','tview','After only: this is what shows during GET SET UP (side-on, so face-down reads). The loop in the Daily 13 list below is the work view from above, on its mat.'],
+];
+{const host=document.getElementById('close');const h=document.createElement('h3');h.textContent='Close-ups: hands, feet, Y-T-W';h.id='app-close';host.appendChild(h);
+ const eng={};
+ CLOSE.forEach(([title,k,name,vb,view,note])=>{eng[k]=eng[k]||{B:MK['B_'+k](),A:MK['A_'+k]()};
+  const card=document.createElement('div');card.className='card';card.innerHTML='<h4>'+title+'</h4><div class="row"></div><p class="note">'+note+'</p>';
+  const row=card.querySelector('.row');
+  (view?[['A','after']]:[['B','before'],['A','after']]).forEach(([w,l])=>{const E=eng[k][w];let m=E.MOVES.find(x=>x.n===name);
+    const hold=view==='tview';
+    if(view){const v=hold?m.tview:view;m=Object.assign({},m,v);delete m.fit;}
+    m.fit=E.fitOf(m);
+    const cell=document.createElement('div');cell.className='cell';cell.innerHTML='<svg viewBox="'+vb+'"></svg><div class="lab">'+l+'</div>';
+    row.appendChild(cell);views.push({E,m,svg:cell.querySelector('svg'),cell,vis:false,after:w==='A',hold});});
+  host.appendChild(card);});}
 const io=new IntersectionObserver(es=>es.forEach(e=>{const v=views.find(x=>x.cell===e.target);if(v)v.vis=e.isIntersecting;}),{rootMargin:'200px'});
 views.forEach(v=>io.observe(v.cell));
 const RX=/#6d4f1c|#c2a473|#7d5a1e|#b9a98b|#42591f|#a8bc85|#5c7d34/g;
-function draw(v,ph){v.E.setSkin(v.after&&skinOn?TUNED:null);
+function draw(v,ph){
   const mk=v.E.figMarkup(v.m,v.m.fit,ph),map={'#6d4f1c':T.R,'#c2a473':T.L,'#7d5a1e':T.body,'#b9a98b':T.prop,'#42591f':T.R,'#a8bc85':T.L,'#5c7d34':T.body};
   if(!v.g){const p=v.E.poseAt(v.m,0).p,q=v.E.project([p[0],93,p[2]]);v.g={x:q.x*v.m.fit.sc+v.m.fit.ox,y:q.y*v.m.fit.sc+v.m.fit.oy,ry:40*Math.sin(v.E.pitch()*Math.PI/180)};}
   v.svg.innerHTML='<ellipse cx="'+v.g.x.toFixed(1)+'" cy="'+v.g.y.toFixed(1)+'" rx="40" ry="'+v.g.ry.toFixed(1)+'" fill="'+T.floor+'"/>'+mk.replace(RX,c=>map[c]);}
@@ -83,13 +107,13 @@ const chips=document.getElementById('chips');
 STAGES.forEach((t,i)=>{const b=document.createElement('button');b.className='chip'+(i?'':' on');b.textContent=t[0];
   b.onclick=()=>{T=theme(t[1],!!t[2]);chips.querySelectorAll('.chip.st').forEach(x=>x.classList.remove('on'));b.classList.add('on');paint();};b.classList.add('st');chips.appendChild(b);});
 if(TUNED){const b=document.createElement('button');b.className='chip';b.textContent='skin: today';b.onclick=()=>{skinOn=!skinOn;b.textContent=skinOn?'skin: tuned export':'skin: today';b.classList.toggle('on',skinOn);paint();};chips.appendChild(b);}
-APPS.forEach(([k,label])=>{const a=document.createElement('a');a.className='chip';a.href='#app-'+k;a.textContent=label;chips.appendChild(a);});
+[['close','Close-ups']].concat(APPS).forEach(([k,label])=>{const a=document.createElement('a');a.className='chip';a.href='#app-'+k;a.textContent=label;chips.appendChild(a);});
 const scrub=document.getElementById('scrub'),phv=document.getElementById('phv'),pp=document.getElementById('pp'),sp=document.getElementById('sp');
 pp.onclick=()=>{playing=!playing;pp.textContent=playing?'Pause':'Play';if(playing)scrubPh=null;};
 sp.onclick=()=>{speed=speed===1?0.5:speed===0.5?0.25:1;sp.textContent=speed+'×';};
 scrub.oninput=()=>{playing=false;pp.textContent='Play';scrubPh=scrub.value/1000;frame(performance.now(),true);};
 function frame(now,once){const dt=last?Math.min(0.1,(now-last)/1000):0;last=now;if(playing)clock+=dt*speed;
-  views.forEach(v=>{if(!v.vis)return;draw(v,scrubPh!=null?scrubPh:((clock/v.m.cyc)%1));});
+  views.forEach(v=>{if(!v.vis)return;draw(v,v.hold?0:(scrubPh!=null?scrubPh:((clock/v.m.cyc)%1)));});
   phv.textContent=scrubPh!=null?'ph '+scrubPh.toFixed(2):'';
   if(!once)requestAnimationFrame(frame);}
 paint();requestAnimationFrame(frame);`;
@@ -108,7 +132,7 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px;font-size:.88em;word-b
 .row{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cell{border-radius:10px;overflow:hidden;position:relative}.cell svg{display:block;width:100%;height:auto}.lab{position:absolute;left:8px;top:5px;font-size:.7rem;font-weight:600;opacity:.75}
 .pair p{font-size:.8rem;margin:.8em 0 0;opacity:.8}`;
 const page=(title,body,js)=>`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>${CSS}</style></head><body><main>
-<nav><a href="index.html">Phase 2 report</a><a href="index.html#live">Before / after loops</a><a href="sheets.html">Sheets + audit</a><a href="tune.html">Skin tuning</a><a href="assessment.html">Phase 1 assessment</a></nav>${body}</main>${js?`<script>${js}</script>`:''}</body></html>`;
+<nav><a href="index.html">Phase 2 report</a><a href="index.html#live">Before / after loops</a><a href="sheets.html">Sheets + audit</a><a href="rewordings.html">Re-worded rubric lines</a><a href="tune.html">Skin tuning</a><a href="assessment.html">Phase 1 assessment</a></nav>${body}</main>${js?`<script>${js}</script>`:''}</body></html>`;
 // ---- index ----
 const report=has('docs/figure-phase2-report.md')?md(rd('docs/figure-phase2-report.md')):'<h1>Figure work, Phase 2</h1><p>Report not written yet.</p>';
 fs.writeFileSync(path.join(OUT,'index.html'),page('Figure work, Phase 2',report+LIVE_HTML,LIVE_JS));
@@ -118,10 +142,11 @@ let sh='<h1>Eight-phase sheets, before and after</h1><p>App camera above; small 
 for(const a in LABEL){sh+=`<h2>${LABEL[a]}</h2>`;after.filter(f=>f.startsWith('after-'+a+'-')).forEach(f=>{const b='before-'+f.slice(6);
   sh+=`<div class="pair"><p>${f.slice(6).replace(/\.png$/,'')} · before</p>${before.includes(b)?img(b):'<p>(no before sheet)</p>'}<p>after</p>${img(f)}</div>`;});}
 if(has('qa/screenshots/fig/audit.md'))sh+=md(rd('qa/screenshots/fig/audit.md'));
-['skin-dryrun-preset2.md','skin-dryrun-preset3.md','skin.md'].forEach(f=>{if(has('qa/screenshots/fig/'+f))sh+='<h2 id="'+f.replace(/\W/g,'-')+'">'+f+'</h2>'+md(rd('qa/screenshots/fig/'+f));});
+['skin.md'].forEach(f=>{if(has('qa/screenshots/fig/'+f))sh+='<h2 id="'+f.replace(/\W/g,'-')+'">'+f+'</h2>'+md(rd('qa/screenshots/fig/'+f));});
 fs.writeFileSync(path.join(OUT,'sheets.html'),page('Sheets and audit',sh));
 // ---- Phase 1 documents, static ----
 let as=md(rd('docs/figure-system-assessment.md'))+'<h2>Strips from Phase 1</h2>'+strips.filter(f=>f.startsWith('strip-')).map(f=>`<p class="note">${f}</p>`+img(f)).join('')+md(rd('docs/pose-critique.md'));
 fs.writeFileSync(path.join(OUT,'assessment.html'),page('Phase 1 assessment',as));
+if(has('docs/rubric-rewordings.md'))fs.writeFileSync(path.join(OUT,'rewordings.html'),page('Re-worded rubric lines',md(rd('docs/rubric-rewordings.md'))));
 if(fs.existsSync(path.join(OUT,'critique.html')))fs.unlinkSync(path.join(OUT,'critique.html'));
 console.log('built review/index.html ('+Math.round(fs.statSync(path.join(OUT,'index.html')).size/1024)+' KB), sheets.html ('+after.length+' after, '+before.length+' before), assessment.html');

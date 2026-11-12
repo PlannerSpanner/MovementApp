@@ -8,8 +8,12 @@ const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..')
 const h=fs.readFileSync(path.join(ROOT,'morning-flow.html'),'utf8');
 const js=h.split('<script>')[1].split('</script>')[0];
 const core=js.slice(0,js.indexOf('const layer=document.getElementById'));
-const {MOVES,solve,poseAt,figMarkup,fitOf,project,rotY,sub}=
-  new Function(core+'\nreturn {MOVES,solve,poseAt,figMarkup,fitOf,project,rotY,sub};')();
+const {MOVES,solve,poseAt,figMarkup,fitOf,project,rotY,sub,setSkin}=
+  new Function(core+'\nreturn {MOVES,solve,poseAt,figMarkup,fitOf,project,rotY,sub,setSkin:s=>{SKIN=s;}};')();
+// The engine tests below are about the torso's GEOMETRY (legacy polygon at zero bend, which
+// way the edges bow). They read the unskinned markup, so the figure skin is switched off
+// for this file; the skin has its own checks in qa/fig/skin.js.
+setSkin(null);
 // dirOnly lives below the DOM marker; it is a one-liner, so read it from the page source
 const dirOnlySrc=(js.match(/const dirOnly=([^;]*);/)||[])[1];
 const dirOnly=dirOnlySrc?new Function('return '+dirOnlySrc)():()=>false;

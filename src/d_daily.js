@@ -29,7 +29,7 @@ const MOVES=[
  // 5.4 above the floor) and the front foot stays flat, so no toe flips direction.
  A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,2],aL:[-6,-10,-6,-8],aR:[6,10,6,8],ikFL:[-5.8,93,2.6],lR:[4,2,-4,2],fpL:0,fpR:0},
  M:{p:[-5.7,64,-12.8],yaw:24,tw:0,s:[5,3],aL:[-2,-10,-2,-8],aR:[2,10,2,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0},
- B:{p:[-7.7,72,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0}},
+ B:{p:[-7.7,71.2,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0}},
 
 // Contralateral reach: right arm sweeps overhead while the left leg lengthens; the
 // mirror at halfway swaps the lead pair (punching-rotations precedent). Low back
@@ -37,13 +37,13 @@ const MOVES=[
 {n:"Dead bug",pos:'supine',cue:"Ribs down, low back pressed into the floor",dur:45,bil:true,cyc:3.6,cam:62,tdur:15,
  setup:"Lie on your back. Knees up over your hips, shins level, arms to the ceiling.",
  A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[180,-6,180,-5],aR:[180,6,180,5],
-    lL:[176,-7,88,-5],lR:[176,7,88,5]},
+    lL:[176,-7,88,-5],lR:[176,7,88,5],fpL:-80,fpR:-80},
  B:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[180,-6,180,-5],aR:[268,6,268,5],
-    lL:[97,-7,94,-5],lR:[176,7,88,5]}},
+    lL:[97,-7,94,-5],lR:[176,7,88,5],fpL:-80,fpR:-80}},
 
 // Hip extension, not lumbar extension: the torso is one straight slab (s0 == s1) and
 // the top position is the straight knee-hip-shoulder diagonal — no extra arch.
-{n:"Glute bridge",pos:'supine',cue:"Tuck first, drive through the heels, squeeze tall",dur:45,bil:false,cyc:3.2,cam:62,tdur:10,
+{n:"Glute bridge",pos:'supine',cue:"Tuck first, drive through the heels, squeeze tall",dur:45,bil:false,cyc:3.2,cam:52,tdur:10,
  setup:"Stay on your back. Feet flat on the floor, hip width, heels close to your hands.",
  A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
     aL:[88,-8,88,-6],aR:[88,8,88,6]},
@@ -86,8 +86,12 @@ const MOVES=[
 
 // A=Y, M=T, B=W: the cycle sweeps Y->T->W->T->Y. Tiny floats — the work is the
 // scapular squeeze, not elevation. cam 72: the only view where the letters open.
-{n:"Prone Y-T-W raise",pos:'prone',cue:"Blades down and back — small floats, thumbs up",dur:45,bil:false,cyc:4.2,cam:40,pitch:58,tdur:15,
+{n:"Prone Y-T-W raise",pos:'prone',cue:"Blades down and back — small floats, thumbs up",dur:45,bil:false,cyc:4.2,cam:40,pitch:58,tview:{cam:40,pitch:13},tdur:15,
+ prop:[{q:[[19.5,93,39.9],[38.8,93,16.9],[-24,93,-35.8],[-43.3,93,-12.8]]}],
  setup:"Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.",
+ // Two cameras (Will, 2026-11-12): the GET SET UP preview is side-on (tview) so face-down
+ // reads while you get to the floor; the work phase uses the raised camera so the letters
+ // read. The pale floor patch is a mat under the body: from above it says "lying down".
  // 2026-11-12 (Will): raised camera (pitch 58) so the Y, the T and the W open up on screen;
  // side-on at 13 deg they collapsed into one line. The body lies ACROSS the screen (yaw 50
  // at camera 40) so the letters are not skewed. Arms are FK in the horizontal plane, a
@@ -124,8 +128,8 @@ const MOVES=[
 // Hinge held constant; elbows drive up and back toward the hips. Neutral grip:
 // dumbbell handles run front-to-back. Arm world targets in both frames (blendable).
 {n:"Dumbbell bent-over row",pos:'standing',cue:"Elbows to the hips — no torso heave",dur:45,bil:false,cyc:2.6,cam:48,tdur:15,
- prop:[{db:[{j:'haL',o:[0,0,-2.4]},{j:'haL',o:[0,0,2.4]},1.7]},
-       {db:[{j:'haR',o:[0,0,-2.4]},{j:'haR',o:[0,0,2.4]},1.7]}],
+ prop:[{db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.7]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
  setup:"Stand up and grab your dumbbells. Soft knees, hinge your chest toward the floor, back flat.",
  // 2026-11-12 (Will): torso about 45 deg from the floor, flat back (it was 28 deg). Soft
  // knees, hips back over the heels; the arms hang straight below the shoulders at the
@@ -141,7 +145,7 @@ const MOVES=[
 // yaw 14 the hands sat skewed under the shoulders and the right elbow flared 6 units out.
 // The bottom stops 1.5 short of parallel (a safety margin on the AC-joint rule, it sat
 // exactly on it) and the top is a straight arm.
-{n:"Bench dips",pos:'bench',cue:"Stop at parallel — shoulders down and back",dur:40,bil:false,cyc:3.0,cam:80,tdur:15,
+{n:"Bench dips",pos:'bench',cue:"Stop at parallel — shoulders down and back",dur:40,bil:false,cyc:3.0,cam:72,tdur:15,
  prop:[{l:[[-12,74,0.5],[12,74,0.5]]},{l:[[-12,74,-6.5],[12,74,-6.5]]},
        {l:[[-12,74,0.5],[-12,74,-6.5]]},{l:[[12,74,0.5],[12,74,-6.5]]},
        {l:[[-11,74,0.5],[-11,93,0.5]]},{l:[[11,74,0.5],[11,93,0.5]]},
@@ -154,8 +158,8 @@ const MOVES=[
 
 // Static hold: the fight is grip + anti-shrug + anti-lean. Barely-visible sway.
 {n:"Dumbbell farmer hold",pos:'standing',cue:"Ribs stacked over pelvis — don't let the weights win",dur:35,bil:false,cyc:4.6,cam:40,tdur:15,pin:"LR",
- prop:[{db:[{j:'haL',o:[0,0,-2.4]},{j:'haL',o:[0,0,2.4]},1.9]},
-       {db:[{j:'haR',o:[0,0,-2.4]},{j:'haR',o:[0,0,2.4]},1.9]}],
+ prop:[{db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.9]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.9]}],
  setup:"Pick up your dumbbells. Stand tall, shoulders packed down and back.",
  // 2026-11-12: arms hang dead straight (FK); the old hand targets sat too close to the
  // shoulders and bent the elbows to 155 deg. The sway is a breath.
@@ -166,13 +170,15 @@ const MOVES=[
 
 // The exhale reset: ribs settle down and in, pelvis neutral, breath into the low
 // back. br pairs the tone with the figure's breathing sway.
-{n:"Standing posture reset",pos:'standing',cue:"Exhale the ribs down — breathe into your low back",dur:30,bil:false,cyc:5.0,cam:40,tdur:15,br:true,pin:"LR",
+{n:"Standing posture reset",pos:'standing',cue:"Exhale the ribs down — breathe into your low back",dur:30,bil:false,cyc:10,split:0.4,cam:40,tdur:15,br:true,pin:"LR",
  setup:"Set the dumbbells down. Stand tall, feet hip width, arms easy at your sides.",
- // 2026-11-12: A is a rib FLARE (low back arched: lower segment forward, upper segment back,
- // head stacked), B is the stack. It was a whole-trunk forward lean, so the exhale lifted
- // the chest: the fault the cue names.
- A:{p:[0,55.4,0],yaw:16,tw:0,s:[8,-7],hf:3,aL:[6,-8,4,-6],aR:[6,8,4,6],
+ // 2026-11-12 (Will approved the timing): three breaths in the 30 s, about 4 s in and 6 s
+ // out (cyc 10, split 0.4). A is the STACK (ribs over pelvis); the inhale opens to B, a rib
+ // FLARE (low back arched: lower segment forward, upper segment back, head stacked); the
+ // longer exhale brings the ribs down to the stack again. Before this it was a
+ // whole-trunk forward lean on a 5 s cycle, and the exhale lifted the chest.
+ A:{p:[0,55.4,0],yaw:16,tw:0,s:[1,0],hf:0,aL:[6,-8,4,-6],aR:[6,8,4,6],
     lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
- B:{p:[0,55.4,0],yaw:16,tw:0,s:[1,0],hf:0,aL:[6,-8,4,-6],aR:[6,8,4,6],
+ B:{p:[0,55.4,0],yaw:16,tw:0,s:[8,-7],hf:3,aL:[6,-8,4,-6],aR:[6,8,4,6],
     lL:[-2,-6,2,-5],lR:[2,6,-2,5]}}
 ];

@@ -18,7 +18,8 @@ function sample(E,m,n=N){
   const F=[]; for(let i=0;i<n;i++){const ph=i/n,pose=E.poseAt(m,ph),j=E.solve(pose);F.push({ph,pose,j,i});}
   const C={E,m,F,n};
   C.at=ph=>F[Math.round((((ph%1)+1)%1)*n)%n];
-  C.J=(f,k)=>Array.isArray(k)?k:(k.includes('+')?mid(f.j[k.split('+')[0]],f.j[k.split('+')[1]]):f.j[k]);
+  // a joint name, 'gpL'/'gpR' (the grip point in the fist), 'a+b' (midpoint) or a raw [x,y,z]
+  C.J=(f,k)=>Array.isArray(k)?k:(k.includes('+')?mid(C.J(f,k.split('+')[0]),C.J(f,k.split('+')[1])):(f.j[k]||E.gripPt(f.j,k)));
   C.ang=(f,a,b,c)=>angV(sub(C.J(f,a),C.J(f,b)),sub(C.J(f,c),C.J(f,b)));          // joint angle at b
   C.gap=(f,k)=>FLOOR-C.J(f,k)[1];                                                 // height above the floor
   C.tilt=(f,a,b)=>{const t=angV(sub(C.J(f,b),C.J(f,a)),UP);return Math.min(t,180-t);};  // segment vs vertical, 0..90

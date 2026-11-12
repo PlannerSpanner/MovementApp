@@ -1,22 +1,23 @@
 const WK_B=[
-{n:"Trap-bar deadlift",sets:3,reps:"6",cyc:3.2,cam:64,pin:"LR",
+{n:"Trap-bar deadlift",sets:3,reps:"6",cyc:3.2,cam:48,pin:"LR",
  how:"Stand centered in the bar, hips back until the hamstrings load, shoulders over the handles, back flat. Push the floor away and stand tall — every rep fast and clean.",
  cues:["Flat back before you pull","Push the floor, don't yank the bar","Hips and shoulders rise together","Finish tall, glutes squeezed"],
- prop:[{l:[{j:'haL',o:[0,0,-6]},{j:'haL',o:[0,0,6]}]},
-       {l:[{j:'haR',o:[0,0,-6]},{j:'haR',o:[0,0,6]}]},
-       {l:[{j:'haL',o:[0,0,6]},{j:'haR',o:[0,0,6]}]},
-       {l:[{j:'haL',o:[0,0,-6]},{j:'haR',o:[0,0,-6]}]},
-       {l:[{j:'haL',o:[0,4,0]},{j:'haL',o:[-9,4,0]}]},
-       {l:[{j:'haR',o:[0,4,0]},{j:'haR',o:[9,4,0]}]},
-       {l:[{j:'haL',o:[0,0,0]},{j:'haL',o:[0,4,0]}]},
-       {l:[{j:'haR',o:[0,0,0]},{j:'haR',o:[0,4,0]}]},
-       {c:[{j:'haL',o:[-9,4,0]},9.2]},
-       {c:[{j:'haR',o:[9,4,0]},9.2]}],
+ prop:[{l:[{j:'gpL',o:[0,0,-6]},{j:'gpL',o:[0,0,6]}]},
+       {l:[{j:'gpR',o:[0,0,-6]},{j:'gpR',o:[0,0,6]}]},
+       {l:[{j:'gpL',o:[0,0,6]},{j:'gpR',o:[0,0,6]}]},
+       {l:[{j:'gpL',o:[0,0,-6]},{j:'gpR',o:[0,0,-6]}]},
+       {l:[{j:'gpL',o:[0,4,0]},{j:'gpL',o:[-9,4,0]}]},
+       {l:[{j:'gpR',o:[0,4,0]},{j:'gpR',o:[9,4,0]}]},
+       {l:[{j:'gpL',o:[0,0,0]},{j:'gpL',o:[0,4,0]}]},
+       {l:[{j:'gpR',o:[0,0,0]},{j:'gpR',o:[0,4,0]}]},
+       {c:[{j:'gpL',o:[-9,4,0]},9.2]},
+       {c:[{j:'gpR',o:[9,4,0]},9.2]}],
  // 2026-11-12: FK arms at the sides (old hand targets missed by 4 mid-rep), plates on the floor
  // at the bottom with the handles 4 above the plate centre (a trap bar's raised handles), knees
- // about 100 deg. Plates drawn as rings so the legs show through.
+ // about 100 deg. Plates drawn as rings so the legs show through. With the handles in the
+ // fist the trunk is at 54 deg (was 65) and the arms 10 deg back of plumb (was 17).
  A:{p:[0,55.2,0],yaw:20,tw:0,s:[3,3],hf:0,aL:[0,-4,0,-4],aR:[0,4,0,4],lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
- B:{p:[-3.4,66,-9.3],yaw:20,tw:0,s:[65.5,65.5],hf:-18,aL:[-17,-4,-17,-4],aR:[-17,4,-17,4],lL:[0,0,0,0],
+ B:{p:[-3.4,66,-9.3],yaw:20,tw:0,s:[54.4,54.4],hf:-12,aL:[-10,-4,-10,-4],aR:[-10,4,-10,4],lL:[0,0,0,0],
     lR:[0,0,0,0]}},
 
 {n:"Split squat",sets:3,reps:"8",each:true,cyc:3.0,cam:62,
@@ -27,17 +28,17 @@ const WK_B=[
  // authored: back foot on its ball, heel up (fp 45), front foot flat.
  A:{p:[0,60.6,-6],yaw:0,tw:0,s:[6,6],hf:0,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
     ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0},
- B:{p:[0,71.4,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
+ B:{p:[0,70.6,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
     ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0}},
 
-{n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:82,
+{n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:66,
  how:"Chest on an incline bench, arms hanging, palms facing each other. Row both dumbbells by driving the elbows back, squeeze between the shoulder blades, then lower slowly.",
  cues:["Chest glued to the pad","Elbows back, not straight up","One-beat pause at the top","No neck craning"],
  prop:[{l:[[0,74.5,-8],[0,58,16.9]]},
        {l:[[0,74.5,-8],[0,93,-8]]},
        {l:[[0,58,16.9],[0,93,16.9]]},
-       {db:[{j:'haL',o:[0,0,-2.4]},{j:'haL',o:[0,0,2.4]},1.7]},
-       {db:[{j:'haR',o:[0,0,-2.4]},{j:'haR',o:[0,0,2.4]},1.7]}],
+       {db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.7]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
  // 2026-11-12: body and bench squared (yaw 0, camera 82 keeps the view); both arms hang
  // straight at the bottom (the right was bent to 155) and the elbows stay close at the top.
  A:{p:[0,72,-6],yaw:0,tw:0,s:[52,50],hf:-10,ikL:{w:[-8,81.5,14.2]},ikR:{w:[8,81.5,14.2]},swAL:-96,
@@ -51,8 +52,8 @@ const WK_B=[
  prop:[{l:[[-4.8,76.5,-1.4],[4.8,76.5,1.4]]},
        {l:[[-4,76.5,-1.2],[-4,93,-1.2]]},
        {l:[[4,76.5,1.2],[4,93,1.2]]},
-       {l:[[-3,4,12],{m:['haL','haR']}]},
-       {l:[{j:'haL',o:[-1.2,0,0]},{j:'haR',o:[1.2,0,0]}]}],
+       {l:[[-3,4,12],{m:['gpL','gpR']}]},
+       {l:[{j:'gpL',o:[-1.2,0,0]},{j:'gpR',o:[1.2,0,0]}]}],
  // 2026-11-12: arms fully extended toward the pulley at the top (they were bent to 134-146),
  // one constant 12 deg lean (it rocked from 0 to 12), handle to the upper chest. Seen from the
  // side (camera 94) so the cable runs in front of the face instead of across it.
@@ -64,13 +65,13 @@ const WK_B=[
 {n:"Band pull-apart",sets:2,reps:"15",cyc:2.7,cam:40,pitch:22,
  how:"Arms straight out in front at shoulder height, band taut between your hands. Pull it apart until it touches your chest, arms wide, then return without letting it go slack.",
  cues:["Shoulder blades slide back first","Arms dead straight","Keep tension both directions","Ribs down"],
- prop:[{l:['haL','haR']}],
+ prop:[{l:['gpL','gpR']}],
  // 2026-11-12: faces the lens (yaw -40) from slightly above so the pull to a T happens ACROSS
  // the screen (in near-profile it folded into the chest). FK arms stay dead straight through
  // the whole arc.
- A:{p:[0,55.4,0],yaw:-15,tw:0,s:[1,0],hf:0,aL:[90,3,90,3],aR:[90,-3,90,-3],lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
+ A:{p:[0,55.4,0],yaw:-15,tw:0,s:[1,0],hf:0,aL:[90,3,90,3],aR:[90,-3,90,-3],lL:[-2,-6,2,-5],lR:[2,6,-2,5],gL:90,gR:90},
  B:{p:[0,55.4,0],yaw:-15,tw:0,s:[1,0],hf:0,aL:[90,-86,90,-86],aR:[90,86,90,86],lL:[-2,-6,2,-5],
-    lR:[2,6,-2,5]}},
+    lR:[2,6,-2,5],gL:90,gR:90}},
 
 {n:"Side plank",sets:2,reps:"30 sec",each:true,cyc:4.2,cam:18,pin:"LR",
  how:"On your forearm, elbow under the shoulder, feet stacked. Lift the hips until head to heels is one straight line, and hold — keep breathing.",

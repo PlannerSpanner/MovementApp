@@ -34,7 +34,7 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
   // authored foot contact (eng2.js footAt): blend when either key carries it
-  ['fpL','fpR','fyL','fyR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
+  ['fpL','fpR','fyL','fyR','gL','gR','pL','pR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}
@@ -42,7 +42,9 @@ const easeQ=t=>t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 function poseAt(m,ph){
   normalise(m);
   if(m.orb) return orbitPose(m.A,m.orb,ph*2*Math.PI);
-  const tri=ph<0.5?ph*2:(1-ph)*2;
+  // m.split (2026-11-12) = the fraction of the cycle spent going A -> B (default one half).
+  // Standing posture reset uses 0.4: a 4 s inhale out to B, a 6 s exhale back to A.
+  const sp=m.split||0.5, tri=ph<sp?ph/sp:(1-ph)/(1-sp);
   // A-M-B is ONE eased sweep (2026-11-12): the ease runs over the whole half cycle and M is
   // passed through at speed. Easing each segment separately stopped the figure dead at M.
   if(m.M){const e=easeQ(tri); return e<0.5 ? blend(m.A,m.M,e*2) : blend(m.M,m.B,(e-0.5)*2);}
@@ -52,6 +54,10 @@ function poseAt(m,ph){
 // which is the only way to open up anything that happens in the floor plane (prone Y-T-W).
 let CAM=40,PITCH=13;
 function setCam(m){CAM=m.cam||40;PITCH=m.pitch==null?13:m.pitch;}
+// m.tview (2026-11-12) = a second camera {cam,pitch} used only for the GET SET UP preview of
+// that movement (Prone Y-T-W: side-on while you get down, so face-down reads; the raised
+// camera once the work starts, so the letters read). fitOf / figMarkup / placeGround take
+// the view as an optional last argument; without it they use the movement's own camera.
 function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
   const x=v[0]*c+v[2]*s, z=-v[0]*s+v[2]*c;
   return {x,y:v[1]*Math.cos(R(PITCH))+z*Math.sin(R(PITCH)),d:z};}
@@ -67,10 +73,10 @@ const INK='#6d4f1c',LIMB_L='#c2a473',TORSO='#7d5a1e',BELLY='#7d5a1e',PROP='#b9a9
 // {db:[P,P,r]} dumbbell (handle line + filled end plates).
 function resPt(P,j,yaw,roll){
   if(Array.isArray(P))return P;
-  if(typeof P==='string')return j[P];
+  if(typeof P==='string')return j[P]||gripPt(j,P);
   let b;
-  if(P.m){const a=j[P.m[0]],c=j[P.m[1]];b=[(a[0]+c[0])/2,(a[1]+c[1])/2,(a[2]+c[2])/2];}
-  else b=j[P.j];
+  if(P.m){const a=j[P.m[0]]||gripPt(j,P.m[0]),c=j[P.m[1]]||gripPt(j,P.m[1]);b=[(a[0]+c[0])/2,(a[1]+c[1])/2,(a[2]+c[2])/2];}
+  else b=j[P.j]||gripPt(j,P.j);
   const o=P.o?rotY(roll?rotZb(P.o,roll):P.o,yaw||0):[0,0,0];
   return [b[0]+o[0],b[1]+o[1],b[2]+o[2]];
 }
@@ -78,6 +84,7 @@ function propShapes(m,j,pose){
   if(!m.prop)return [];
   const att=P=>!Array.isArray(P);   // any joint-referenced point = a held/attached implement
   return m.prop.map(p=>{
+    if(p.q)return {t:'q',pts:p.q.map(P=>resPt(P,j,pose.yaw,pose.roll)),att:false};
     if(p.l)return {t:'l',a:resPt(p.l[0],j,pose.yaw,pose.roll),b:resPt(p.l[1],j,pose.yaw,pose.roll),w:p.w||1,att:att(p.l[0])||att(p.l[1])};
     if(p.db)return {t:'db',a:resPt(p.db[0],j,pose.yaw,pose.roll),b:resPt(p.db[1],j,pose.yaw,pose.roll),r:p.db[2],att:att(p.db[0])||att(p.db[1])};
     return {t:'c',c:resPt(p.c[0],j,pose.yaw,pose.roll),r:p.c[1],f:p.f,att:att(p.c[0])};
@@ -87,12 +94,13 @@ function propShapes(m,j,pose){
 // define the frame (dumbbells, a bench, a wall). Off for the legacy apps so their
 // framing never shifts.
 const PROPFIT=false;
-function fitOf(m){setCam(m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
+function fitOf(m,v){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
   for(let i=0;i<=24;i++){const pose=poseAt(m,i/24),jn=solve(pose);
     const pts=[];
     for(const k in jn)pts.push([jn[k],0]);
     if(PROPFIT)propShapes(m,jn,pose).forEach(s=>{
-      if(s.t==='c')pts.push([s.c,s.r]);
+      if(s.t==='q')s.pts.forEach(v=>pts.push([v,0]));
+      else if(s.t==='c')pts.push([s.c,s.r]);
       else if(s.t==='db'){pts.push([s.a,s.r]);pts.push([s.b,s.r]);}
       else{pts.push([s.a,0]);pts.push([s.b,0]);}
     });
@@ -106,8 +114,8 @@ function fitOf(m){setCam(m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
 // (joint-attached) implement instead joins the painter's sort with its own depth,
 // floored just in front of the torso quad: it sits in a hand on the near side of the
 // body, so it may never vanish behind the torso (qa/daily.js hard invariant).
-function figMarkup(m,fit,ph){
-  setCam(m);
+function figMarkup(m,fit,ph,v){
+  setCam(v||m);
   const pose=poseAt(m,ph);
   const j=solve(pose), P={};
   for(const k in j){const q=project(j[k]);P[k]={x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};}
@@ -116,6 +124,8 @@ function figMarkup(m,fit,ph){
   const pw=(1.6*fit.sc).toFixed(2);
   const shapes=propShapes(m,j,pose);
   const mkProp=s=>{
+    // {q:[P,P,P,P]} = a pale filled patch on the floor (a mat), under everything
+    if(s.t==='q')return `<polygon points="${s.pts.map(v=>{const q=S(v);return q.x.toFixed(1)+','+q.y.toFixed(1);}).join(' ')}" fill="${PROP}" fill-opacity="0.3"/>`;
     if(s.t==='l'){const a=S(s.a),b=S(s.b);
       return `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${PROP}" stroke-width="${(1.6*s.w*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;}
     if(s.t==='db'){const a=S(s.a),b=S(s.b),r=(s.r*fit.sc).toFixed(1);
@@ -128,8 +138,20 @@ function figMarkup(m,fit,ph){
   const propMk=shapes.filter(s=>!s.att).map(mkProp).join('');
   const side=n=>n.endsWith('L')?LIMB_L:INK;
   const parts=LIMBS.map(([x,y],i)=>({t:'l',a:P[x],b:P[y],d:(P[x].d+P[y].d)/2,col:side(y),w:1,seg:SEGS_SKIN[i]}));
+  if(SKIN){
+    // far-limb narrowing, then feet and hands as projected 3D shapes (eng2.js)
+    parts.forEach((p,i)=>{p.k=farK(p.d,parts[i<4?(i+2)%4:4+(i-2)%4].d);});
+    // a hand closes into a fist when the movement hangs an implement from its grip point
+    if(!m._held){const ps=JSON.stringify(m.prop||'');m._held={L:ps.indexOf('gpL')>=0,R:ps.indexOf('gpR')>=0};}
+    const held=m._held;
+    [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
+      footPolys(j,sd).forEach(pl=>parts.push({t:'pg',pts:pl.map(S),col,d:(P['ft'+sd].d+P['toe'+sd].d)/2+0.01,w:0.9*parts[il].k}));
+      parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
+    });
+  }else{
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
   parts.push({t:'l',a:P.ftR,b:P.toeR,d:(P.ftR.d+P.toeR.d)/2,col:INK,w:0.8});
+  }
   // torso: the legacy quad, or -- when the pose carries a spine bend -- a path whose
   // side edges bow with the curvature (torsoEdges in eng2.js; corners unchanged)
   if(SKIN&&SKIN.torso){const e=torsoSkin(j,pose.bend,8),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
@@ -176,7 +198,8 @@ function figMarkup(m,fit,ph){
   parts.sort((x,y)=>x.d-y.d);
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
-    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc)}" fill="${p.col}"/>`;
+    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k)}" fill="${p.col}"/>`;
+    if(p.t==='pg')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${p.col}" stroke="${p.col}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${p.col}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
     if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
     if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
@@ -185,7 +208,7 @@ function figMarkup(m,fit,ph){
     return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${INK}"/>`;}).join('');
 }
 const layer=document.getElementById('layer'), shadowEl=document.getElementById('shadow');
-function drawFig(m,fit,ph){layer.innerHTML=figMarkup(m,fit,ph);}
+function drawFig(m,fit,ph,v){layer.innerHTML=figMarkup(m,fit,ph,v);}
 // the floor is a fixed plane: its ellipse is placed once per movement and never moves
 let mirrorOn=false;
 function applyMirror(on){
@@ -195,8 +218,8 @@ function applyMirror(on){
   shadowEl.setAttribute('cx',(on?100-groundCx:groundCx).toFixed(2));
 }
 let groundCx=50;
-function placeGround(m,fit){
-  setCam(m);
+function placeGround(m,fit,v){
+  setCam(v||m);
   const j=solve(poseAt(m,0));
   const pts=['ftL','ftR','toeL','toeR','haL','haR','knL','knR'].map(k=>j[k]).filter(p=>p[1]>89.5);
   let gx=0,gz=0;
@@ -208,7 +231,7 @@ function placeGround(m,fit){
   shadowEl.setAttribute('rx','40');
   shadowEl.setAttribute('ry',(40*Math.sin(R(PITCH))).toFixed(2));
 }
-MOVES.forEach(m=>m.fit=fitOf(m));
+MOVES.forEach(m=>{m.fit=fitOf(m);if(m.tview)m.fitT=fitOf(m,m.tview);});
 
 // ---------- timer ----------
 const $=id=>document.getElementById(id);
@@ -598,17 +621,19 @@ if(window.addEventListener){
 let t0=performance.now(),last=0,curFit=null,brPh=0;
 (function loop(now){
   if(now-last>30){last=now;const m=SEGS[idx].m;
-    if(curFit!==m.fit){curFit=m.fit;placeGround(m,m.fit);applyMirror(false);}
+    const tv=(TR_ALL&&SEGS[idx].trans&&m.tview)?m.tview:null, fit=tv?m.fitT:m.fit;
+    if(curFit!==fit){curFit=fit;placeGround(m,fit,tv);applyMirror(false);}
     // TR_ALL gaps hold the upcoming movement's A keyframe as a static preview
     const ph=(TR_ALL&&SEGS[idx].trans)?0:((now-t0)/1000%m.cyc)/m.cyc;
     // breath-tempo audio on flagged movements: cycle wrap = inhale start (rising),
     // halfway = exhale start (falling). Only while the timer runs and audio exists.
     if(running&&m.br&&!SEGS[idx].trans&&actx){
-      if(ph<brPh)breathTone(196,294,m.cyc*0.42);
-      else if(brPh<0.5&&ph>=0.5)breathTone(294,196,m.cyc*0.48);
+      const sp=m.split||0.5;   // inhale = A -> B, exhale = B -> A (poseAt)
+      if(ph<brPh)breathTone(196,294,m.split?m.cyc*sp*0.9:m.cyc*0.42);
+      else if(brPh<sp&&ph>=sp)breathTone(294,196,m.split?m.cyc*(1-sp)*0.9:m.cyc*0.48);
     }
     brPh=ph;
-    drawFig(m,m.fit,ph);}
+    drawFig(m,fit,ph,tv);}
   requestAnimationFrame(loop);
 })(performance.now());
 timeLeft=MOVES[0].dur;

@@ -6,8 +6,8 @@ const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..')
 const h=fs.readFileSync(path.join(ROOT,'strength.html'),'utf8');
 const js=h.split('<script>')[1].split('</script>')[0];
 const core=js.slice(0,js.indexOf('// ---- DOM ----'));
-const ctx=new Function(core+'\nreturn {WK_A,WK_B,solve,poseAt,propShapes,fitOf,figMarkup,TORSO,PROP,freshChecks,dayKey};')();
-const {WK_A,WK_B,solve,poseAt,propShapes}=ctx;
+const ctx=new Function(core+'\nreturn {WK_A,WK_B,solve,poseAt,propShapes,fitOf,figMarkup,TORSO,PROP,freshChecks,dayKey,gripPt};')();
+const {WK_A,WK_B,solve,poseAt,propShapes,gripPt}=ctx;
 const SEGS=[['pelvis','chest',13],['chest','neck',13],['neck','head',9],
  ['hpL','knL',19],['knL','ftL',19],['hpR','knR',19],['knR','ftR',19],
  ['shL','elL',13],['elL','haL',13],['shR','elR',13],['elR','haR',13],
@@ -51,7 +51,7 @@ function checkMove(m){
     (GRIP[m.n]||[]).forEach(g=>{
       const s=propShapes(m,j,pose)[g.i];
       g.hands.forEach((hn,hi)=>{
-        const hd=j[hn];
+        const hd=gripPt(j,'gp'+hn.slice(-1));   // implements sit in the fist, 3.4 beyond the wrist (2026-11-12)
         let d;
         if(g.ends)d=dist(hd,hi===0?s.a:(g.hands.length>1?s.b:s.a));
         else if(g.seg)d=dSeg(hd,s.a,s.b);

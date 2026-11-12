@@ -169,15 +169,16 @@ let SKIN=null;
 const smooth=x=>x*x*(3-2*x);
 // half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
 // with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
-function limbHalf(seg,t){
+function limbHalf(seg,t,k){
   const S=SKIN; if(!S) return 1.5;
   const pr=S[seg],prox=seg==='upper'||seg==='thigh',r0=(prox?S.joint:S.mid)/2,r1=(prox?S.mid:S.tip)/2,rm=pr.w/2;
   const at=Math.max(0.05,Math.min(0.95,pr.at));
-  return t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+  return (k||1)*(t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at)));
 }
 // screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
-function limbD(a,b,seg,sc){
+function limbD(a,b,seg,sc,k){
   const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';
+  sc*=(k||1);   // k = far-limb narrowing (farK); the centre line is untouched
   const r0=(prox?S.joint:S.mid)*sc/2, r1=(prox?S.mid:S.tip)*sc/2, rm=pr.w*sc/2;
   const at=Math.max(0.05,Math.min(0.95,pr.at));
   const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
@@ -192,6 +193,83 @@ function limbD(a,b,seg,sc){
   return 'M'+Lp.join('L')+`A${r1.toFixed(2)},${r1.toFixed(2)} 0 0 0 ${Rp[0]}L`+Rp.slice(1).join('L')
     +`A${r0.toFixed(2)},${r0.toFixed(2)} 0 0 0 ${Lp[0]}Z`;
 }
+// Far-limb narrowing (Will, 2026-11-12): of each left/right pair, the limb FARTHER from the
+// camera is drawn narrower (SKIN.far, e.g. 0.78), so two thighs seen side-on stay two limbs
+// instead of merging into one. The factor eases in over 4 units of depth difference, so
+// nothing pops as limbs trade places. dThis/dOther = camera depth of this limb and its twin.
+function farK(dThis,dOther){
+  const S=SKIN; if(!S||!S.far||S.far>=1) return 1;
+  return 1-(1-S.far)*smooth(Math.max(0,Math.min(1,(dOther-dThis)/4)));
+}
+// ---- feet and hands as small 3D objects (drawn only with a skin) ----
+// The foot is built in its own frame -- f heel-to-ball, up toward the shin, side -- as two
+// flat outlines: a PROFILE wedge (heel, arch, ball, toe) and a PLAN footprint (narrow
+// rounded heel widening to the forefoot). Both are projected by the camera and filled, so
+// side-on the wedge shows, from above the footprint shows, and in between you get both:
+// the shape comes from the foot's orientation, not from a fixed glyph. The ankle joint
+// (ft) is the heel on the floor and the toe joint is the BALL of the foot, exactly as the
+// authored contact numbers (fp/fy) place them; the toes beyond the ball lie flat when the
+// ball is on the floor, so a heel-up foot pivots about its ball.
+function footPolys(J,s){
+  const ft=J['ft'+s],ball=J['toe'+s],kn=J['kn'+s];
+  let f=sub(ball,ft); if(len(f)<1e-3) f=[0,0,1]; f=nrm(f);
+  const perp=(v,a)=>{const d=v[0]*a[0]+v[1]*a[1]+v[2]*a[2];return [v[0]-a[0]*d,v[1]-a[1]*d,v[2]-a[2]*d];};
+  let up=perp(sub(kn,ft),f); if(len(up)<2) up=perp([0,-1,0],f); if(len(up)<1e-3) up=perp([0,0,1],f); up=nrm(up);
+  const sd=cross(f,up);
+  const k=Math.max(0,Math.min(1,(ball[1]-91.4)/1.2));                 // ball on the floor -> toes flat
+  let fh=[f[0],0,f[2]]; fh=len(fh)<1e-3?f:nrm(fh);
+  const td=nrm([f[0]+(fh[0]-f[0])*k,f[1]+(fh[1]-f[1])*k,f[2]+(fh[2]-f[2])*k]);
+  let tu=perp(up,td); tu=len(tu)<1e-3?up:nrm(tu);
+  const P=(a,n,w)=>[ft[0]+f[0]*a+up[0]*n+sd[0]*(w||0),ft[1]+f[1]*a+up[1]*n+sd[1]*(w||0),ft[2]+f[2]*a+up[2]*n+sd[2]*(w||0)];
+  const T=(a,n,w)=>[ball[0]+td[0]*a+tu[0]*n+sd[0]*(w||0),ball[1]+td[1]*a+tu[1]*n+sd[1]*(w||0),ball[2]+td[2]*a+tu[2]*n+sd[2]*(w||0)];
+  const profile=[P(-1.5,0),P(-1.6,1.5),P(-0.5,2.9),P(1.1,2.9),P(3.4,1.9),P(6.4,1.05),T(1.7,0.6),T(2.2,0.25),T(1.8,0),
+                 P(6.4,0),P(4.7,0.2),P(2.9,0.65),P(1.0,0.15)];
+  const plan=[P(-1.5,0.1,0),P(-1.1,0.1,0.95),P(0.6,0.1,1.25),P(2.6,0.1,1.05),P(4.6,0.1,1.7),P(6.4,0.1,1.75),T(1.5,0.1,1.35),T(2.2,0.1,0.5),
+              T(2.2,0.1,-0.5),T(1.5,0.1,-1.35),P(6.4,0.1,-1.75),P(4.6,0.1,-1.7),P(2.6,0.1,-1.05),P(0.6,0.1,-1.25),P(-1.1,0.1,-0.95)];
+  return [profile,plan];
+}
+// The hand is one flat mitten continuing the forearm, with the thumb as a bulge on one edge.
+// Grip (pose gL/gR, degrees about the forearm): 0 = NEUTRAL, thumb on the upper-arm side of
+// the elbow's bend plane (thumb up in a handshake, thumbs forward with the arms hanging);
+// 90 = PRONATED, thumb turned toward the body's midline; negative would be supinated, which
+// Will's distal-bicep rule forbids and the audit rejects. Because the mitten is flat, its
+// drawn width and the side its thumb sits on both change with the grip.
+function handFrame(J,s,g,surf){
+  const el=J['el'+s],ha=J['ha'+s],sh=J['sh'+s]; let u=nrm(sub(ha,el));
+  const lat=nrm(sub(J.shR,J.shL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);
+  const med=s==='L'?lat:[-lat[0],-lat[1],-lat[2]];
+  // A hand that would poke through the surface it rests on (the floor, or pose pL/pR = the
+  // height of a bench top) is laid FLAT on it instead: fingers along the surface in the
+  // forearm's compass direction (or the body's facing when the forearm is vertical), palm down.
+  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0;
+  if(over>0&&ha[1]<=S0+1.5){
+    let h=[u[0],0,u[2]]; if(len(h)<0.35) h=[fw[0],0,fw[2]]; if(len(h)<1e-3) h=[0,0,1]; h=nrm(h);
+    const dy=Math.max(0,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
+    u=[h[0]*k,dy,h[2]*k];
+    let t=[med[0],0,med[2]]; const d=t[0]*u[0]+t[2]*u[2]; t=[t[0]-u[0]*d,0,t[2]-u[2]*d]; if(len(t)<1e-3) t=cross(u,[0,1,0]);
+    return {ha,u,t:nrm(t)};
+  }
+  const perp=(v)=>{const d=v[0]*u[0]+v[1]*u[1]+v[2]*u[2];return [v[0]-u[0]*d,v[1]-u[1]*d,v[2]-u[2]*d];};
+  let w=perp(sub(sh,el)); const b=perp(fw); w=[w[0]+b[0]*0.35,w[1]+b[1]*0.35,w[2]+b[2]*0.35];
+  if(len(w)<1e-3) w=perp([0,-1,0]); if(len(w)<1e-3) w=perp([1,0,0]); w=nrm(w);
+  const c=cross(u,w),sg=(c[0]*med[0]+c[1]*med[1]+c[2]*med[2])>=0?1:-1;
+  return {ha,u,t:g?rotAxis(w,u,sg*R(g)):w};
+}
+// opt.fist: the hand is closed round an implement (a short rounded fist that the handle passes
+// through at the grip point) instead of the open mitten; opt.surf: see handFrame.
+function handPoly(J,s,g,opt){
+  const {ha,u,t}=handFrame(J,s,g||0,opt&&opt.surf);
+  const H=(a,b)=>[ha[0]+u[0]*a+t[0]*b,ha[1]+u[1]*a+t[1]*b,ha[2]+u[2]*a+t[2]*b];
+  if(opt&&opt.fist) return [H(-0.2,-1.2),H(1.4,-1.9),H(3.5,-1.9),H(4.6,-0.8),H(4.6,0.7),H(3.7,1.8),H(2.4,2.5),H(1.1,1.9),H(-0.2,1.2)];
+  return [H(-0.2,-1.0),H(1.3,-1.55),H(3.5,-1.6),H(5.3,-1.1),H(6.1,0),H(5.5,0.95),H(4.1,1.5),H(3.2,1.75),H(2.9,3.0),H(1.9,2.9),H(0.9,1.5),H(-0.2,1.0)];
+}
+// where an implement sits in the fist: 3.4 beyond the wrist along the forearm. Props may name
+// 'gpL'/'gpR' (alone or as {j:'gpL',o:[..]}) to hang from the grip instead of the wrist joint.
+function gripPt(J,k){
+  const s=k.slice(-1),el=J['el'+s],ha=J['ha'+s],u=nrm(sub(ha,el));
+  return [ha[0]+u[0]*3.4,ha[1]+u[1]*3.4,ha[2]+u[2]*3.4];
+}
+
 // the torso's two side edges with the skin's waist and chest factors applied about the
 // trunk's centre line (3D, before projection). n samples; works with or without bend.
 function torsoSkin(J,bend,n){

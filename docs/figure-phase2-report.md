@@ -2,54 +2,74 @@
 
 2026-11-12. Branch `figure-assessment`, nothing pushed.
 
-Every movement in Morning Flow, Daily 13 and Strength now passes its rubric, and the audit that proves it runs in the gauntlet. The skin is waiting on you: tune it on the [tuning page](tune.html) and press Export.
+Your skin is applied to both templates, with feet and hands as small 3D shapes, the two-camera Y-T-W and the 4-in, 6-out posture reset. The full audit passes with it. The skin has a measured cost at Live Activity size, listed below. Hands do not show grip direction at phone size; the implement does.
 
-## Where each step stands
+## What you asked for in this round
 
-| Step | Status |
+| Item | Status |
 |---|---|
-| 1. Audit in the gauntlet | Done. 259 checklist lines are executable tests; a broken line fails the build. |
-| 2. Four engine patches | Done. 50 of 59 movements rendered byte-identically after them; the 9 that changed were the 7 with a mid keyframe and the 2 side planks. |
-| 3. Skin tuning page | Built and served. **Waiting for your export.** |
-| 4. Pose fixes, app by app | Done. 36 of 37 movements changed (Dead bug passed as shipped). Each app was reviewed by a fresh reviewer until every movement came back shippable. |
-| 5. Apply the skin and re-audit | Not started: needs your export. The checks are written and dry-run on the presets (below). |
-| 6. Authored foot contact | Done. Heel-up and flat feet are authored numbers; no toe flips remain. |
+| 1. Apply the skin, re-audit | Done. `src/skin.json` is your export plus the far-limb factor. 261 of 261 rubric tests pass, no numeric fault. The skin check passes with 12 accepted costs. |
+| 2. Feet with a real shape | Done. A wedge from the side, a footprint from above, both projected from one 3D foot. Heel-up pivots on the ball. |
+| 3. Hands, and implement height | Done, with two findings you asked me to report: grip direction does not read from the hand at phone size, and the dumbbells still hang short of mid-thigh. No limb length changed. |
+| 4. Y-T-W on both cameras | Done. Setup preview side-on, work phase from above, mat under the body. |
+| 5. Posture reset breathing | Done. 10 s cycle, 4 s in and 6 s out, three breaths in the 30 s. The breath tone follows it. Session still 715 s. |
+| 6. Re-worded rubric lines | [The table](rewordings.html): original line, what the test checks, reason. |
+
+## The skin
+
+- **Far-limb narrowing.** I read "far-limb width multiplier" as: of each left/right pair, the limb farther from the camera is drawn narrower. I set it to 0.8 and it eases in over a few units of depth so nothing pops. No keyline. Say if you meant something else or want a different factor; it is one number, `far`, in `src/skin.json`.
+- **What narrowing does and does not do.** It gives depth and stops two side-by-side limbs reading as one slab. It does not help when the far limb is directly behind the near one: a narrower limb hides more completely. So I also turned five side-on lifts 14 to 18° off pure profile (RDL, Trap bar, Chest-supported row, Single-arm row, Bench dips), and Glute bridge 10°, so the far leg shows beside the near one.
+- **Contrast.** Left limbs are 3.1:1 or better on all eight stages; left against right is 3.4:1 or better. The stage colours are still placeholders.
+- **The web apps' own colours do not meet 3:1.** The 3:1 figure above is for the pale and dark stages of the new player. In the pages as they ship today, the left limb against the page is 1.9:1 in Morning Flow, 2.1:1 in Daily 13, 1.9:1 in Strength and 2.0 to 2.2:1 in the two prenatal apps. Darkening each left-limb colour about 35% toward the right-limb colour reaches 3.05:1 and leaves left against right at 2.2 to 3.0:1 (Flow `#6593a2`, Daily `#8f85b5`, Strength `#7f945c`). I did not change the themes: it alters each app's look and you asked about stages. One line each if you want it.
+- **Measured cost at 28 pt.** Against today's skin, 12 things got worse and I accepted them with a reason each (`qa/fig/skin-waivers.json`, and at the bottom of the [sheets page](sheets.html)):
+  - 8 are thumbnails where one limb fewer reads at the movement's worst phase. Six of those are a standing figure whose far arm now merges with the thicker trunk.
+  - 4 are a far limb mostly hidden behind a near one for part of the cycle (Plank's far thigh, Down dog's far thigh, the far forearm in two rows).
+  - The single worst thumbnail is the deep fold in Arm sweeps: 2 of 8 limbs read, against 3 today.
+- Your joint width (4.4) is wider than every limb's swell except the thigh's. That is most of why arms merge with the trunk at 28 pt. A narrower shoulder and hip would recover several of the 12.
+
+- **Review.** A fresh reviewer looked at all 37 sheets with the skin: "ship after fixes" on the first pass (planted hands went through the floor, Dead bug's toes pointed down, gripping hands were open), "ship" after those were fixed. Two things it called faint and I left: the daylight under the rear knee in the lunge and split squat is about 3 units and will be hard to see on a phone, and in broad front views the figure reads nearer 3 to 4 than 2 because of the wide shoulder and hip caps.
+
+## Hands, grip and implement height
+
+- **The hand** is one flat mitten continuing the forearm, with the thumb as a bulge on one edge. Its thumb side follows a grip number per pose: 0 neutral, 90 pronated. The audit fails the build if any pose turns a hand toward supination.
+- **Grip direction at phone size: it does not read from the hand.** On a phone the thumb bulge is 2 to 4 pixels and is usually under the implement. What reads is the implement: dumbbell handles running front to back (neutral) on rows, presses, the farmer hold and the pulldown handles; a bar across the body (pronated) on the RDL and the band. Nothing in the three apps shows an underhand grip. I did not add detail to force it.
+- **Implement height.** Implements now sit in the fist, 3.4 units beyond the wrist joint. Effect:
+
+| | Before the hand | With the hand | Real proportions (Drillis and Contini) |
+|---|---|---|---|
+| Dumbbell handle below the hip joint, standing | 0 (at the hip) | 3.3 units, 7 cm | 6.9 units, 15 cm |
+| Distance still to go to mid-thigh | 9.5 units | 6.2 units | 2.8 units |
+| RDL: arms back of plumb at the bottom | 11° | 5° | |
+| RDL: trunk hinge at the bottom | 64° | 53° | |
+| Trap bar: arms back of plumb at the bottom | 17° | 10° | |
+| Trap bar: trunk at the bottom | 65° | 54° | |
+
+- **Why the dumbbells are still high: it is not the arms.** Scaled to this figure's height (79 units), Drillis and Contini give shoulder-to-wrist 26.2 units; the figure has 26. The arms are right. The hip joint is low: 37.8 units above the floor against 41.9, because the trunk is 3.2 long (26 against 22.8) and the legs are about 4 short (the figure has no ankle height). Raising the hip joint 3 to 4 units would put the handle where it is on a person. That moves every pose in all five apps, so I have not done it. Your call.
+
+## Y-T-W and posture reset
+
+- **Y-T-W.** During GET SET UP the figure is side-on and holds the Y on the floor, so face-down reads. When the work starts the camera is above and the letters read. The mat is four floor lines under the body. It needed one small template feature: a movement can name a second camera for its setup preview.
+- **Posture reset.** The loop starts stacked, opens to the rib flare over a 4 s inhale and settles over a 6 s exhale. The movement is still about 4 cm of chest travel, so the tone carries most of it.
 
 ## The numbers
 
-- 259 of 259 executable rubric lines pass. 27 more lines need an eye and were judged on the sheets.
-- No joint under the floor, no missed hand or foot target, no jump between frames, in any of the 37 movements.
-- 11 judgement flags (a limb hidden behind the trunk, or pointing into the lens for an instant) are accepted with a written reason each, in `qa/fig/waivers.json`.
-- The list of known faults (`qa/fig/todo.json`) started at 158 and is empty.
-- Morning Flow is still 805 s and Daily 13 still 715 s. No movement name, duration or gap changed.
-- `npm run gauntlet` passes.
+- 261 of 261 executable rubric lines pass; 26 more are judged on the sheets.
+- No joint under the floor, no missed target, no jump between frames, no supinated grip, in any of the 37 movements.
+- 11 pose flags and 12 skin costs are accepted with written reasons.
+- Morning Flow 805 s, Daily 13 715 s. `npm run gauntlet` passes.
+- Every movement in all five apps now renders differently from main, because the skin applies everywhere, including Prenatal Stretch and Birth Prep. Their poses are untouched.
 
-## Needs you
+## Still needs you
 
-1. **Skin.** Tune and export. My dry run of the presets against today's skin: preset 1 is clean; preset 2 ("suggested") raises 9 flags, preset 3 raises 16. Almost all are the two thighs merging in lifts seen side-on (RDL, Trap bar, Chest-supported row, Bench dips, Single-arm row). Thinner thighs, or a wider gap between left and right tone, would clear them. Left-limb contrast is 3.1:1 or better on all eight stage colours I tried; those colours are still placeholders.
-2. **Prone Y-T-W.** With the raised camera each letter reads. It does not read as face-down: from above, nothing in a stick figure says prone rather than supine. You asked me to flag this, not choose. The side-on view kept the prone read and lost the letters.
-3. **Deep squats cue.** The text now says "Sink until your hips are just below your knees, heels down". That line is on-screen only; there was no clip to regenerate. The Plank hold setup line was re-recorded ("Turn over into a forearm plank. Elbows under your shoulders, one straight line."). Worth a listen.
-4. **Standing posture reset.** The rubric wants the exhale longer than the inhale. That is a timing change, so I left it.
-5. **Proportions.** The figure's arm is as long as its trunk and longer than its thigh. Three things follow and I did not change them: hanging dumbbells end at the hip joint, not mid-thigh; in both deadlifts the arms sit 11 to 17° back of vertical to keep the bar near the legs; on all fours with straight arms the back slopes up to the shoulders. Shorter arms would fix all three and touch every movement.
-6. **Chest opener swings.** The loop cannot alternate which arm is on top between cycles. The left arm is always on top.
-7. **Rubric lines I re-worded.** Where a test could not hold on this figure I changed the test and said why in `qa/fig/rubric.js`: the hip hand rests on the crest 5 above the joint; the split-squat front shin is tested only while the knee is bent; the floor press must be 1.3 times taller than wide on screen, not 2 times; a hanging hand is tested at hip height; the lunge heel is tested once the foot has landed. Say if any of these should go back.
-
-## What changed, in one line each
-
-The before and after loops for all 37 movements are below, each with a note. The three kinds of fix were:
-
-- **Squared to the body.** A dozen movements had feet, hands or hip travel laid out as if the figure faced straight ahead, while it was turned 14 to 24°. That skewed stances and tipped shins.
-- **On its side for real.** Side plank (both apps) and Clamshell now use the new root roll. Before, they were a face-down body seen from an angle.
-- **Seen from where it reads.** Y-T-W, 90/90, Chest opener, Face pull, Band pull-apart and others have a camera chosen so the movement crosses the screen. Per-movement camera pitch made this possible.
-
-Engine additions, all off unless a pose uses them: `roll`, `pitch`, shoulder tilt `st`, foot pitch `fpL`/`fpR`, toe-out `fyL`/`fyR`, a floor clamp, and one ease through mid keyframes. The skin code is in and switched off.
+1. **Skin cost.** Look at the Live Activity sizes with your export. If the arm-into-trunk merge bothers you, the lever is joint width.
+2. **Far-limb factor.** 0.8 is my choice, not yours.
+3. **Hip height.** Raise the hip joint to real proportions, or leave the dumbbells at upper thigh.
+4. **Web theme colours.** Darken the left-limb colour in the current pages to reach 3:1, or leave them until the native player.
+5. **Chest opener swings** still cannot alternate the top arm between cycles.
+6. **Listen** to the re-recorded Plank hold line and to the 4 and 6 breath tone.
 
 ## What is not proven
 
-- No phone test. I checked the pages in phone-sized Chromium and WebKit on this computer only.
-- The reviewers were other instances of me looking at eight stills per movement. They caught real faults (hip circles, side plank feet, pulldown elbows), but they are not you.
-- Prenatal Stretch and Birth Prep: their built files changed because they carry the shared engine. Every one of their 22 movements renders byte-identically to main at all 64 phases.
-
-## When you export a skin
-
-I copy it to `src/skin.json`, rebuild, run `node qa/fig/skin.js` (it then gates the build), re-run the full audit and the sheets with the new skin, and send the result back through a reviewer before committing.
+- No phone test. Pages were checked in phone-sized Chromium and WebKit on this computer.
+- The reviewers are other instances of me looking at eight stills per movement.
+- The breath tone timing is tested for scheduling, not by ear.
