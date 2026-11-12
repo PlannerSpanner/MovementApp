@@ -1,13 +1,13 @@
 // Frame pins: a hash of every movement's rendered markup (fit + 64 phases) for all five
-// apps, from the real engine + data. The committed qa/fig/frames.json is the record of what
+// apps, from the real engine + data. The committed qa/fig/pins.json is the record of what
 // every movement looks like; an engine or data edit that changes a movement nobody meant to
 // touch shows up here as a changed hash, by name.
-//   node qa/fig/frames.js            check against qa/fig/frames.json (exit 1 on any change)
+//   node qa/fig/frames.js            check against qa/fig/pins.json (exit 1 on any change)
 //   node qa/fig/frames.js --update   rewrite it (do this in the same commit as the intended change)
 //   node qa/fig/frames.js --diff     list changed movements, exit 0
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const {load,APPS}=require('./engine');
-const FILE=path.join(__dirname,'frames.json'), N=64;
+const FILE=path.join(__dirname,'pins.json'), N=64;
 function pins(){
   const out={};
   for(const app of Object.keys(APPS)){const E=load(app);
@@ -19,7 +19,7 @@ function pins(){
 }
 if(require.main===module){
   const now=pins(), arg=process.argv[2];
-  if(arg==='--update'){fs.writeFileSync(FILE,JSON.stringify(now,null,1)+'\n');console.log('frames.json updated ('+Object.keys(now).length+' movements)');process.exit(0);}
+  if(arg==='--update'){fs.writeFileSync(FILE,JSON.stringify(now,null,1)+'\n');console.log('pins.json updated ('+Object.keys(now).length+' movements)');process.exit(0);}
   const was=fs.existsSync(FILE)?JSON.parse(fs.readFileSync(FILE,'utf8')):{};
   const keys=[...new Set([...Object.keys(was),...Object.keys(now)])].sort();
   const ch=keys.filter(k=>was[k]!==now[k]);
