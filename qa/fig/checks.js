@@ -14,7 +14,8 @@
 //  ankle      the ankle joint is outside the drawn foot outline in some frame
 //  shinPast   the end of the shin stroke pokes out past the foot outline
 //  footShape  the foot outline crosses itself, or has a corner sharper than TURN_LIMIT
-//  heel       heel length is outside 18-30% of the foot, or the foot is not 11-13 units long
+//  heel       heel length is outside 10-30% of the foot, or the foot is not 10-13 units long
+//  heelBack   in the foot's profile the back of the heel is more than 0.5 behind the shin's back edge
 //  arch       the raised arch is not on the medial (big-toe) side of that foot
 //  sole       the foot faces the wrong way for its contact: sole down when the shin stands on it,
 //             TOP of the foot down when the shin lies along the floor (kneeling, prone), toes
@@ -23,7 +24,7 @@
 // or waived with a reason in waivers.json.
 const {N,FLOOR,sub,dot,len,nrm,cross,deg,angV:ang,sample}=require('./lib');
 const SEG=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
-const HARD=['floor','miss','pop','supinated','ankle','shinPast','sole','footShape','heel','arch'];
+const HARD=['floor','miss','pop','supinated','ankle','shinPast','sole','footShape','heel','heelBack','arch'];
 // sharpest corner allowed anywhere on a foot outline, in degrees of turning between two edges
 const TURN_LIMIT=50;
 // feet whose toes are tucked under (ball on the floor, heel up) while the shin is near the floor
@@ -72,7 +73,7 @@ function audit(E,m){
     const near=(p,pl)=>Math.min(...pl.map((c,i)=>dSeg2(p,c,pl[(i+1)%pl.length])));
     const inside=(p,pl,g)=>inPoly(p,pl)||near(p,pl)<g;
     const segX=(a,b,c,d)=>{const o=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);const d1=o(a,b,c),d2=o(a,b,d),d3=o(c,d,a),d4=o(c,d,b);return d1*d2<-1e-9&&d3*d4<-1e-9;};
-    ['L','R'].forEach((sd,si)=>{let out=0,outPh=0,past=0,pastPh=0,bad=0,badPh=0,why='',xs=0,crossPh=0,turn=0,turnPh=0,archBad=0,heelBad='';
+    ['L','R'].forEach((sd,si)=>{let out=0,outPh=0,past=0,pastPh=0,bad=0,badPh=0,why='',xs=0,crossPh=0,turn=0,turnPh=0,archBad=0,heelBad='',heelBack=-9;
       fr.forEach(f=>{const od=si?'L':'R',dS=(E.project(f.j['kn'+sd]).d+E.project(f.j['ft'+sd]).d)/2,dO=(E.project(f.j['kn'+od]).d+E.project(f.j['ft'+od]).d)/2,k=E.farK(dS,dO);
         const pl=E.footOutline(f.j,sd,sp,sc,k),A=sp(f.j['ft'+sd]),K=sp(f.j['kn'+sd]),n0=pl.length;
         // 1. a simple shape: no self-crossing, no corner sharper than the turning limit
@@ -83,14 +84,20 @@ function audit(E,m){
         // 2. the ankle and the whole end of the shin stroke, cap included, are inside the foot
         if(!inside(A,pl,0)){if(!out)outPh=f.ph;out++;}
         const dx=A.x-K.x,dy=A.y-K.y,l=Math.hypot(dx,dy),r=E.limbHalf('shin',1,k)*sc;
-        if(l>0.5){const ux=dx/l,uy=dy/l;for(let a=-180;a<180;a+=15){const c=Math.cos(a*Math.PI/180),s2=Math.sin(a*Math.PI/180);
-          const pt={x:A.x+r*(ux*c-uy*s2),y:A.y+r*(ux*s2+uy*c)};
-          if((pt.x-A.x)*ux+(pt.y-A.y)*uy<-0.02*r)continue;              // the half of the cap that is shin body, not end
-          if(!inside(pt,pl,0.12*sc)){const d=near(pt,pl);if(d>past){past=d;pastPh=f.ph;}}}}
+        if(l>0.5){const ux=dx/l,uy=dy/l;[-1,-0.5,0,0.5,1].forEach(t=>{const pt={x:A.x-uy*r*t,y:A.y+ux*r*t};   // the flat end of the shin, corner to corner
+          if(!inside(pt,pl,0.12*sc)){const d=near(pt,pl);if(d>past){past=d;pastPh=f.ph;}}});}
         // 3. proportions and the arch, from the landmarks themselves
         const L=E.footLandmarks(f.j,sd,k),F=L.F,al=p=>dot(sub(p,F.ft),F.f),hh=p=>dot(sub(p,F.ft),F.n),ww=p=>dot(sub(p,F.ft),cross(F.f,F.n))*(sd==='L'?1:-1);
         const rear=Math.min(...L.pts.map(q=>al(q.p)-q.r)),front=Math.max(...L.pts.map(q=>al(q.p)+q.r)),ratio=-rear/(front-rear);
-        if(ratio<0.18||ratio>0.30||front-rear<11||front-rear>13)heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
+        if(ratio<0.10||ratio>0.30||front-rear<10||front-rear>13)heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
+        // heel flush with the shin: measured in the foot's own profile (along the foot, behind the ankle),
+        // the back of the heel may reach at most half a unit behind the shin's back edge
+        const hbk=Math.max(...L.pts.filter(q=>/^heel|^ach/.test(q.id)).map(q=>-(al(q.p)-q.r)))-L.tip;
+        if(hbk>heelBack)heelBack=hbk;
+        // and against the ACTUAL shin whenever it stands within 15 deg of square on the foot: heel
+        // landmarks, in the foot's side plane, measured square to the shin axis, behind it
+        {const us=nrm(sub(F.ft,f.j['kn'+sd]));if(Math.abs(dot(F.f,us))<0.26){for(const q of L.pts.filter(q=>/^heel/.test(q.id))){let v=sub(q.p,F.ft);const dm=dot(v,L.med);v=[v[0]-L.med[0]*dm,v[1]-L.med[1]*dm,v[2]-L.med[2]*dm];
+          const d=dot(v,us),pp=[v[0]-us[0]*d,v[1]-us[1]*d,v[2]-us[2]*d];if(dot(pp,F.f)<0){const ex=Math.hypot(pp[0],pp[1],pp[2])+q.r-L.tip;if(ex>heelBack)heelBack=ex;}}}}
         const g=id=>L.pts.find(q=>q.id===id),aT=g('archT'),eL=g('edgeL');
         if(!(ww(aT.p)>0.5&&ww(eL.p)<-0.5&&ww(g('mtp1').p)>0&&ww(g('mtp5').p)<0&&(hh(aT.p)-aT.r)-(hh(eL.p)-eL.r)>0.5))archBad++;
         // 4. contact type
@@ -107,8 +114,9 @@ function audit(E,m){
       if(xs)add('footShape',sd+':cross',`the ${nm} foot outline crosses itself in ${xs} of ${N} frames (first at ph ${crossPh.toFixed(2)})`);
       if(turn>TURN_LIMIT)add('footShape',sd+':corner',`the ${nm} foot outline has a ${turn.toFixed(0)} deg corner at ph ${turnPh.toFixed(2)} (limit ${TURN_LIMIT})`);
       if(out)add('ankle',sd,`ft${sd} is outside its foot outline in ${out} of ${N} frames (first at ph ${outPh.toFixed(2)})`);
-      if(past>0.05*sc)add('shinPast',sd,`the ${nm} shin end, cap included, pokes ${past.toFixed(2)} screen units out of the foot at ph ${pastPh.toFixed(2)}`);
-      if(heelBad)add('heel',sd,`${nm} foot: ${heelBad} (published: heel about a quarter of a 12-unit foot)`);
+      if(past>0.05*sc)add('shinPast',sd,`the ${nm} shin's flat end pokes ${past.toFixed(2)} screen units out of the foot at ph ${pastPh.toFixed(2)}`);
+      if(heelBad)add('heel',sd,`${nm} foot: ${heelBad}`);
+      if(heelBack>0.5)add('heelBack',sd,`${nm} foot: the back of the heel is ${heelBack.toFixed(2)} behind the back edge of the shin in profile (limit 0.5)`);
       if(archBad)add('arch',sd,`${nm} foot: the raised arch is not on the medial (big-toe) side, or the outer edge is not low, in ${archBad} of ${N} frames`);
       if(bad)add('sole',sd,`${nm} foot: ${why} (${bad} of ${N} frames, first at ph ${badPh.toFixed(2)})`);});}
   for(const k in fr[0].j){const st=fr.map((f,i)=>len(sub(fr[(i+1)%N].j[k],f.j[k])));

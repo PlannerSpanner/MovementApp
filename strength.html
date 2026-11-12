@@ -86,7 +86,7 @@ h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase
   <div id="listB"></div>
 </div>
 <script>
-const BUILDV='d20c1df311';
+const BUILDV='cdb3150080';
 const WK_A=[
 {n:"Goblet squat",sets:3,reps:"8",cyc:3.0,pin:"LR",
  how:"Hold one dumbbell vertically against your chest, elbows tucked under it. Sit down and back until your elbows brush the insides of your knees, then drive back up through the whole foot.",
@@ -429,7 +429,7 @@ function limbHalf(seg,t,k){
   return (k||1)*(t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at)));
 }
 // screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
-function limbD(a,b,seg,sc,k){
+function limbD(a,b,seg,sc,k,flat){
   const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';
   sc*=(k||1);   // k = far-limb narrowing (farK); the centre line is untouched
   const r0=(prox?S.joint:S.mid)*sc/2, r1=(prox?S.mid:S.tip)*sc/2, rm=pr.w*sc/2;
@@ -443,7 +443,9 @@ function limbD(a,b,seg,sc,k){
     const cx=a.x+dx*t,cy=a.y+dy*t;
     Lp.push((cx+nx*h).toFixed(2)+','+(cy+ny*h).toFixed(2));
     Rp.unshift((cx-nx*h).toFixed(2)+','+(cy-ny*h).toFixed(2));}
-  return 'M'+Lp.join('L')+`A${r1.toFixed(2)},${r1.toFixed(2)} 0 0 0 ${Rp[0]}L`+Rp.slice(1).join('L')
+  // flat = a square-cut far end (the shin: its end is buried inside the foot, so there is no
+  // round cap to escape the foot outline and nothing has to bulge to hide one)
+  return 'M'+Lp.join('L')+(flat?`L${Rp[0]}L`:`A${r1.toFixed(2)},${r1.toFixed(2)} 0 0 0 ${Rp[0]}L`)+Rp.slice(1).join('L')
     +`A${r0.toFixed(2)},${r0.toFixed(2)} 0 0 0 ${Lp[0]}Z`;
 }
 // Far-limb narrowing (Will, 2026-11-12): of each left/right pair, the limb FARTHER from the
@@ -495,15 +497,16 @@ function footFrame(J,s){
 // hull of the projected balls), so the silhouette is right from the side, from above, from
 // the front and from any angle between, with no fixed 2D glyph.
 // Proportions, scaled to this figure (79 units tall; Drillis and Contini: foot length
-// 0.152 H = 12.0, foot breadth 0.055 H = 4.3): heel 2.9 behind the ankle (0.24 of the foot
-// length), ball of the foot at 0.73, breadth 4.6 across the toe joints, inner arch raised
+// 0.152 H = 12.0, foot breadth 0.055 H = 4.3). The heel reaches only 1.55 behind the ankle,
+// flush with the back of the shin (Will's eye on the phone overruled the 0.24-of-length heel,
+// which bulged behind the leg), so the drawn foot is 10.7 long; ball of the foot at 6.4, breadth 4.6 across the toe joints, inner arch raised
 // 0.8 off the sole (about 6% of foot length) with the OUTER edge low and nearly flat.
 // The ankle height is 1.6, half the published 0.039 H: the skeleton's ankle joint sits on
 // the floor line, and a taller foot would be drawn under the floor.
 // The toe joint of the skeleton is the ball of the foot (big-toe joint line), as the
 // authored contact numbers place it; with the sole down and the ball planted the toes lie
 // flat beyond it, so a heel-up foot pivots on its ball.
-const FOOT={len:12.0,heel:2.9,h0:-1.6};
+const FOOT={len:10.7,h0:-1.6};
 function footLandmarks(J,s,k){
   const F=footFrame(J,s),ft=F.ft,ball=F.ball,f=F.f,n=F.n,mg=s==='L'?1:-1;
   const med=[F.sd[0]*mg,F.sd[1]*mg,F.sd[2]*mg];
@@ -513,18 +516,29 @@ function footLandmarks(J,s,k){
   const dt=n[0]*td[0]+n[1]*td[1]+n[2]*td[2]; let tu=[n[0]-td[0]*dt,n[1]-td[1]*dt,n[2]-td[2]*dt]; tu=len(tu)<1e-3?n:nrm(tu);
   const P=(a,h,w)=>[ft[0]+f[0]*a+n[0]*h+med[0]*w,ft[1]+f[1]*a+n[1]*h+med[1]*w,ft[2]+f[2]*a+n[2]*h+med[2]*w];
   const T=(a,h,w)=>[ball[0]+td[0]*a+tu[0]*h+med[0]*w,ball[1]+td[1]*a+tu[1]*h+med[1]*w,ball[2]+td[2]*a+tu[2]*h+med[2]*w];
-  const h0=FOOT.h0,tip=((SKIN&&SKIN.tip)||2.3)*(k||1)/2;
+  const h0=FOOT.h0,tip=((SKIN&&SKIN.tip)||2.3)*(k||1)/2,hb=tip+0.2;
   const pts=[
-    {id:'ankle',p:P(0,0,0),r:tip+0.5},                         // encloses the shin's end cap
-    {id:'malM',p:P(0.1,0.15,1.0),r:0.55},{id:'malL',p:P(-0.3,-0.15,-1.0),r:0.55},   // inner and outer ankle bones
-    {id:'heelB',p:P(-2.2,h0+0.9,0),r:0.7},                     // back of the heel
-    {id:'heelM',p:P(-1.3,h0+0.6,0.7),r:0.6},{id:'heelL',p:P(-1.3,h0+0.6,-0.8),r:0.6},   // heel pad
+    {id:'ankle',p:P(0,0,0),r:0.6},
+    {id:'malM',p:P(0.1,0.15,tip-0.25),r:0.55},{id:'malL',p:P(-0.3,-0.15,-(tip-0.25)),r:0.55},   // inner and outer ankle bones
+    // The back of the heel is nearly FLUSH with the back of the shin (the Achilles line): it
+    // reaches 0.2 behind the shin's back edge when the shin is square on the foot (Will, 2026-11-12: at most half a unit, which then holds up to a 15 deg lean), with a
+    // small rounded corner at the bottom. hb = how far behind the ankle that is.
+    {id:'heelB',p:P(-(hb-0.55),h0+0.75,0),r:0.55},             // back of the heel
+    {id:'heelM',p:P(-(hb-0.6),h0+0.5,0.65),r:0.5},{id:'heelL',p:P(-(hb-0.6),h0+0.5,-0.75),r:0.5},   // heel pad
     {id:'archT',p:P(2.5,h0+1.35,1.05),r:0.5},                  // top of the inner arch, off the floor
     {id:'edgeL',p:P(2.4,h0+0.45,-1.5),r:0.45},                 // the outside edge, low
     {id:'instep',p:P(2.7,0.35,0.1),r:0.6},
     {id:'mtp1',p:P(6.4,h0+0.6,1.5),r:0.6},{id:'mtp5',p:P(5.2,h0+0.5,-2.0),r:0.5},   // big-toe and little-toe joints
     {id:'toe1',p:T(2.35,h0+0.4,1.2),r:0.4},{id:'toe2',p:T(2.15,h0+0.4,0.2),r:0.4},{id:'toe5',p:T(1.0,h0+0.35,-1.9),r:0.35}];  // toe tips
-  return {F,med,pts,archU:P(2.6,h0+0.8,1.0),heelSole:P(-1.3,h0,0.7),ballSole:P(6.4,h0,1.5)};
+  // the shin's own cross-section at the ankle, as six small balls round the shin axis: the foot
+  // is exactly as thick as the shin where they meet (0.15 more, no bulge), whatever angle the
+  // foot makes with the shin, so the shin's square-cut end always lies inside the outline
+  {const us=nrm(sub(ft,J['kn'+s])),d0=us[0]*n[0]+us[1]*n[1]+us[2]*n[2];
+   let e1=[n[0]-us[0]*d0,n[1]-us[1]*d0,n[2]-us[2]*d0]; if(len(e1)<0.2){const d1=us[0]*f[0]+us[1]*f[1]+us[2]*f[2];e1=[f[0]-us[0]*d1,f[1]-us[1]*d1,f[2]-us[2]*d1];}
+   e1=nrm(e1); const e2=cross(us,e1),rr=tip-0.3;
+   for(let a=0;a<6;a++){const c=Math.cos(a*Math.PI/3)*rr,q=Math.sin(a*Math.PI/3)*rr;
+     pts.push({id:'ring',p:[ft[0]+e1[0]*c+e2[0]*q,ft[1]+e1[1]*c+e2[1]*q,ft[2]+e1[2]*c+e2[2]*q],r:0.45});}}
+  return {F,med,pts,tip,archU:P(2.6,h0+0.8,1.0),heelSole:P(-(hb-0.6),h0,0.65),ballSole:P(6.4,h0,1.5)};
 }
 // resample a closed polygon evenly along its length and relax it, so the outline is one soft
 // curve with no facet where the hull steps from one landmark to the next
@@ -555,7 +569,7 @@ function footOutline(J,s,pr,sc,k){
   let tc=cross(rx,ry); const tl=len(tc)||1; tc=[tc[0]/tl,tc[1]/tl,tc[2]/tl];
   const face=Math.abs(L.med[0]*tc[0]+L.med[1]*tc[1]+L.med[2]*tc[2]);
   // which side of the foot is toward the viewer: compare the depth order of the two ankle bones
-  const dM=pr(L.pts[1].p),dL=pr(L.pts[2].p),near=(dM.d!==undefined&&dL.d!==undefined)?(dM.d>=dL.d):true;
+  const dM=pr(L.pts.find(q=>q.id==='malM').p),dL=pr(L.pts.find(q=>q.id==='malL').p),near=(dM.d!==undefined&&dL.d!==undefined)?(dM.d>=dL.d):true;
   const m=near?Math.max(0,Math.min(1,(face-0.3)/0.45)):0;
   if(m>0.02){const hs=pr(L.heelSole),bs=pr(L.ballSole),q=pr(L.archU),tol=0.45*sc,n=H.length;
     const on=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l2));
@@ -834,7 +848,7 @@ function figMarkup(m,fit,ph){
   parts.sort((x,y)=>x.d-y.d);
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
-    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k)}" fill="${p.col}"/>`;
+    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin')}" fill="${p.col}"/>`;
     if(p.t==='pg'){   // feet and hands: a smooth closed curve through the edge midpoints, each vertex a control point
       const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
       let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);

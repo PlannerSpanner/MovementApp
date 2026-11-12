@@ -75,7 +75,7 @@ APPS.forEach(([k,label])=>{const B=MK['B_'+k](),A=MK['A_'+k]();const h=document.
     cards.appendChild(card);});});
 // ---- close-ups: same engines, a cropped viewBox, optionally another camera ----
 const CLOSE=[
- ['Both feet from the side','daily','Standing posture reset','feet:26',{cam:74,pitch:6},'After only (the old engine had one camera). Near foot: its outer edge, flat on the floor. A modest heel behind and below the ankle; the shin is narrowest just above it.'],
+ ['Both feet from the side','daily','Standing posture reset','feet:26',{cam:74,pitch:6},'After only (the old engine had one camera). The back of the heel is flush with the back of the shin, 0.2 units behind its edge, with a small rounded corner at the bottom. The shin ends square inside the foot.'],
  ['Both feet from the other side','daily','Standing posture reset','feet:26',{cam:254,pitch:6},'After only.'],
  ['Both feet from the front','daily','Standing posture reset','feet:30',{cam:344,pitch:10},'After only.'],
  ['Both feet, three-quarter','daily','Standing posture reset','feet:30',{cam:30,pitch:18},'After only. The far foot shows its inner side, so its arch lifts off the floor; the near foot shows its outer edge, which stays flat.'],

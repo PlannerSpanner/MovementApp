@@ -4,6 +4,17 @@
 
 Your skin is applied to both templates, with feet and hands as small 3D shapes, the two-camera Y-T-W and the 4-in, 6-out posture reset. The full audit passes with it. The skin has a measured cost at Live Activity size, listed below. Hands do not show grip direction at phone size; the implement does.
 
+## Heel, fourth pass
+
+You passed the feet except the side view: the heel bulged back and down behind the leg.
+
+- **Heel moved forward.** Its back edge now sits 0.2 units behind the back edge of the shin when the shin is square on the foot, and stays within your half-unit limit up to a 15° lean, with a small rounded corner at the bottom. The heel pad is reduced to match.
+- **No inflated ankle.** The shin now ends in a square cut buried in the foot. In place of the oversized ankle ball, the foot carries the shin's own cross-section at the ankle (0.15 wider than the shin), so nothing escapes and nothing bulges.
+- **New check:** in the foot's profile the back of the heel may reach at most 0.5 behind the shin's back edge, both feet, every frame; and the same measured square to the actual shin whenever the shin stands within 15° of square on the foot. Both pass in all 37 movements.
+- **Where the limit cannot hold:** when the shin leans well over or back from a flat foot, the heel is necessarily further behind the shin line, as on a real leg. Across every frame of every movement the worst case is 0.56 units. The check does not cover frames where the shin leans more than 15°.
+- **Consequence for proportions:** the heel is now about 13% of the drawn foot, and the foot is 10.5 units long, not 12. Your eye overruled the quarter-length heel I had taken from memory.
+- The side close-up of both feet is the first card under Close-ups.
+
 ## Feet, third pass: built from 3D landmarks
 
 You sent back the close-ups: jagged outline, a line end sticking out, a heel far too big, and an arch on both sides.

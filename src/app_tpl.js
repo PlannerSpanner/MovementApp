@@ -199,7 +199,7 @@ function figMarkup(m,fit,ph,v){
   parts.sort((x,y)=>x.d-y.d);
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
-    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k)}" fill="${p.col}"/>`;
+    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin')}" fill="${p.col}"/>`;
     if(p.t==='pg'){   // feet and hands: a smooth closed curve through the edge midpoints, each vertex a control point
       const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
       let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);
