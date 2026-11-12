@@ -18,3 +18,6 @@ audition/
 
 # local TTS virtualenv for tools/gen_cues.py (model files cache in %LOCALAPPDATA%/kokoro)
 tools/tts-venv/
+
+# local figure-assessment review page (built by proto/review/build.js, served on the LAN, never deployed)
+/review/

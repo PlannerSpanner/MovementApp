@@ -8,7 +8,7 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const SRC=path.join(__dirname,'..','..','src'),rd=f=>fs.readFileSync(path.join(SRC,f),'utf8');
 function rep(s,a,b,all){if(!s.includes(a))throw new Error('patch anchor missing: '+a);return all?s.split(a).join(b):s.replace(a,b);}
-function load(dataFile){
+function source(dataFile){   // patched engine + data + pure template, as one script (also inlined by proto/review/build.js)
   let eng=rd('eng2.js'),tpl=rd('app_tpl.js');tpl=tpl.slice(0,tpl.indexOf('const layer=document.getElementById'));
   // P1: every body-frame vector in solve() goes through rotR (roll, then yaw)
   const i=eng.indexOf('function solve(p){'),j=eng.indexOf('// spine curvature');
@@ -23,8 +23,10 @@ function load(dataFile){
   tpl=rep(tpl,'if(m.M) return tri<0.5 ? blend(m.A,m.M,easeQ(tri*2)) : blend(m.M,m.B,easeQ((tri-0.5)*2));',
               'if(m.M){const e=easeQ(tri);return e<0.5?blend(m.A,m.M,e*2):blend(m.M,m.B,(e-0.5)*2);}');
   tpl=tpl.replace('const PROPFIT=false;','const PROPFIT=true;');
-  const code=eng+'\n'+rd(dataFile)+'\n'+tpl+'\n;({MOVES,poseAt,solve,figMarkup,fitOf,project})';
-  return vm.runInNewContext(code,{Math,console,Object,Array,JSON,isFinite});
+  return eng+'\n'+rd(dataFile)+'\n'+tpl;
+}
+function load(dataFile){
+  return vm.runInNewContext(source(dataFile)+'\n;({MOVES,poseAt,solve,figMarkup,fitOf,project})',{Math,console,Object,Array,JSON,isFinite});
 }
 // ---- data-only re-authoring in the EXISTING schema (y down, floor 93, units ~2.2 cm) ----
 const OVERRIDE={
@@ -42,4 +44,4 @@ const OVERRIDE={
  // Cat-cows: data only. Segment angles chosen so the neck (shoulders) stays over the hands.
  'Cat-cows':m=>{m.A.s=[62,92];m.B.s=[92,62];m.A.p=[0,74,0];m.B.p=[0,74,0];}
 };
-module.exports={load,OVERRIDE};
+module.exports={load,source,OVERRIDE};
