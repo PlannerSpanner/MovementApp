@@ -651,6 +651,25 @@ grip loads the distal bicep tendon at the radial tuberosity (in rehab).
 
 # Daily 13 — 13 movements, ~12 min (11:55) including authored setup gaps
 
+> **Figure audit, 2026-11-12.** Every pose below was re-checked against `docs/rubrics/daily.md`
+> (executable form: `qa/fig/rubric.js`, in the gauntlet) and reviewed by a fresh reviewer
+> until every movement came back shippable. Will's decisions of that date: Deep squats go
+> to just below parallel with the heels down (not to the heels; cue text changed to "Sink
+> until your hips are just below your knees, heels down"); Side plank HOLDS the line (no
+> animated sag, a breath only); Plank hold is a forearm plank (spoken setup now "Turn over
+> into a forearm plank. Elbows under your shoulders, one straight line."); the Bent-over row
+> hinges to about 45 degrees from the floor; Prone Y-T-W is seen from a raised camera.
+> What changed in the figure: Side plank and Clamshell genuinely lie on their side (root
+> roll: hips, shoulders and feet stacked); Reverse lunges plant the rear foot at full step
+> length and then drop, front shin vertical; Bird dog has hands under the shoulders and a
+> low forward slide; Y-T-W uses straight forward-kinematic arms so each letter reads; Plank
+> has elbows under the shoulders and forearms on the floor; Bench dips stop 1.5 units short
+> of parallel (margin on the AC-joint rule) with straight arms at the top; Farmer hold hangs
+> straight arms; Posture reset starts from a rib flare and settles to the stack.
+> Known limits: heel-up feet and toe direction (authored foot contact is a later step);
+> seen from above, Y-T-W reads as lying flat but nothing in a stick figure says face-down;
+> the figure's arm is as long as its trunk, so hanging dumbbells end at the hip joint.
+
 Renamed from Daily 10 on 2026-08-26 (daily-10.html lives on as a redirect stub for
 old bookmarks). Daily postural maintenance alongside the Wed/Sat strength block: zero
 meaningful recovery cost, nothing near failure. Primary goal is anterior pelvic tilt

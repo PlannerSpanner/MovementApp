@@ -51,19 +51,20 @@ const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
  for(const ph of PH){const p=poseAt(m,ph),j=solve(p);
    if(Math.abs(p.yaw-m.A.yaw)>0.01||Math.abs(p.p[1]-m.A.p[1])>0.01)still=false;
    ftMax=Math.max(ftMax,dist(j.ftR,j0.ftR),dist(j.ftL,j0.ftL));
-   knMax=Math.max(knMax,dist(j.knR,j0.knR));}
+   knMax=Math.max(knMax,dist(j.knL,j0.knL));}   // top leg = left since 2026-11-12 (lies on the right side)
  check(`clamshell heels welded (foot drift ${ftMax.toFixed(2)})`,ftMax<0.3);
  check(`clamshell top knee opens (travel ${knMax.toFixed(1)})`,knMax>4);
  check('clamshell pelvis never rolls (yaw/height constant)',still);}
 
-// side plank: the top frame is one straight line head-to-heels; the sag drops ONLY
-// the pelvis — the planted forearm (hand) never moves
+// side plank: one straight line head-to-heels, held; the planted forearm (hand) never moves
 {const m=get('Side plank');
  const top=solve(poseAt(m,0)),sag=solve(poseAt(m,0.5));
  const fm=[(top.ftL[0]+top.ftR[0])/2,(top.ftL[1]+top.ftR[1])/2,(top.ftL[2]+top.ftR[2])/2];
  const line=ang(top.neck,top.pelvis,fm);
  check(`side plank top line ${line.toFixed(0)}° (head to heels)`,line>168);
- check(`side plank sag drops the pelvis (${(sag.pelvis[1]-top.pelvis[1]).toFixed(1)})`,sag.pelvis[1]-top.pelvis[1]>1.2);
+ // Will, 2026-11-12: HOLD the line, no animated sag (a breath is fine)
+ check(`side plank holds the line (pelvis travel ${Math.abs(sag.pelvis[1]-top.pelvis[1]).toFixed(2)})`,Math.abs(sag.pelvis[1]-top.pelvis[1])<0.6);
+ check(`side plank is on its side (hips stacked ${Math.abs(top.hpL[1]-top.hpR[1]).toFixed(1)} apart in height)`,Math.abs(top.hpL[1]-top.hpR[1])>8);
  check('side plank planted forearm never moves',dist(top.haR,sag.haR)<0.3);}
 
 // bird dog: spine one neutral slab at every phase (the rib-pelvis lock IS the
