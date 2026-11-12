@@ -64,6 +64,15 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     `<polygon>` byte-for-byte (verified over every frame of all five apps). Used by
     Cat-cows (+60/−50), Cobra (−45), Bent rotation sweeps' M (+45). Candidates: thread
     the needle, wide-knee child's pose.
+  - `roll` (added 2026-11-12) = root roll in degrees about the body's own front-to-back
+    axis, applied before the yaw; roll > 0 lowers the figure's right side, 90 = lying on
+    the right side. Blends like `yaw`. Zero/absent is the old engine exactly. This is what
+    lets a figure be genuinely side-lying (side plank, clamshell); joint-attached prop
+    offsets roll with it.
+  - Floor clamp (2026-11-12): a knee, ankle, elbow or hand that would be drawn more than
+    0.6 under the floor is hinged back up about its parent joint (bone length and compass
+    direction kept). Poses that stay above the floor are bit-identical. It is a safety net,
+    not an authoring tool: a clamped IK foot misses its target and the audit says so.
   - `orb` modes: `{hips:true,rx,rz,ry}` pelvis circle (feet pinned), `{swivel:true,amp}`
     knee circles, `{leg:'R'|'L',fB,fA,aB,aA,knee?}` single-leg hip CAR — that leg's thigh
     traces a cone from the phase, knee ~90° (shin follows the thigh), the other leg keeps
@@ -188,7 +197,9 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
   - Movements: `{n, pos, posCue?, setup?, tdur?, cue, dur, bil, cyc, pin, belly, cam, prop,
     orb, A, B, M?}`. `M` = optional mid-keyframe (path A→M→B→M→A). `pin:'LR'` nails feet at
     their frame-A spots. `orb` = orbital pose (hip circles). `cam` = per-movement camera yaw
-    (default 40). Props use the same system as wk_tpl (ported 2026-08-12): points may be
+    (default 40); `pitch` = per-movement camera pitch (default 13, added 2026-11-12, both
+    templates; `setCam(m)` sets both). A-M-B is ONE eased sweep since 2026-11-12: M is
+    passed through at speed, the figure no longer stops dead at the mid keyframe. Props use the same system as wk_tpl (ported 2026-08-12): points may be
     world `[xyz]`, joint names, `{j,o}`, `{m:[..],o}`; shapes `{l}`, `{c}` (+`f:1`),
     `{db:[P,P,r]}` dumbbell — joint-referenced props re-resolve every frame. Rendering
     is a pure `figMarkup` (above the `const layer=` slice line, so qa/geo/lint can eval
@@ -249,6 +260,17 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
                        # breath tones, 2x toggle, auto-update freshness, voice
                        # (pre-generated cue clips: scheduling, decode, failure modes,
                        # all 5 apps, fake DOM + WebKit + Chromium; needs `npx playwright install webkit`)
+    npm run qa:fig     # the figure audit on its own: frame pins + rubric/numeric audit
+                       # (verbose) + eight-phase look sheets. In the gauntlet since
+                       # 2026-11-12. qa/fig/rubric.js = the executable checklist lines of
+                       # docs/rubrics/*.md; qa/fig/checks.js = floor/miss/pop/hidden/short/
+                       # merged/kneeBack/hyperExt at 64 phases; qa/fig/pins.json = a hash of
+                       # every movement's render in all five apps (an unintended change
+                       # fails; an intended one is `node qa/fig/frames.js --update` in the
+                       # same commit, so the diff names every movement that changed);
+                       # todo.json = known faults pending (may only shrink: an entry that
+                       # stops firing must be removed); waivers.json = judgement flags
+                       # accepted with a written reason.
     npm run cues       # after editing any spoken text: enumerate strings + generate missing clips
     node tools/dump.js && python3 tools/strips.py   # fallback PIL contact sheets (needs Pillow)
     python3 tools/ascii.py <app> "<movement>" 0,3    # text-mode pose render

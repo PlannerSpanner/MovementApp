@@ -18,7 +18,7 @@ function normalise(m){
 }
 function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
   swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),
-  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
+  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
   s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
@@ -30,9 +30,15 @@ const easeQ=t=>t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 function poseAt(m,ph){
   normalise(m);
   const tri=ph<0.5?ph*2:(1-ph)*2;
-  if(m.M) return tri<0.5 ? blend(m.A,m.M,easeQ(tri*2)) : blend(m.M,m.B,easeQ((tri-0.5)*2));
+  // A-M-B is ONE eased sweep (2026-11-12): the ease runs over the whole half cycle and M is
+  // passed through at speed. Easing each segment separately stopped the figure dead at M.
+  if(m.M){const e=easeQ(tri); return e<0.5 ? blend(m.A,m.M,e*2) : blend(m.M,m.B,(e-0.5)*2);}
   return blend(m.A,m.B,easeQ(tri));}
-let CAM=40; const PITCH=13;
+// Camera: yaw CAM (per movement, m.cam, default 40) and pitch PITCH (per movement, m.pitch,
+// default 13 -- the fixed value until 2026-11-12). A higher pitch looks down on the figure,
+// which is the only way to open up anything that happens in the floor plane (prone Y-T-W).
+let CAM=40,PITCH=13;
+function setCam(m){CAM=m.cam||40;PITCH=m.pitch==null?13:m.pitch;}
 function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
   const x=v[0]*c+v[2]*s, z=-v[0]*s+v[2]*c;
   return {x,y:v[1]*Math.cos(R(PITCH))+z*Math.sin(R(PITCH)),d:z};}
@@ -44,13 +50,13 @@ const INK='#42591f',LIMB_L='#a8bc85',TORSO='#5c7d34',PROP='#b9a98b';
 // midpoint of two joints plus an offset ({m:['haL','haR'],o:[x,y,z]}). Joint-referenced
 // points are re-resolved every frame, so an implement authored against the hands can
 // never drift out of them.
-function resPt(P,j,yaw){
+function resPt(P,j,yaw,roll){
   if(Array.isArray(P))return P;
   if(typeof P==='string')return j[P];
   let b;
   if(P.m){const a=j[P.m[0]],c=j[P.m[1]];b=[(a[0]+c[0])/2,(a[1]+c[1])/2,(a[2]+c[2])/2];}
   else b=j[P.j];
-  const o=P.o?rotY(P.o,yaw||0):[0,0,0];
+  const o=P.o?rotY(roll?rotZb(P.o,roll):P.o,yaw||0):[0,0,0];
   return [b[0]+o[0],b[1]+o[1],b[2]+o[2]];
 }
 // resolved prop geometry for one frame; qa/wk.js asserts implement↔hand attachment on this
@@ -58,12 +64,12 @@ function propShapes(m,j,pose){
   if(!m.prop)return [];
   const att=P=>!Array.isArray(P);   // any joint-referenced point = a held/attached implement
   return m.prop.map(p=>{
-    if(p.l)return {t:'l',a:resPt(p.l[0],j,pose.yaw),b:resPt(p.l[1],j,pose.yaw),w:p.w||1,att:att(p.l[0])||att(p.l[1])};
-    if(p.db)return {t:'db',a:resPt(p.db[0],j,pose.yaw),b:resPt(p.db[1],j,pose.yaw),r:p.db[2],att:att(p.db[0])||att(p.db[1])};
-    return {t:'c',c:resPt(p.c[0],j,pose.yaw),r:p.c[1],f:p.f,att:att(p.c[0])};
+    if(p.l)return {t:'l',a:resPt(p.l[0],j,pose.yaw,pose.roll),b:resPt(p.l[1],j,pose.yaw,pose.roll),w:p.w||1,att:att(p.l[0])||att(p.l[1])};
+    if(p.db)return {t:'db',a:resPt(p.db[0],j,pose.yaw,pose.roll),b:resPt(p.db[1],j,pose.yaw,pose.roll),r:p.db[2],att:att(p.db[0])||att(p.db[1])};
+    return {t:'c',c:resPt(p.c[0],j,pose.yaw,pose.roll),r:p.c[1],f:p.f,att:att(p.c[0])};
   });
 }
-function fitOf(m){CAM=m.cam||40;let a=1e9,b=-1e9,c=1e9,d=-1e9;
+function fitOf(m){setCam(m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
   for(let i=0;i<=24;i++){const pose=poseAt(m,i/24),jn=solve(pose);
     const pts=[];
     for(const k in jn)pts.push([jn[k],0]);
@@ -78,7 +84,7 @@ function fitOf(m){CAM=m.cam||40;let a=1e9,b=-1e9,c=1e9,d=-1e9;
   const sc=Math.min(100/(b-a),100/(d-c));
   return {sc,ox:(100-(b-a)*sc)/2-a*sc,oy:(100-(d-c)*sc)/2-c*sc};}
 function figMarkup(m,fit,ph){
-  CAM=m.cam||40;
+  setCam(m);
   const pose=poseAt(m,ph);
   const j=solve(pose), P={};
   for(const k in j){const q=project(j[k]);P[k]={x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};}
@@ -130,7 +136,7 @@ function figMarkup(m,fit,ph){
     return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${INK}"/>`;}).join('');
 }
 function groundOf(m,fit){
-  CAM=m.cam||40;
+  setCam(m);
   const j=solve(poseAt(m,0));
   const pts=['ftL','ftR','toeL','toeR','haL','haR','knL','knR'].map(k=>j[k]).filter(p=>p[1]>89.5);
   let gx=0,gz=0;

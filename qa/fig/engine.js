@@ -27,7 +27,7 @@ function source(app,opts){
   return code;
 }
 const EXPORTS=a=>`\n;({MOVES:${a.moves},poseAt,solve,figMarkup,fitOf,project,propShapes,torsoEdges,L,`+
-  `setCam:m=>{CAM=m.cam||40;if(typeof PITCH!=='undefined'&&typeof setPitch==='function')setPitch(m);},getCam:()=>CAM,getPitch:()=>PITCH,`+
+  `setCam,getCam:()=>CAM,getPitch:()=>PITCH,`+
   `setSkin:s=>{if(typeof SKIN!=='undefined')SKIN=s;},INK,LIMB_L,TORSO,PROP})`;
 function load(app,opts){
   const a=APPS[app];

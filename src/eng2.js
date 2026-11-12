@@ -29,8 +29,13 @@ function ik(S,T,l1,l2,ref,sign,swivel){
 
 function solve(p){
   const pelvis=p.p, yawP=p.yaw, tw=p.tw||0;
+  // root roll (2026-11-12): `roll` turns the WHOLE body about its own front-to-back axis
+  // before the yaw, so a figure can lie or prop on its side (side plank, clamshell).
+  // roll > 0 lowers the figure's right side; 90 = lying on the right side. Every
+  // body-frame vector below goes through rotR; zero/absent roll is exactly the old rotY.
+  const roll=p.roll||0, rotR=(v,deg)=>rotY(roll?rotZb(v,roll):v,deg);
   const sl=p.sl||0;
-  const d1=rotY(rotZb(spineDir(p.s[0]),sl),yawP);
+  const d1=rotR(rotZb(spineDir(p.s[0]),sl),yawP);
   const chest=add(pelvis,d1,L.s1);
   // tw = torso twist about the LOWER-SPINE AXIS, not the world vertical (changed
   // 2026-10-12). Upright the two coincide, so it is the familiar shoulder yaw; hinged
@@ -38,27 +43,50 @@ function solve(p){
   // drops -- which is what bent rotations and thread-the-needle actually do. The
   // chest->neck segment carries 45% of it, the head, shoulders and FK arms the full angle.
   const twist=(v,k)=>tw?rotAxis(v,d1,-R(tw*k)):v;
-  const neck =add(chest, twist(rotY(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
-  const head =add(neck,  twist(rotY(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
-  const axS=twist(rotY([1,0,0],yawP),1), axH=rotY([1,0,0],yawP);
+  const neck =add(chest, twist(rotR(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
+  const head =add(neck,  twist(rotR(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
+  const axS=twist(rotR([1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
   const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
   const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
   const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
-  const fk=(o,a,l1,l2,yaw)=>{const j1=add(o,rotY(dir(a[0],a[1]),yaw),l1);
-    return [j1,add(j1,rotY(dir(a[2],a[3]),yaw),l2)];};
+  const fk=(o,a,l1,l2,yaw)=>{const j1=add(o,rotR(dir(a[0],a[1]),yaw),l1);
+    return [j1,add(j1,rotR(dir(a[2],a[3]),yaw),l2)];};
   // legs: IK to a world foot target if given, else forward kinematics
-  const legRef=rotY([0,0,1],yawP);
+  const legRef=rotR([0,0,1],yawP);
   let knL,ftL,knR,ftR;
   if(p.ikFL){[knL,ftL]=ik(hpL,p.ikFL,L.th,L.sh,legRef,1,p.swL);} else {[knL,ftL]=fk(hpL,p.lL,L.th,L.sh,yawP);}
   if(p.ikFR){[knR,ftR]=ik(hpR,p.ikFR,L.th,L.sh,legRef,1,p.swR);} else {[knR,ftR]=fk(hpR,p.lR,L.th,L.sh,yawP);}
+  // floor clamp (2026-11-12): no knee, ankle, elbow or hand may be drawn under the floor.
+  // A joint that would sink is hinged back up about its parent joint -- the bone keeps its
+  // length and its compass direction, only its dip changes -- so the correction grows
+  // smoothly from zero as the joint reaches the floor and never pops. A pose that keeps
+  // everything above the floor is untouched (bit-identical). The clamp plane sits 0.6 below
+  // the floor line (about 1 cm, inside the stroke): a straight standing leg that is 0.2
+  // too long must not be kinked to fix what nobody can see.
+  const FLR=93.6;
+  const hinge=(o,j,l,alt)=>{
+    if(!(j[1]>FLR)) return j;
+    const dy=Math.max(-1,Math.min(1,(FLR-o[1])/l)), h=Math.sqrt(Math.max(0,1-dy*dy));
+    let hs=[j[0]-o[0],0,j[2]-o[2]];
+    if(len(hs)<1e-3) hs=[alt[0],0,alt[2]];
+    if(len(hs)<1e-3) hs=[0,0,1];
+    const hz=nrm(hs);
+    return [o[0]+hz[0]*h*l, o[1]+dy*l, o[2]+hz[2]*h*l];
+  };
+  const clampLimb=(o,j1,j2,l1,l2)=>{
+    const k=hinge(o,j1,l1,legRef);
+    const e0=k===j1?j2:add(k,sub(j2,j1),1);          // a moved mid joint carries its lower bone with it
+    return [k,hinge(k,e0,l2,sub(k,o))];
+  };
+  [knL,ftL]=clampLimb(hpL,knL,ftL,L.th,L.sh); [knR,ftR]=clampLimb(hpR,knR,ftR,L.th,L.sh);
   Object.assign(J,{knL,ftL,knR,ftR});
   const footOf=(kn,ft)=>{
     const u=nrm(sub(ft,kn));
     const perp=(r)=>{const d=r[0]*u[0]+r[1]*u[1]+r[2]*u[2];
       return [r[0]-u[0]*d, r[1]-u[1]*d, r[2]-u[2]*d];};
-    const a=perp(rotY([0,0,1],yawP)), b=perp([0,1,0]);
+    const a=perp(rotR([0,0,1],yawP)), b=perp([0,1,0]);
     let d=nrm(len(a)>=len(b)?a:b);
-    if(!isFinite(d[0])||len(d)<1e-3) d=rotY([0,0,1],yawP);
+    if(!isFinite(d[0])||len(d)<1e-3) d=rotR([0,0,1],yawP);
     // a foot may not pass through the floor: if it would, lay it along the floor instead
     const FL=93;
     if(ft[1]+d[1]*L.ft > FL){
@@ -66,7 +94,7 @@ function solve(p){
       const h=Math.sqrt(Math.max(0,1-dy*dy));
       let hsrc=[d[0],0,d[2]];
       if(len(hsrc)<1e-3) hsrc=[u[0],0,u[2]];
-      if(len(hsrc)<1e-3) hsrc=rotY([0,0,1],yawP);
+      if(len(hsrc)<1e-3) hsrc=rotR([0,0,1],yawP);
       const hz=nrm(hsrc);
       d=[hz[0]*h, dy, hz[2]*h];
     }
@@ -78,10 +106,11 @@ function solve(p){
   let elL,haL,elR,haR;
   // optional arm swivel (swAL/swAR): spins the elbow's bend plane about the
   // shoulder->hand axis, same as the leg swivels — undefined means unchanged
-  const fkA=(o,a)=>{const j1=add(o,twist(rotY(dir(a[0],a[1]),yawP),1),L.up);
-    return [j1,add(j1,twist(rotY(dir(a[2],a[3]),yawP),1),L.fo)];};
+  const fkA=(o,a)=>{const j1=add(o,twist(rotR(dir(a[0],a[1]),yawP),1),L.up);
+    return [j1,add(j1,twist(rotR(dir(a[2],a[3]),yawP),1),L.fo)];};
   if(tL){[elL,haL]=ik(shL,tL,L.up,L.fo,axS,-1,p.swAL);} else {[elL,haL]=fkA(shL,p.aL);}
   if(tR){[elR,haR]=ik(shR,tR,L.up,L.fo,axS, 1,p.swAR);} else {[elR,haR]=fkA(shR,p.aR);}
+  [elL,haL]=clampLimb(shL,elL,haL,L.up,L.fo); [elR,haR]=clampLimb(shR,elR,haR,L.up,L.fo);
   return Object.assign(J,{elL,haL,elR,haR});
 }
 
