@@ -6,6 +6,9 @@
 **Angle convention.** "Knee angle" is the included angle (180° = straight leg), as in Will's spec; papers that report flexion are converted (flexion = 180 − included). "Torso pitch" is degrees from vertical (0° = upright, 90° = horizontal).
 **Checklist use.** Questions are answered from eight stills at phases 0, 0.125 … 0.875 of one rep. "Bottom" and "top" mean whichever stills are nearest those positions; the in-between stills are where most failures are expected, so several questions say "in every frame".
 
+**Decision by Will, 2026-11-12.** *Side plank:* hold the straight line. No animated sag; a subtle breathing motion is fine. Checklist lines 4 and 5 are superseded.
+**Executable form.** The checklist lines that the skeleton can decide are tests in `qa/fig/rubric.js` (same numbers as the checklists here) and run in `npm run gauntlet`; a broken line fails the build. Lines that need an eye are listed there as LOOK and judged on the phase sheets (`node qa/fig/sheets.js`).
+
 ---
 
 # Workout A

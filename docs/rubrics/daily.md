@@ -6,6 +6,14 @@
 **Unsourced claims** are marked "(unsourced, from Will's spec)". Nothing here proposes changing what an exercise is.
 **Reading the checklists.** Eight stills at phases 0, 0.125 … 0.875 of one cycle. Unless stated, phase 0 is the start position and phase 0.5 the far end of the rep. Descriptions are of the human body, not of any rendering.
 
+**Decisions by Will, 2026-11-12 (these override the text below where they differ).**
+- *Deep squats:* just below parallel, heels down, not sitting on the heels. Checklist line 4 stands as written; the "nearly sitting on the heels" wording in Must-see and Differs-from-canon is superseded, and the cue text changes to match.
+- *Side plank:* hold the straight line. No animated sag; a subtle breathing motion is fine. Checklist lines 5 and 6 are superseded.
+- *Plank hold:* forearm plank. The spoken setup line says so.
+- *Bent-over row:* torso about 45° from the floor, flat back.
+- *Prone Y-T-W:* raised camera (pitch about 58°) provided it still reads as face-down on the phone.
+**Executable form.** The checklist lines that the skeleton can decide are tests in `qa/fig/rubric.js` (same numbers as the checklists here) and run in `npm run gauntlet`; a broken line fails the build. Lines that need an eye are listed there as LOOK and judged on the phase sheets (`node qa/fig/sheets.js`).
+
 ---
 
 ## 1. Deep squats (bodyweight)

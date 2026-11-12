@@ -6,6 +6,9 @@
 **Numbers.** Angles are human joint angles, not engine parameters. Ranges quoted from population norms are ceilings for plausibility, not targets.
 **Checklists** assume eight stills at phases 0, 0.125 ... 0.875 of one cycle. "Every frame" means all eight; "some frame" means at least one. For side-switching movements, run the checklist once per side.
 
+**Decision by Will, 2026-11-12.** *Cat-cows:* arms straight and vertical, elbows softly locked, shoulder blades free to move. Checklist line 2 is read that way.
+**Executable form.** The checklist lines that the skeleton can decide are tests in `qa/fig/rubric.js` (same numbers as the checklists here) and run in `npm run gauntlet`; a broken line fails the build. Lines that need an eye are listed there as LOOK and judged on the phase sheets (`node qa/fig/sheets.js`).
+
 ---
 
 ## 1. Bouncing in place
