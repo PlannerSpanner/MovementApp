@@ -1,0 +1,6 @@
+{
+  "name": "movement-figure-proto",
+  "private": true,
+  "description": "Prototype-only dependencies for the figure-system assessment. Not part of the shipped apps.",
+  "dependencies": { "three": "0.169.0" }
+}

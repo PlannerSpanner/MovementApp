@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>rig 3D renderer (prototype)</title>
+<!-- Lit 3D mannequin for the prototype rig. Receives capsules already in screen space
+     (x right 0..100, y down 0..100, z toward the viewer) so it lines up exactly with the 2D
+     renderer; a real implementation would keep the 3D camera and add orbit controls. -->
+<body style="margin:0;background:transparent">
+<script type="module">
+import * as THREE from '/proto/node_modules/three/build/three.module.min.js';
+const R=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+R.setClearColor(0x000000,0);document.body.appendChild(R.domElement);
+const cam=new THREE.OrthographicCamera(0,100,0,-100,0.1,4000);cam.position.set(0,0,2000);
+const UP=new THREE.Vector3(0,1,0);
+window.render3d=(caps,light,px)=>{
+  R.setSize(px,px,false);R.setPixelRatio(2);
+  const scene=new THREE.Scene(),geos=[],mats={};
+  // light sits up-left-front of the viewer in every view; a dark ground bounces less
+  scene.add(new THREE.HemisphereLight(0xffffff,light?0x9a958c:0x3a3f46,light?1.55:1.25));
+  const d=new THREE.DirectionalLight(0xffffff,light?1.5:1.9);d.position.set(-0.55,0.9,1);scene.add(d);
+  const mat=c=>mats[c]||(mats[c]=new THREE.MeshLambertMaterial({color:new THREE.Color(c)}));
+  for(const k of caps){
+    const a=new THREE.Vector3(k.a[0],-k.a[1],k.a[2]),b=new THREE.Vector3(k.b[0],-k.b[1],k.b[2]),m=mat(k.col);
+    for(const [p,r] of [[a,k.ra],[b,k.rb]]){const g=new THREE.SphereGeometry(r,24,16);geos.push(g);const s=new THREE.Mesh(g,m);s.position.copy(p);scene.add(s);}
+    const dir=b.clone().sub(a),len=dir.length();
+    if(len>1e-3){const g=new THREE.CylinderGeometry(k.rb,k.ra,len,24,1,true);geos.push(g);const c=new THREE.Mesh(g,m);
+      c.position.copy(a.clone().add(b).multiplyScalar(0.5));c.quaternion.setFromUnitVectors(UP,dir.normalize());scene.add(c);}
+  }
+  R.render(scene,cam);const url=R.domElement.toDataURL('image/png');
+  geos.forEach(g=>g.dispose());Object.values(mats).forEach(m=>m.dispose());
+  return url;
+};
+</script>
+</body>
