@@ -14,7 +14,11 @@ http.createServer((req,rsp)=>{
       catch(e){rsp.writeHead(400);rsp.end('bad json');}});
     return;}
   if(req.method!=='GET'&&req.method!=='HEAD'){rsp.writeHead(405);rsp.end();return;}
-  const rel=decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/,'')||'index.html',p=path.resolve(ROOT,rel);
+  const url0=req.url.split('?')[0],rel=decodeURIComponent(url0).replace(/^\/+/,'')||'index.html';let p=path.resolve(ROOT,rel);
+  // a folder serves its index.html; without the trailing slash, redirect so relative links resolve
+  if((p===ROOT||p.startsWith(ROOT+path.sep))&&fs.existsSync(p)&&fs.statSync(p).isDirectory()){
+    if(!url0.endsWith('/')){rsp.writeHead(302,{Location:url0+'/'});rsp.end();return;}
+    p=path.join(p,'index.html');}
   if(!(p===ROOT||p.startsWith(ROOT+path.sep))||!fs.existsSync(p)||fs.statSync(p).isDirectory()){rsp.writeHead(404);rsp.end('not found');return;}
   rsp.writeHead(200,{'Content-Type':MIME[path.extname(p)]||'application/octet-stream','Cache-Control':'no-store'});
   fs.createReadStream(p).pipe(rsp);

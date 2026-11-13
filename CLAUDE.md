@@ -99,8 +99,17 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     Will rejected both on his phone (jagged, shin cap escaping, arch on both sides).
     qa/fig/checks.js enforces: ankle inside the outline, shin end not past it, sole direction
     matching the contact, planted heel = flat foot, toes tucked only for the TUCKED list.
-  - Grip: pose `gL`/`gR` in degrees about the forearm, 0 = neutral (thumb on the upper-arm side
-    of the elbow's bend plane), 90 = pronated. NEGATIVE = SUPINATED = FORBIDDEN (Will's distal
+  - HAND ORIENTATION (rebuilt 2026-11-13 after Will saw, on his phone, thumbs turned inward on
+    hanging arms). `handFrame` returns `{ha,u,t,palm}`. Neutral comes from where the FOREARM
+    points in the body's own frame: down = thumb forward, palm to the thigh; forward = thumb up;
+    up = thumb back; out to the side = forward and a little up. NEVER take it from the elbow's
+    bend plane: on a straight arm that plane is noise (the old bug), and blending the two flipped
+    the thumb in one frame (lateral reaches). Pronation turns by handedness (`hs`), not by a sign
+    guess. A hand or forearm resting on the floor or a bench (`pL`/`pR`) lies flat, palm DOWN.
+    qa/fig/checks.js hard flags: `thumb` (hanging arm: neutral = thumb forward, pronated = thumb
+    to the midline), `palm` (flat hand palm down, thumb inner side), `handPop` (thumb swings over
+    45 deg between two phases), `supinated` (also from geometry: a palm facing forward).
+  - Grip: pose `gL`/`gR` in degrees about the forearm, 0 = neutral, 90 = pronated. NEGATIVE = SUPINATED = FORBIDDEN (Will's distal
     bicep rule); qa/fig/checks.js fails the build on it. At phone size grip reads from the
     implement, not the hand: dumbbell handles fore-aft = neutral, a bar across = pronated.
   - Implements sit in the fist: props name `gpL`/`gpR` (alone, in `{j:..,o:..}` or `{m:[..]}`),

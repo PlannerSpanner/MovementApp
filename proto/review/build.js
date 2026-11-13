@@ -48,7 +48,10 @@ const mk=(get,[k,label,data,tplF,cut,moves,trall])=>{let tpl=get(tplF);tpl=tpl.s
   return `function(){${get('eng2.js')}\n${data.map(get).join('\n')}\n${tpl}\n;return {MOVES:${moves},poseAt,solve,figMarkup,fitOf,project,pitch:()=>PITCH,setSkin:s=>{if(typeof SKIN!=='undefined')SKIN=s;}};}`;};
 const SKINJ=has('src/skin.json')?JSON.stringify(JSON.parse(rd('src/skin.json'))):null;
 const now=f=>f==='eng2.js'&&SKINJ?rd('src/'+f).replace('let SKIN=null;','let SKIN='+SKINJ+';'):rd('src/'+f);
-const ENG='const MK={'+APPS.map(a=>`B_${a[0]}:${mk(old,a)},A_${a[0]}:${mk(now,a)}`).join(',\n')+'};';
+// BEFORE = the base commit as shipped: its own skin.json stamped in, if it has one
+let OLDSKIN=null;try{OLDSKIN=JSON.stringify(JSON.parse(old('skin.json')));}catch(e){}
+const was=f=>f==='eng2.js'&&OLDSKIN?old(f).replace('let SKIN=null;','let SKIN='+OLDSKIN+';'):old(f);
+const ENG='const MK={'+APPS.map(a=>`B_${a[0]}:${mk(was,a)},A_${a[0]}:${mk(now,a)}`).join(',\n')+'};';
 const NOTES=has('docs/figure-phase2-notes.json')?JSON.parse(rd('docs/figure-phase2-notes.json')):{};
 const SKIN=null;   // the approved skin is stamped into the AFTER engines above
 const LIVE_HTML=`<section id="live"><h2>Before and after, live</h2>
@@ -75,6 +78,14 @@ APPS.forEach(([k,label])=>{const B=MK['B_'+k](),A=MK['A_'+k]();const h=document.
     cards.appendChild(card);});});
 // ---- close-ups: same engines, a cropped viewBox, optionally another camera ----
 const CLOSE=[
+ ['Hands, standing: arms hanging','daily','Standing posture reset','hands:30',null,'Hand rebuilt 2026-11-13. Neutral: palms face the thighs, thumbs point forward. Before, the thumb came from the bend plane of the elbow, which is noise on a straight arm, so the hands read as turned inward.'],
+ ['Hands, standing, from the side','daily','Standing posture reset','hands:30',{cam:80,pitch:8},'After only. Thumb at the front edge of each hand.'],
+ ['Hands, standing, from the front','daily','Standing posture reset','hands:44',{cam:350,pitch:10},'After only. Seen from the front the hands are edge-on, thumbs toward the viewer.'],
+ ['Hands on all fours: Cat-cows','flow','Cat-cows','hands:30',null,'Flat on the floor, palms down, fingers ahead, thumbs on the inner side.'],
+ ['Hands on all fours, from above','flow','Cat-cows','hands:34',{cam:40,pitch:62},'After only. Thumbs toward each other.'],
+ ['Hands on a row, close','daily','Dumbbell bent-over row','hands:34',null,'Neutral grip all the way up: thumbs forward, handles front to back.'],
+ ['Hands on a farmer hold, close','daily','Dumbbell farmer hold','hands:34',null,'Neutral grip: thumbs forward, palms to the thighs.'],
+ ['Hands on the bar: Romanian deadlift','strength','Romanian deadlift','hands:40',null,'Pronated (overhand): thumbs toward the midline, backs of the hands forward.'],
  ['Both feet from the side','daily','Standing posture reset','feet:26',{cam:74,pitch:6},'After only (the old engine had one camera). The back of the heel is flush with the back of the shin, 0.2 units behind its edge, with a small rounded corner at the bottom. The shin ends square inside the foot.'],
  ['Both feet from the other side','daily','Standing posture reset','feet:26',{cam:254,pitch:6},'After only.'],
  ['Both feet from the front','daily','Standing posture reset','feet:30',{cam:344,pitch:10},'After only.'],
@@ -107,6 +118,9 @@ const CLOSE=[
     if(view){const v=hold?m.tview:view;m=Object.assign({},m,v);delete m.fit;}
     m.fit=E.fitOf(m);
     let box=vb;
+    if(vb.indexOf('hands:')===0){E.figMarkup(m,m.fit,0);const j=E.solve(E.poseAt(m,0)),pp=k=>{const q=E.project(j[k]);return [q.x*m.fit.sc+m.fit.ox,q.y*m.fit.sc+m.fit.oy];};
+      const P4=['haL','haR'].map(pp),xs=P4.map(p=>p[0]),ys=P4.map(p=>p[1]),cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
+      const wd=Math.max(+vb.slice(6),Math.max(...xs)-Math.min(...xs)+16,Math.max(...ys)-Math.min(...ys)+16);box=(cx-wd/2)+' '+(cy-wd/2+2)+' '+wd+' '+wd;}
     if(vb.indexOf('feet:')===0){E.figMarkup(m,m.fit,0);const j=E.solve(E.poseAt(m,0)),pp=k=>{const q=E.project(j[k]);return [q.x*m.fit.sc+m.fit.ox,q.y*m.fit.sc+m.fit.oy];};
       const P4=['ftL','ftR','toeL','toeR'].map(pp),xs=P4.map(p=>p[0]),ys=P4.map(p=>p[1]),cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2;
       const wd=Math.max(+vb.slice(5),Math.max(...xs)-Math.min(...xs)+12,Math.max(...ys)-Math.min(...ys)+12);box=(cx-wd/2)+' '+(cy-wd/2)+' '+wd+' '+wd;}

@@ -102,7 +102,7 @@ button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transit
   <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
 </div>
 <script>
-const BUILDV='10abae2f06';
+const BUILDV='67b7f75769';
 // Daily 13 — postural maintenance (renamed from Daily 10, 2026-08-26). tdur = length
 // of the GET SET UP gap BEFORE the movement (TR_ALL builds); setup = authored
 // transition script, spoken as "Next: <name>. <setup>". Position flow: standing (1-2)
@@ -632,31 +632,44 @@ function footOutline(J,s,pr,sc,k){
   return smoothLoop(H,64,4);
 }
 // The hand is one flat mitten continuing the forearm, with the thumb as a bulge on one edge.
-// Grip (pose gL/gR, degrees about the forearm): 0 = NEUTRAL, thumb on the upper-arm side of
-// the elbow's bend plane (thumb up in a handshake, thumbs forward with the arms hanging);
-// 90 = PRONATED, thumb turned toward the body's midline; negative would be supinated, which
-// Will's distal-bicep rule forbids and the audit rejects. Because the mitten is flat, its
-// drawn width and the side its thumb sits on both change with the grip.
+// handFrame returns the wrist, u (wrist -> fingertips), t (toward the THUMB, in the hand's plane)
+// and palm (the way the palm faces). Rebuilt 2026-11-13: the old frame took the thumb from the
+// elbow's bend plane even when the arm was straight, where that plane is noise, so hanging
+// arms read as turned inward (Will, on his phone).
+//  - NEUTRAL (g = 0) comes from where the FOREARM points in the body's own frame: down =
+//    thumb forward (arms hanging, palms to the thighs; the bottom of a row), forward = thumb
+//    up (a handshake), up = thumb back (overhead, the top of a hammer curl or a neutral
+//    press), back = thumb down, out to the side or across the body = forward and a little up.
+//  - Grip (pose gL/gR, degrees about the forearm): 0 neutral, 90 PRONATED. The turn is by
+//    handedness (a right forearm pronates one way, a left the other), never by a guess.
+//    Negative would be supinated, which Will's distal-bicep rule forbids and the audit rejects.
+//  - A hand resting on a surface is laid flat on it, PALM DOWN, so the thumb falls on the
+//    inner side when the fingers point ahead.
 function handFrame(J,s,g,surf){
   const el=J['el'+s],ha=J['ha'+s],sh=J['sh'+s]; let u=nrm(sub(ha,el));
   const lat=nrm(sub(J.shR,J.shL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);
-  const med=s==='L'?lat:[-lat[0],-lat[1],-lat[2]];
+  const hs=s==='L'?1:-1;                                   // palm = hs * (u x t)
+  const out=(u,t)=>{const c=cross(u,t);return {ha,u,t,palm:[c[0]*hs,c[1]*hs,c[2]*hs]};};
   // A hand that would poke through the surface it rests on (the floor, or pose pL/pR = the
   // height of a bench top) is laid FLAT on it instead: fingers along the surface in the
   // forearm's compass direction (or the body's facing when the forearm is vertical), palm down.
-  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0;
-  if(over>0&&ha[1]<=S0+1.5){
+  // A forearm lying along the surface (side plank, forearm plank) rests the same way.
+  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0, lying=Math.abs(ha[1]-S0)<=1.6&&Math.abs(el[1]-S0)<=2.6;
+  if((over>0||lying)&&ha[1]<=S0+1.5){
     let h=[u[0],0,u[2]]; if(len(h)<0.35) h=[fw[0],0,fw[2]]; if(len(h)<1e-3) h=[0,0,1]; h=nrm(h);
     const dy=Math.max(0,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
     u=[h[0]*k,dy,h[2]*k];
-    let t=[med[0],0,med[2]]; const d=t[0]*u[0]+t[2]*u[2]; t=[t[0]-u[0]*d,0,t[2]-u[2]*d]; if(len(t)<1e-3) t=cross(u,[0,1,0]);
-    return {ha,u,t:nrm(t)};
+    const c=cross(h,[0,1,0]);                              // palm down: t = -hs * (u x down), kept level
+    return out(u,nrm([-hs*c[0],0,-hs*c[2]]));
   }
   const perp=(v)=>{const d=v[0]*u[0]+v[1]*u[1]+v[2]*u[2];return [v[0]-u[0]*d,v[1]-u[1]*d,v[2]-u[2]*d];};
-  let w=perp(sub(sh,el)); const b=perp(fw); w=[w[0]+b[0]*0.35,w[1]+b[1]*0.35,w[2]+b[2]*0.35];
+  // neutral reference from the FOREARM'S DIRECTION IN THE BODY'S FRAME (see above). It does not
+  // use the elbow's bend plane: blending the two cancelled where they disagreed and the thumb
+  // flipped in one frame (lateral reaches).
+  const cu=cross(lat,u),pf=perp(fw),pu=perp(upb);
+  let w=[cu[0]+0.3*pf[0]+0.3*pu[0],cu[1]+0.3*pf[1]+0.3*pu[1],cu[2]+0.3*pf[2]+0.3*pu[2]];
   if(len(w)<1e-3) w=perp([0,-1,0]); if(len(w)<1e-3) w=perp([1,0,0]); w=nrm(w);
-  const c=cross(u,w),sg=(c[0]*med[0]+c[1]*med[1]+c[2]*med[2])>=0?1:-1;
-  return {ha,u,t:g?rotAxis(w,u,sg*R(g)):w};
+  return out(u,g?rotAxis(w,u,hs*R(g)):w);
 }
 // opt.fist: the hand is closed round an implement (a short rounded fist that the handle passes
 // through at the grip point) instead of the open mitten; opt.surf: see handFrame.

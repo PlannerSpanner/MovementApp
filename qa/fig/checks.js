@@ -24,7 +24,7 @@
 // or waived with a reason in waivers.json.
 const {N,FLOOR,sub,dot,len,nrm,cross,deg,angV:ang,sample}=require('./lib');
 const SEG=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
-const HARD=['floor','miss','pop','supinated','ankle','shinPast','sole','footShape','heel','heelBack','arch'];
+const HARD=['floor','miss','pop','supinated','thumb','palm','handPop','ankle','shinPast','sole','footShape','heel','heelBack','arch'];
 // sharpest corner allowed anywhere on a foot outline, in degrees of turning between two edges
 const TURN_LIMIT=50;
 // feet whose toes are tucked under (ball on the floor, heel up) while the shin is near the floor
@@ -40,6 +40,36 @@ function audit(E,m){
   const fl={};fr.forEach(f=>{for(const k in f.j){const d=f.j[k][1]-FLOOR;if(d>0.6&&(!fl[k]||d>fl[k].d))fl[k]={d,ph:f.ph};}});
   // grip: a supinated (palm-up, underhand) grip must never be shown (Will's distal bicep rule)
   {let w=0,wp=0;fr.forEach(f=>['gL','gR'].forEach(k=>{const g=f.pose[k]||0;if(g<w){w=g;wp=f.ph;}}));if(w<-10)add('supinated','grip',`a hand is turned ${(-w).toFixed(0)} deg toward supination at ph ${wp.toFixed(2)}`);}
+  // hands, every frame (added 2026-11-13 after Will saw thumbs turned inward on hanging arms).
+  //  thumb    an arm hanging straight beside an upright body: neutral grip = thumb FORWARD and
+  //           palm to the thigh; pronated grip (g >= 60) = thumb toward the midline. A palm
+  //           facing forward is supinated and is reported as such.
+  //  palm     a hand laid flat on the floor or a bench has its palm DOWN, and with the fingers
+  //           pointing the way the body faces the thumb is on the inner side
+  //  handPop  the thumb swings more than 45 deg about the forearm between two sampled phases
+  ['L','R'].forEach(s=>{
+    const bad={};const note=(k,v,ph,msg)=>{if(!bad[k]||v>bad[k].v)bad[k]={v,ph,msg};};
+    let prev=null;
+    fr.forEach(f=>{const j=f.j,g=f.pose['g'+s]||0,h=E.handFrame(j,s,g,f.pose['p'+s]);
+      const lat=nrm(sub(j.shR,j.shL)),upb=nrm(sub(j.chest,j.pelvis)),fw=cross(upb,lat),med=s==='L'?lat:lat.map(x=>-x);
+      const fore=nrm(sub(j['ha'+s],j['el'+s])),elbow=ang(sub(j['sh'+s],j['el'+s]),sub(j['ha'+s],j['el'+s]));
+      const flat=Math.abs(h.u[1])<0.999&&dot(h.u,fore)<0.999&&Math.abs(h.t[1])<1e-6;   // the engine laid it on a surface
+      if(flat){
+        if(h.palm[1]<0.9-Math.abs(h.u[1]))note('palm',1-h.palm[1],f.ph,`${s} hand lies on a surface with its palm not down (palm y ${h.palm[1].toFixed(2)})`);
+        const hu=nrm([h.u[0],0,h.u[2]]),hf=nrm([fw[0]+upb[0],0,fw[2]+upb[2]]);
+        if(Math.abs(lat[1])<0.5&&dot(hu,nrm([fw[0]+upb[0],0,fw[2]+upb[2]]))>0.5&&dot(h.t,med)<0.3)note('palm',1,f.ph,`${s} hand flat with fingers ahead but the thumb on the outer side`);
+      }else if(elbow>165&&fore[1]>0.87&&-upb[1]>0.87){
+        if(dot(h.palm,fw)>0.5)note('supinated',dot(h.palm,fw),f.ph,`${s} palm faces forward on a hanging arm (supinated)`);
+        else if(g<20&&(dot(h.t,fw)<0.7||dot(h.palm,med)<0.6))note('thumb',1-dot(h.t,fw),f.ph,`${s} arm hangs in a neutral grip but the thumb is not forward (thumb.fwd ${dot(h.t,fw).toFixed(2)}, palm.thigh ${dot(h.palm,med).toFixed(2)})`);
+        else if(g>=60&&dot(h.t,med)<0.6)note('thumb',1-dot(h.t,med),f.ph,`${s} arm hangs in a pronated grip but the thumb is not toward the midline (${dot(h.t,med).toFixed(2)})`);
+      }
+      // thumb swing about the forearm between neighbouring phases (the forearm's own motion removed)
+      if(prev&&!flat&&!prev.flat){const d=dot(h.t,prev.u),tp=nrm([prev.t[0],prev.t[1],prev.t[2]]),du=dot(tp,h.u);
+        const a1=nrm(sub(h.t,h.u.map(x=>x*0))),a0=nrm(sub(tp,h.u.map(x=>x*du)));const sw=ang(a1,a0);
+        if(sw>45)note('handPop',sw,f.ph,`${s} thumb swings ${sw.toFixed(0)} deg in one step`);}
+      prev={u:h.u,t:h.t,flat};});
+    for(const k in bad)add(k,'hand'+s,`${bad[k].msg} at ph ${bad[k].ph.toFixed(2)}`);
+  });
   for(const k in fl)add('floor',k,`${k} ${fl[k].d.toFixed(1)} below the floor at ph ${fl[k].ph.toFixed(2)}`);
   [['ikL','haL'],['ikR','haR'],['ikFL','ftL'],['ikFR','ftR']].forEach(([t,jn])=>{
     const w=worst(f=>{let T=f.pose[t];if(!T)return null;T=Array.isArray(T)?T:(T.w||f.j[T.k]);if(!T)return null;
