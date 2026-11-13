@@ -28,7 +28,7 @@ const MOVES=[
 {n:"Arm sweeps with knee dip",pos:'standing',cue:"Arms sweep overhead, then fold and swing through",dur:50,bil:false,cyc:2.0,
  setup:"Stay standing, feet under your hips, arms hanging.",
  A:{p:[2.4,55.7,5.5],yaw:24,tw:0,s:[-12,-18],hf:-22,aL:[196,-9,204,-7],aR:[196,9,204,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]},
- B:{p:[-3.7,60,-8.2],yaw:24,tw:0,s:[122,146],hf:14,aL:[-62,-9,-70,-7],aR:[-62,9,-70,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]}},
+ B:{p:[-3.7,56.5,-8.2],yaw:24,tw:0,s:[122,146],hf:14,aL:[-62,-9,-70,-7],aR:[-62,9,-70,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]}},
 
 // A = right punch: the trunk twists left (tw<0 brings the right shoulder forward), the
 // right arm extends fully across the body, the left fist retracts to the ribs; B mirrors.
@@ -169,9 +169,9 @@ const MOVES=[
 // the ball of the foot, the other foot is flat.
 {n:"Pedaling down dog",pos:'downdog',cue:"Alternate pressing each heel down",dur:60,bil:false,cyc:2.2,tdur:15,
  setup:"Tuck your toes and press up and back into down dog, hips high.",
- A:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
+ A:{p:[0.77,57.85,2.06],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
     aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-10.9,90.3,-15.4],ikFR:[-1.85,93,-19.7],fpL:25,fpR:0},
- B:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
+ B:{p:[0.77,57.85,2.06],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
     aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-11.25,93,-16.3],ikFR:[-1.5,90.3,-18.8],fpL:0,fpR:25}},
 
 // Rebuilt 2026-10-12 in the standard quadruped frame (torso along +z, shins trailing
@@ -204,8 +204,8 @@ const MOVES=[
 // arms, and the old floor targets were missed by 2 to 3.6.
 {n:"90/90 with a fold",pos:'seated',cue:"Z-sit: front shin across, back shin behind — fold forward",dur:60,bil:true,cyc:3.4,cam:58,pitch:30,tdur:15,
  setup:"Sit into a Z. Front shin across in front, back shin behind you.",
- A:{p:[0,90,0],yaw:-8,tw:0,s:[6,4],hf:0,ikL:{w:[-11,88.8,0.5]},ikR:{w:[5.6,88.5,9.5]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lR:[88,12,6,-86],lL:[57,-76,-90,-6]},
- B:{p:[0,90,0],yaw:-8,tw:0,s:[42,48],hf:-8,ikL:{w:[-4,92,16]},ikR:{w:[12,92,18]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lR:[88,12,6,-86],lL:[57,-76,-90,-6]}}
+ A:{p:[0,92,0],yaw:-8,tw:0,s:[6,4],hf:0,ikL:{w:[-11,88.8,0.5]},ikR:{w:[5.6,88.5,9.5]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lR:[80,12,6,-86],lL:[57,-76,-90,-6]},
+ B:{p:[0,92,0],yaw:-8,tw:0,s:[42,48],hf:-8,ikL:{w:[-4,92,16]},ikR:{w:[12,92,18]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lR:[80,12,6,-86],lL:[57,-76,-90,-6]}}
 ];

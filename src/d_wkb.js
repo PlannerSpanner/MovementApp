@@ -28,7 +28,7 @@ const WK_B=[
  // authored: back foot on its ball, heel up (fp 45), front foot flat.
  A:{p:[0,60.6,-6],yaw:0,tw:0,s:[6,6],hf:0,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
     ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0},
- B:{p:[0,70.6,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
+ B:{p:[0,74,-6],yaw:0,tw:0,s:[8,8],hf:-2,aL:[3,-7,5,-5],aR:[3,7,5,5],ikFL:[-5,88.5,-24.9],
     ikFR:[5,93,12.8],swL:0,swR:0,fpL:45,fpR:0}},
 
 {n:"Chest-supported row",sets:3,reps:"10",cyc:2.5,cam:66,

@@ -1,12 +1,12 @@
 {
- "occlusion:morning-flow/Pedaling down dog:hpR-knR": "The far thigh sits behind the near thigh while that leg is the straight one. The pedal reads from the near leg and the two shins.",
  "thumbnail:daily-13/Deep squats": "Standing at 28 pt, the far arm lies along the thicker trunk and thigh. One limb fewer for the standing instant only.",
  "thumbnail:daily-13/Plank hold": "Same cause: the far leg is behind the near leg, so at 28 pt the plank reads as one line of body on two forearms, which is what a plank is.",
  "occlusion:daily-13/Dumbbell bent-over row:elR-haR": "At the bottom the far forearm hangs behind the near thigh for a sixth of the rep. Its dumbbell stays visible below.",
- "thumbnail:daily-13/Dumbbell farmer hold": "Arms hang against the thighs by design. At 28 pt the far arm merges with the trunk and the near dumbbell covers its hand; the two dumbbells are what is left to read, and they are close in tone to the left limb.",
  "thumbnail:daily-13/Standing posture reset": "Standing still with the arms at the sides: the far arm lies along the thicker trunk at 28 pt.",
  "thumbnail:strength/Romanian deadlift": "At lockout the far arm lies along the trunk at 28 pt; the bar and rings carry the read.",
  "thumbnail:strength/Split squat": "At the top the far arm lies along the thicker trunk at 28 pt.",
  "occlusion:strength/Chest-supported row:elR-haR": "The far forearm hangs behind the bench pad and near arm for a sixth of the rep.",
- "thumbnail:strength/Chest-supported row": "Lying on the incline, the far arm and far leg sit behind the near ones for part of the pull. Four limbs read at the worst instant against five today."
+ "thumbnail:strength/Chest-supported row": "Lying on the incline, the far arm and far leg sit behind the near ones for part of the pull. Four limbs read at the worst instant against five today.",
+ "occlusion:morning-flow/Thread the needle:hpR-knR": "Since the 2026-11-13 proportions the hip joint sits 3 units up inside the trunk, so on all fours the top of the far thigh starts behind the trunk. The knee, shin and foot stay in view and the thread reads from the arms.",
+ "overlap:strength/Neutral-grip DB floor press:thighs": "Lying on the back seen from the side, the two bent legs are one behind the other, and with the longer thighs they now overlap for the whole press. The movement is in the arms; the legs are a fixed rest."
 }

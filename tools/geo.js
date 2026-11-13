@@ -1,4 +1,5 @@
-// geometry invariants: limb lengths ±0.2, toe len 6.4, no joint through floor (y>95.5),
+// geometry invariants: limb lengths ±0.2 (thigh and shin 19.75, ankle to ball 7.65 since the
+// 2026-11-13 proportions), no joint through floor (y>95.5),
 // foot drift ≤1.8 for movements outside the allowed moving set (see CLAUDE.md gauntlet).
 const fs=require('fs'),path=require('path');const ROOT=path.join(__dirname,'..');
 const APPS=['morning-flow','prenatal-stretch','prenatal-movement','daily-13'];
@@ -21,9 +22,9 @@ const MOVING=new Set([
  'Seated cat-cow','Seated side reach',
  'Dead bug','Bird dog']);  // daily-10: extending leg / contralateral reach
 const SEGS=[['pelvis','chest',13],['chest','neck',13],['neck','head',9],
- ['hpL','knL',19],['knL','ftL',19],['hpR','knR',19],['knR','ftR',19],
+ ['hpL','knL',19.75],['knL','ftL',19.75],['hpR','knR',19.75],['knR','ftR',19.75],
  ['shL','elL',13],['elL','haL',13],['shR','elR',13],['elR','haR',13],
- ['ftL','toeL',6.4],['ftR','toeR',6.4]];
+ ['ftL','toeL',7.65],['ftR','toeR',7.65]];
 const TOL=0.2, FLOOR=95.5, DRIFT=1.8;
 let fail=false;
 for(const app of APPS){

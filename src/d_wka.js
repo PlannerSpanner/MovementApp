@@ -55,7 +55,7 @@ const WK_A=[
  // shallower hinge (53 deg, was 64) and the arms hang 5 deg back of plumb (was 11).
  // Overhand grip: gL/gR 90 (pronated).
  A:{p:[0,55.2,0],yaw:24,tw:0,s:[3,3],hf:0,aL:[7,-3,7,-3],aR:[7,3,7,3],lL:[-2,-6,2,-5],lR:[2,6,-2,5],gL:90,gR:90},
- B:{p:[-5.7,61.3,-12.9],yaw:24,tw:0,s:[53.5,53.5],hf:-14,aL:[-5,-3,-5,-3],aR:[-5,3,-5,3],lL:[0,0,0,0],
+ B:{p:[-5.7,58.7,-12.9],yaw:24,tw:0,s:[53.5,53.5],hf:-14,aL:[-5,-3,-5,-3],aR:[-5,3,-5,3],lL:[0,0,0,0],
     lR:[0,0,0,0],gL:90,gR:90}},
 
 {n:"Face pull",sets:2,reps:"15",cyc:2.7,cam:60,pitch:22,

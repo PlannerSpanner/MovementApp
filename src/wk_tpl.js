@@ -6,6 +6,13 @@ function lerpT(A,B,t){if(!A&&!B)return null; if(A&&A.k)return A;
 function normalise(m){
   if(m._norm) return; m._norm=true;
   const KF=[m.A,m.B,m.M].filter(Boolean);
+  // proportions 2026-11-13: authored planted-foot targets are lifted, once, to the new ankle
+  // height (eng2.js footRetarget) BEFORE anything is derived from them
+  // floor positions (trunk base within 25 of the floor in A): the hip joints keep A's offset
+  // direction while the spine flexes over them (eng2.js p.hs)
+  if(m.A.p[1]>=68)KF.forEach(k=>{if(k.hs==null)k.hs=m.A.s[0];});
+  KF.forEach(k=>{if(k._rt)return;k._rt=true;if(Math.abs(k.roll||0)>45)return;   // side-lying: no foot stands on its sole
+    if(k.ikFL)k.ikFL=footRetarget(k.ikFL,k.fpL,k.fyL);if(k.ikFR)k.ikFR=footRetarget(k.ikFR,k.fpR,k.fyR);});
   if(m.pin){
     const j=solve(m.A);
     if(m.pin.indexOf('L')>=0){const t=j.ftL.slice(); KF.forEach(k=>k.ikFL=t.slice());}
@@ -18,7 +25,7 @@ function normalise(m){
 }
 function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
   swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),st:lerp(A.st||0,B.st||0,t),
-  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
+  p:lerpA(A.p,B.p,t),hs:(A.hs==null||B.hs==null)?undefined:lerp(A.hs,B.hs,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
   s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);

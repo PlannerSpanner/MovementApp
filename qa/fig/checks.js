@@ -46,14 +46,15 @@ function audit(E,m){
   //           facing forward is supinated and is reported as such.
   //  palm     a hand laid flat on the floor or a bench has its palm DOWN, and with the fingers
   //           pointing the way the body faces the thumb is on the inner side
-  //  handPop  the thumb swings more than 45 deg about the forearm between two sampled phases
+  //  handPop  the thumb swings more than 45 deg about the forearm between two sampled phases,
+  //           and more than 25 deg per unit of wrist travel (so it is a jump, not a fast turn)
   ['L','R'].forEach(s=>{
     const bad={};const note=(k,v,ph,msg)=>{if(!bad[k]||v>bad[k].v)bad[k]={v,ph,msg};};
     let prev=null;
     fr.forEach(f=>{const j=f.j,g=f.pose['g'+s]||0,h=E.handFrame(j,s,g,f.pose['p'+s]);
       const lat=nrm(sub(j.shR,j.shL)),upb=nrm(sub(j.chest,j.pelvis)),fw=cross(upb,lat),med=s==='L'?lat:lat.map(x=>-x);
       const fore=nrm(sub(j['ha'+s],j['el'+s])),elbow=ang(sub(j['sh'+s],j['el'+s]),sub(j['ha'+s],j['el'+s]));
-      const flat=Math.abs(h.u[1])<0.999&&dot(h.u,fore)<0.999&&Math.abs(h.t[1])<1e-6;   // the engine laid it on a surface
+      const flat=dot(h.u,fore)<0.9999&&Math.abs(h.t[1])<1e-6;   // the engine laid it fully on a surface
       if(flat){
         if(h.palm[1]<0.9-Math.abs(h.u[1]))note('palm',1-h.palm[1],f.ph,`${s} hand lies on a surface with its palm not down (palm y ${h.palm[1].toFixed(2)})`);
         const hu=nrm([h.u[0],0,h.u[2]]),hf=nrm([fw[0]+upb[0],0,fw[2]+upb[2]]);
@@ -66,8 +67,11 @@ function audit(E,m){
       // thumb swing about the forearm between neighbouring phases (the forearm's own motion removed)
       if(prev&&!flat&&!prev.flat){const d=dot(h.t,prev.u),tp=nrm([prev.t[0],prev.t[1],prev.t[2]]),du=dot(tp,h.u);
         const a1=nrm(sub(h.t,h.u.map(x=>x*0))),a0=nrm(sub(tp,h.u.map(x=>x*du)));const sw=ang(a1,a0);
-        if(sw>45)note('handPop',sw,f.ph,`${s} thumb swings ${sw.toFixed(0)} deg in one step`);}
-      prev={u:h.u,t:h.t,flat};});
+        // a pop is a swing the hand's own travel does not explain: over 45 deg in one step AND
+        // over 25 deg per unit the wrist moved (a hand leaving the floor fast may turn fast)
+        const trav=len(sub(j['ha'+s],prev.ha));
+        if(sw>45&&sw>25*trav)note('handPop',sw,f.ph,`${s} thumb swings ${sw.toFixed(0)} deg in one step while the wrist moves ${trav.toFixed(1)}`);}
+      prev={u:h.u,t:h.t,flat,ha:j['ha'+s]};});
     for(const k in bad)add(k,'hand'+s,`${bad[k].msg} at ph ${bad[k].ph.toFixed(2)}`);
   });
   for(const k in fl)add('floor',k,`${k} ${fl[k].d.toFixed(1)} below the floor at ph ${fl[k].ph.toFixed(2)}`);
@@ -118,11 +122,16 @@ function audit(E,m){
           if(!inside(pt,pl,0.12*sc)){const d=near(pt,pl);if(d>past){past=d;pastPh=f.ph;}}});}
         // 3. proportions and the arch, from the landmarks themselves
         const L=E.footLandmarks(f.j,sd,k),F=L.F,al=p=>dot(sub(p,F.ft),F.f),hh=p=>dot(sub(p,F.ft),F.n),ww=p=>dot(sub(p,F.ft),cross(F.f,F.n))*(sd==='L'?1:-1);
-        const rear=Math.min(...L.pts.map(q=>al(q.p)-q.r)),front=Math.max(...L.pts.map(q=>al(q.p)+q.r)),ratio=-rear/(front-rear);
-        if(ratio<0.10||ratio>0.30||front-rear<10||front-rear>13)heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
+        // the heel landmarks follow the shin's line down (engine: sheared by L.lean); measure the
+        // foot's own proportions with that shear taken out
+        const un=q=>/^heel/.test(q.id)?al(q.p)+hh(q.p)*L.lean:al(q.p);
+        const rear=Math.min(...L.pts.map(q=>un(q)-q.r)),front=Math.max(...L.pts.map(q=>al(q.p)+q.r)),ratio=-rear/(front-rear);
+        // foot 12.3 long (0.152 of stature); the heel is a small share of it BY DECISION: its back is
+        // flush with the shin (Will, 2026-11-12), so all the length is in front of the ankle
+        if(ratio<0.08||ratio>0.30||front-rear<11.8||front-rear>12.8)heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
         // heel flush with the shin: measured in the foot's own profile (along the foot, behind the ankle),
         // the back of the heel may reach at most half a unit behind the shin's back edge
-        const hbk=Math.max(...L.pts.filter(q=>/^heel|^ach/.test(q.id)).map(q=>-(al(q.p)-q.r)))-L.tip;
+        const hbk=Math.max(...L.pts.filter(q=>/^heel|^ach/.test(q.id)).map(q=>-(un(q)-q.r)))-L.tip;
         if(hbk>heelBack)heelBack=hbk;
         // and against the ACTUAL shin whenever it stands within 15 deg of square on the foot: heel
         // landmarks, in the foot's side plane, measured square to the shin axis, behind it

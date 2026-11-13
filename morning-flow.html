@@ -177,7 +177,7 @@ svg{--ft:color-mix(in srgb,var(--fi) var(--tk),var(--fp))}
   </div>
 </div></div>
 <script>
-const BUILDV='8df3cf5210';
+const BUILDV='d286923e34';
 // Morning Flow — 13 movements: eight standing (continuous and rhythmic), then a
 // five-movement ground finish moved in from the retired Morning Movement app
 // (2026-08-26; poses verbatim). TR_ALL build: tdur = length of the GET SET UP gap
@@ -208,7 +208,7 @@ const MOVES=[
 {n:"Arm sweeps with knee dip",pos:'standing',cue:"Arms sweep overhead, then fold and swing through",dur:50,bil:false,cyc:2.0,
  setup:"Stay standing, feet under your hips, arms hanging.",
  A:{p:[2.4,55.7,5.5],yaw:24,tw:0,s:[-12,-18],hf:-22,aL:[196,-9,204,-7],aR:[196,9,204,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]},
- B:{p:[-3.7,60,-8.2],yaw:24,tw:0,s:[122,146],hf:14,aL:[-62,-9,-70,-7],aR:[-62,9,-70,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]}},
+ B:{p:[-3.7,56.5,-8.2],yaw:24,tw:0,s:[122,146],hf:14,aL:[-62,-9,-70,-7],aR:[-62,9,-70,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]}},
 
 // A = right punch: the trunk twists left (tw<0 brings the right shoulder forward), the
 // right arm extends fully across the body, the left fist retracts to the ribs; B mirrors.
@@ -349,9 +349,9 @@ const MOVES=[
 // the ball of the foot, the other foot is flat.
 {n:"Pedaling down dog",pos:'downdog',cue:"Alternate pressing each heel down",dur:60,bil:false,cyc:2.2,tdur:15,
  setup:"Tuck your toes and press up and back into down dog, hips high.",
- A:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
+ A:{p:[0.77,57.85,2.06],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
     aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-10.9,90.3,-15.4],ikFR:[-1.85,93,-19.7],fpL:25,fpR:0},
- B:{p:[0,60.3,0],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
+ B:{p:[0.77,57.85,2.06],yaw:20,tw:0,s:[129,129],hf:8,ikL:{w:[7.2,93,40.3]},ikR:{w:[20.4,93,35.5]},
     aL:[0,0,0,0],aR:[0,0,0,0],ikFL:[-11.25,93,-16.3],ikFR:[-1.5,90.3,-18.8],fpL:0,fpR:25}},
 
 // Rebuilt 2026-10-12 in the standard quadruped frame (torso along +z, shins trailing
@@ -384,14 +384,38 @@ const MOVES=[
 // arms, and the old floor targets were missed by 2 to 3.6.
 {n:"90/90 with a fold",pos:'seated',cue:"Z-sit: front shin across, back shin behind — fold forward",dur:60,bil:true,cyc:3.4,cam:58,pitch:30,tdur:15,
  setup:"Sit into a Z. Front shin across in front, back shin behind you.",
- A:{p:[0,90,0],yaw:-8,tw:0,s:[6,4],hf:0,ikL:{w:[-11,88.8,0.5]},ikR:{w:[5.6,88.5,9.5]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lR:[88,12,6,-86],lL:[57,-76,-90,-6]},
- B:{p:[0,90,0],yaw:-8,tw:0,s:[42,48],hf:-8,ikL:{w:[-4,92,16]},ikR:{w:[12,92,18]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lR:[88,12,6,-86],lL:[57,-76,-90,-6]}}
+ A:{p:[0,92,0],yaw:-8,tw:0,s:[6,4],hf:0,ikL:{w:[-11,88.8,0.5]},ikR:{w:[5.6,88.5,9.5]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lR:[80,12,6,-86],lL:[57,-76,-90,-6]},
+ B:{p:[0,92,0],yaw:-8,tw:0,s:[42,48],hf:-8,ikL:{w:[-4,92,16]},ikR:{w:[12,92,18]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lR:[80,12,6,-86],lL:[57,-76,-90,-6]}}
 ];
 
 // ================= 3D skeleton =================
-const L={s1:13,s2:13,nh:9,hr:6.2,up:13,fo:13,th:19,sh:19,shW:7.0,hpW:5.0,ft:6.4};
+// PROPORTIONS (2026-11-13, against Drillis and Contini 1966 at this figure's height of 80.8
+// units, sole to crown; sources and their limits in docs/design/research.md section 5):
+//   hip joint 42.1 above the sole (0.521 H; D&C 0.530), thigh and shank 19.75 each (0.244 H;
+//   D&C 0.245 and 0.246), ankle joint 3.1 above the sole (0.038 H; D&C 0.039), shoulder 65.6
+//   (0.812 H; D&C 0.818), hip joint to shoulder 23.0 (D&C 23.3), foot 12.3 long (0.152 H).
+// Until then the hip joint sat at the bottom of the drawn trunk, 3 units low, with legs 1.5
+// short and the ankle joint 1.6 above the sole. Pose data did not change: `p` is still the
+// BASE of the trunk (the crotch line, where the drawn trunk ends). The HIP JOINTS now sit
+// hipUp further up the lower spine, inside the trunk shape, and the legs pivot from there.
+// Head, shoulders, arms and every hand position are exactly where they were.
+// Arms were left at 13 + 13: shoulder to wrist is 26.0 against D&C's 26.8 (3% short).
+const L={s1:13,s2:13,nh:9,hr:6.2,up:13,fo:13,th:19.75,sh:19.75,shW:7.0,hpW:5.0,ft:7.65,hipUp:3.0,ankUp:1.5};
+// A planted foot's authored ankle target was written for the old foot (ankle joint on the
+// y = 93 plane, 6.4 from the ball). The new ankle joint is ankUp higher over the same sole and
+// 7.65 from the ball, so a SOLE-DOWN target at its contact height is lifted to match: by 1.5
+// when flat, by the pitched equivalent when the heel is up on the ball (fp). Top-down feet
+// (kneeling, prone: fy beyond 90) and feet in the air are returned unchanged. The templates
+// apply this ONCE to authored keyframes in normalise(); the solver itself has no special case.
+function footRetarget(T,fp,fy){
+  if(!T||Math.abs(fy||0)>90) return T;
+  const a=R(Math.max(0,fp||0)),s=Math.sin(a),c=Math.cos(a);
+  const hOld=6.4*s, hNew=(L.ankUp+1.6)*c-1.6+L.ft*s;
+  const w=Math.max(0,Math.min(1,1-((93-hOld)-T[1]-0.5)/1.5));
+  return w>0?[T[0],T[1]-(hNew-hOld)*w,T[2]]:T;
+}
 const R=d=>d*Math.PI/180;
 const rotY=(v,deg)=>{const c=Math.cos(R(deg)),s=Math.sin(R(deg));
   return [v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c];};
@@ -444,8 +468,15 @@ function solve(p){
   const st=p.st||0;
   const axS=twist(rotR(st?rotZb([1,0,0],st):[1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
   const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
-  const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
-  const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
+  // hip joints: hipUp up the lower spine from the trunk's base (see L). pvL/pvR are the base
+  // corners of the drawn trunk, where the hip joints used to be.
+  // p.hs (set by the templates' normalise for floor positions) = the lower-spine angle the hip
+  // offset is taken along instead of this frame's own: when the spine flexes over hips that
+  // rest or pivot on the floor (cat-cow, cobra, a seated fold), the hip joints must not swing.
+  const hc=add(pelvis,p.hs==null?d1:rotR(rotZb(spineDir(p.hs),sl),yawP),L.hipUp);
+  const hpL=add(hc,axH,-L.hpW), hpR=add(hc,axH,L.hpW);
+  const pvL=add(pelvis,axH,-L.hpW), pvR=add(pelvis,axH,L.hpW);
+  const J={pelvis,chest,neck,head,shL,shR,hpL,hpR,pvL,pvR};
   const fk=(o,a,l1,l2,yaw)=>{const j1=add(o,rotR(dir(a[0],a[1]),yaw),l1);
     return [j1,add(j1,rotR(dir(a[2],a[3]),yaw),l2)];};
   // legs: IK to a world foot target if given, else forward kinematics
@@ -484,8 +515,9 @@ function solve(p){
     const a=perp(rotR([0,0,1],yawP)), b=perp([0,1,0]);
     let d=nrm(len(a)>=len(b)?a:b);
     if(!isFinite(d[0])||len(d)<1e-3) d=rotR([0,0,1],yawP);
-    // a foot may not pass through the floor: if it would, lay it along the floor instead
-    const FL=93;
+    // a foot may not pass through the floor: if it would, lay it along the floor instead.
+    // The ball joint of a planted foot rides ankUp above the old floor plane, level with the ankle.
+    const FL=Math.max(93-L.ankUp,Math.min(93,ft[1]));
     if(ft[1]+d[1]*L.ft > FL){
       const dy=Math.max(-1,Math.min(1,(FL-ft[1])/L.ft));
       const h=Math.sqrt(Math.max(0,1-dy*dy));
@@ -507,7 +539,8 @@ function solve(p){
   // roll from flat to the ball with no flip. A toe is never drawn under the floor.
   const footAt=(ft,fp,fy)=>{
     const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
-    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const FL=Math.abs(fy||0)>90?93:Math.max(93-L.ankUp,Math.min(93,ft[1]));   // sole-down: the ball joint stays ankUp up
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>FL) dy=Math.max(-1,Math.min(1,(FL-ft[1])/L.ft));
     const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
     return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
   };
@@ -535,14 +568,17 @@ function solve(p){
 // those edges as a path when bend is non-zero and the legacy polygon when it is zero,
 // so every existing pose renders byte-identically. n = samples per edge (>=2).
 function torsoEdges(J,bend,n){
-  const c0=add(J.hpL,sub(J.hpR,J.hpL),0.5), c1=add(J.shL,sub(J.shR,J.shL),0.5);
-  const u=nrm(sub(c1,c0)), lat=nrm(add(sub(J.hpR,J.hpL),sub(J.shR,J.shL),1));
+  // the trunk is drawn from its BASE corners (pvL/pvR), not from the hip joints, which sit
+  // inside it since 2026-11-13; a J without them (old callers, tests) falls back to the hips
+  const bL=J.pvL||J.hpL, bR=J.pvR||J.hpR;
+  const c0=add(bL,sub(bR,bL),0.5), c1=add(J.shL,sub(J.shR,J.shL),0.5);
+  const u=nrm(sub(c1,c0)), lat=nrm(add(sub(bR,bL),sub(J.shR,J.shL),1));
   let f=cross(u,lat); if(len(f)<1e-6) f=[0,0,1]; f=nrm(f);          // trunk front
   const sag=-(len(sub(c1,c0))/2)*Math.tan(R(bend)/4);                // + bend bows backward
   const L=[],Rr=[];
   for(let i=0;i<=n;i++){const t=i/n, k=sag*Math.sin(Math.PI*t);
-    L.push(add(add(J.hpL,sub(J.shL,J.hpL),t),f,k));
-    Rr.push(add(add(J.hpR,sub(J.shR,J.hpR),t),f,k));}
+    L.push(add(add(bL,sub(J.shL,bL),t),f,k));
+    Rr.push(add(add(bR,sub(J.shR,bR),t),f,k));}
   return {L,R:Rr};
 }
 
@@ -645,7 +681,14 @@ function footFrame(J,s){
 // The toe joint of the skeleton is the ball of the foot (big-toe joint line), as the
 // authored contact numbers place it; with the sole down and the ball planted the toes lie
 // flat beyond it, so a heel-up foot pivots on its ball.
-const FOOT={len:10.7,h0:-1.6};
+// FOOT DIMENSIONS (2026-11-13), as fractions of a 12.3-unit foot (0.152 of stature):
+//   ball of the big toe 0.74 from the heel and of the little toe 0.64 (Xu et al. 2018);
+//   forefoot breadth 0.37 and heel breadth 0.26 (Hajaghazadeh et al. 2018); inner arch
+//   (navicular) 0.15 high (Williams and McClay 2000); ankle joint 3.1 above the sole (D&C).
+//   NOT from data: the back of the heel stays flush with the back of the shin (Will's
+//   decision, 2026-11-12), so the ankle is 0.12 of the foot from the heel where the cited
+//   malleolus position is 0.26 to 0.31. The added length is all in front of the ankle.
+const FOOT={len:12.3,h0:-(L.ankUp+1.6)};
 function footLandmarks(J,s,k){
   const F=footFrame(J,s),ft=F.ft,ball=F.ball,f=F.f,n=F.n,mg=s==='L'?1:-1;
   const med=[F.sd[0]*mg,F.sd[1]*mg,F.sd[2]*mg];
@@ -656,19 +699,23 @@ function footLandmarks(J,s,k){
   const P=(a,h,w)=>[ft[0]+f[0]*a+n[0]*h+med[0]*w,ft[1]+f[1]*a+n[1]*h+med[1]*w,ft[2]+f[2]*a+n[2]*h+med[2]*w];
   const T=(a,h,w)=>[ball[0]+td[0]*a+tu[0]*h+med[0]*w,ball[1]+td[1]*a+tu[1]*h+med[1]*w,ball[2]+td[2]*a+tu[2]*h+med[2]*w];
   const h0=FOOT.h0,tip=((SKIN&&SKIN.tip)||2.3)*(k||1)/2,hb=tip+0.2;
+  // the heel hangs 3.1 below the ankle now, so it follows the SHIN'S line down (the Achilles
+  // line) instead of dropping square to the sole: sheared by the shin's lean, up to 15 deg
+  const usH=nrm(sub(ft,J['kn'+s])),dn=-(usH[0]*n[0]+usH[1]*n[1]+usH[2]*n[2]),df=usH[0]*f[0]+usH[1]*f[1]+usH[2]*f[2];
+  const lean=dn>0.2?Math.max(-0.27,Math.min(0.27,df/dn)):0, HS=h=>-(h)*lean;   // shift along the foot at height h (h < 0 below the ankle)
   const pts=[
     {id:'ankle',p:P(0,0,0),r:0.6},
     {id:'malM',p:P(0.1,0.15,tip-0.25),r:0.55},{id:'malL',p:P(-0.3,-0.15,-(tip-0.25)),r:0.55},   // inner and outer ankle bones
     // The back of the heel is nearly FLUSH with the back of the shin (the Achilles line): it
     // reaches 0.2 behind the shin's back edge when the shin is square on the foot (Will, 2026-11-12: at most half a unit, which then holds up to a 15 deg lean), with a
     // small rounded corner at the bottom. hb = how far behind the ankle that is.
-    {id:'heelB',p:P(-(hb-0.55),h0+0.75,0),r:0.55},             // back of the heel
-    {id:'heelM',p:P(-(hb-0.6),h0+0.5,0.65),r:0.5},{id:'heelL',p:P(-(hb-0.6),h0+0.5,-0.75),r:0.5},   // heel pad
-    {id:'archT',p:P(2.5,h0+1.35,1.05),r:0.5},                  // top of the inner arch, off the floor
-    {id:'edgeL',p:P(2.4,h0+0.45,-1.5),r:0.45},                 // the outside edge, low
-    {id:'instep',p:P(2.7,0.35,0.1),r:0.6},
-    {id:'mtp1',p:P(6.4,h0+0.6,1.5),r:0.6},{id:'mtp5',p:P(5.2,h0+0.5,-2.0),r:0.5},   // big-toe and little-toe joints
-    {id:'toe1',p:T(2.35,h0+0.4,1.2),r:0.4},{id:'toe2',p:T(2.15,h0+0.4,0.2),r:0.4},{id:'toe5',p:T(1.0,h0+0.35,-1.9),r:0.35}];  // toe tips
+    {id:'heelB',p:P(-(hb-0.55)+HS(h0+0.75),h0+0.75,0),r:0.55},             // back of the heel
+    {id:'heelM',p:P(-(hb-0.6)+HS(h0+0.5),h0+0.5,1.05),r:0.5},{id:'heelL',p:P(-(hb-0.6)+HS(h0+0.5),h0+0.5,-1.15),r:0.5},   // heel pad, 3.2 across
+    {id:'archT',p:P(3.3,h0+1.85,1.05),r:0.5},                  // top of the inner arch, off the floor
+    {id:'edgeL',p:P(3.0,h0+0.45,-1.6),r:0.45},                 // the outside edge, low
+    {id:'instep',p:P(3.2,0.3,0.1),r:0.6},
+    {id:'mtp1',p:P(L.ft,h0+0.6,1.55),r:0.6},{id:'mtp5',p:P(L.ft-1.25,h0+0.5,-2.0),r:0.5},   // big-toe and little-toe joints
+    {id:'toe1',p:T(3.0,h0+0.4,1.2),r:0.4},{id:'toe2',p:T(2.8,h0+0.4,0.2),r:0.4},{id:'toe5',p:T(1.4,h0+0.35,-1.9),r:0.35}];  // toe tips
   // the shin's own cross-section at the ankle, as six small balls round the shin axis: the foot
   // is exactly as thick as the shin where they meet (0.15 more, no bulge), whatever angle the
   // foot makes with the shin, so the shin's square-cut end always lies inside the outline
@@ -676,8 +723,8 @@ function footLandmarks(J,s,k){
    let e1=[n[0]-us[0]*d0,n[1]-us[1]*d0,n[2]-us[2]*d0]; if(len(e1)<0.2){const d1=us[0]*f[0]+us[1]*f[1]+us[2]*f[2];e1=[f[0]-us[0]*d1,f[1]-us[1]*d1,f[2]-us[2]*d1];}
    e1=nrm(e1); const e2=cross(us,e1),rr=tip-0.3;
    for(let a=0;a<6;a++){const c=Math.cos(a*Math.PI/3)*rr,q=Math.sin(a*Math.PI/3)*rr;
-     pts.push({id:'ring',p:[ft[0]+e1[0]*c+e2[0]*q,ft[1]+e1[1]*c+e2[1]*q,ft[2]+e1[2]*c+e2[2]*q],r:0.45});}}
-  return {F,med,pts,tip,archU:P(2.6,h0+0.8,1.0),heelSole:P(-(hb-0.6),h0,0.65),ballSole:P(6.4,h0,1.5)};
+     pts.push({id:'ring',p:[ft[0]+e1[0]*c+e2[0]*q,ft[1]+e1[1]*c+e2[1]*q,ft[2]+e1[2]*c+e2[2]*q],r:0.6});}}
+  return {F,med,pts,tip,lean,archU:P(3.3,h0+1.1,1.0),heelSole:P(-(hb-0.6)+HS(h0),h0,0.65),ballSole:P(L.ft,h0,1.5)};
 }
 // resample a closed polygon evenly along its length and relax it, so the outline is one soft
 // curve with no facet where the hull steps from one landmark to the next
@@ -753,13 +800,23 @@ function handFrame(J,s,g,surf){
   // height of a bench top) is laid FLAT on it instead: fingers along the surface in the
   // forearm's compass direction (or the body's facing when the forearm is vertical), palm down.
   // A forearm lying along the surface (side plank, forearm plank) rests the same way.
-  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0, lying=Math.abs(ha[1]-S0)<=1.6&&Math.abs(el[1]-S0)<=2.6;
-  if((over>0||lying)&&ha[1]<=S0+1.5){
-    let h=[u[0],0,u[2]]; if(len(h)<0.35) h=[fw[0],0,fw[2]]; if(len(h)<1e-3) h=[0,0,1]; h=nrm(h);
+  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0, c01=x=>Math.max(0,Math.min(1,x));
+  const lying=c01((1.6-Math.abs(ha[1]-S0))/0.8)*c01((2.6-Math.abs(el[1]-S0))/0.8);   // 0..1, graded so it cannot snap
+  let flat=null, kf=0;
+  if((over>0||lying>0)&&ha[1]<S0+1.5){
+    // fingers lie along the forearm's compass direction; as the forearm nears vertical that
+    // direction stops meaning anything and they turn to the body's facing instead. Graded
+    // (0.2 to 0.6 of horizontal reach), never a switch, so the hand cannot jump round.
+    const hu=[u[0],0,u[2]],lu=len(hu); let hb=[fw[0],0,fw[2]]; hb=len(hb)<1e-3?[0,0,1]:nrm(hb);
+    const wu=smooth(c01((lu-0.2)/0.4)); let h=lu<1e-3?hb:[hu[0]/lu*wu+hb[0]*(1-wu),0,hu[2]/lu*wu+hb[2]*(1-wu)];
+    h=len(h)<1e-3?hb:nrm(h);
     const dy=Math.max(0,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
-    u=[h[0]*k,dy,h[2]*k];
     const c=cross(h,[0,1,0]);                              // palm down: t = -hs * (u x down), kept level
-    return out(u,nrm([-hs*c[0],0,-hs*c[2]]));
+    flat={u:[h[0]*k,dy,h[2]*k],t:nrm([-hs*c[0],0,-hs*c[2]])};
+    // the hand settles onto the surface over the first 4.5 units of contact instead of snapping
+    // flat in one frame (a hand sweeping past the floor: arm sweeps with knee dip)
+    kf=Math.max(lying,c01(over/4.5))*c01((S0+1.5-ha[1])/0.8);   // and fades out as the wrist sinks past the surface
+    if(kf>=1) return out(flat.u,flat.t);
   }
   const perp=(v)=>{const d=v[0]*u[0]+v[1]*u[1]+v[2]*u[2];return [v[0]-u[0]*d,v[1]-u[1]*d,v[2]-u[2]*d];};
   // neutral reference from the FOREARM'S DIRECTION IN THE BODY'S FRAME (see above). It does not
@@ -768,7 +825,18 @@ function handFrame(J,s,g,surf){
   const cu=cross(lat,u),pf=perp(fw),pu=perp(upb);
   let w=[cu[0]+0.3*pf[0]+0.3*pu[0],cu[1]+0.3*pf[1]+0.3*pu[1],cu[2]+0.3*pf[2]+0.3*pu[2]];
   if(len(w)<1e-3) w=perp([0,-1,0]); if(len(w)<1e-3) w=perp([1,0,0]); w=nrm(w);
-  return out(u,g?rotAxis(w,u,hs*R(g)):w);
+  const tF=g?rotAxis(w,u,hs*R(g)):w;
+  if(!flat) return out(u,tF);
+  const e=smooth(kf),ub=nrm([u[0]+(flat.u[0]-u[0])*e,u[1]+(flat.u[1]-u[1])*e,u[2]+(flat.u[2]-u[2])*e]);
+  // the thumb TURNS about the forearm from its free direction to its flat one (never a straight
+  // blend of the two vectors, which collapses when they are opposite: a seated fold). The turn
+  // goes the short way, except that anything past 150 deg the short way goes round by
+  // PRONATION instead: a hand never supinates to lie flat.
+  const pj=v=>{const d=v[0]*ub[0]+v[1]*ub[1]+v[2]*ub[2];const q=[v[0]-ub[0]*d,v[1]-ub[1]*d,v[2]-ub[2]*d];return len(q)<1e-3?null:nrm(q);};
+  const a0=pj(tF),a1=pj(flat.t); if(!a0||!a1) return out(ub,a1||a0||flat.t);
+  const cx=cross(a0,a1); let th=Math.atan2(cx[0]*ub[0]+cx[1]*ub[1]+cx[2]*ub[2],a0[0]*a1[0]+a0[1]*a1[1]+a0[2]*a1[2]);
+  let tp=((hs*th)%(2*Math.PI)+2*Math.PI)%(2*Math.PI); if(tp>R(210)) tp-=2*Math.PI;
+  return out(ub,rotAxis(a0,ub,hs*tp*e));
 }
 // opt.fist: the hand is closed round an implement (a short rounded fist that the handle passes
 // through at the grip point) instead of the open mitten; opt.surf: see handFrame.
@@ -875,6 +943,13 @@ function lerpT(A,B,t){if(!A&&!B)return null; if(A&&A.k)return A;
 function normalise(m){
   if(m._norm) return; m._norm=true;
   const KF=[m.A,m.B,m.M].filter(Boolean);
+  // proportions 2026-11-13: authored planted-foot targets are lifted, once, to the new ankle
+  // height (eng2.js footRetarget) BEFORE anything is derived from them
+  // floor positions (trunk base within 25 of the floor in A): the hip joints keep A's offset
+  // direction while the spine flexes over them (eng2.js p.hs)
+  if(m.A.p[1]>=68)KF.forEach(k=>{if(k.hs==null)k.hs=m.A.s[0];});
+  KF.forEach(k=>{if(k._rt)return;k._rt=true;if(Math.abs(k.roll||0)>45)return;   // side-lying: no foot stands on its sole
+    if(k.ikFL)k.ikFL=footRetarget(k.ikFL,k.fpL,k.fyL);if(k.ikFR)k.ikFR=footRetarget(k.ikFR,k.fpR,k.fyR);});
   // a foot listed in m.pin is nailed to wherever it starts, in every keyframe
   if(m.pin){
     const j=solve(m.A);
@@ -894,7 +969,7 @@ function normalise(m){
 }
 function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
   swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),st:lerp(A.st||0,B.st||0,t),
-  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
+  p:lerpA(A.p,B.p,t),hs:(A.hs==null||B.hs==null)?undefined:lerp(A.hs,B.hs,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
   s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
   ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);

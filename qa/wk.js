@@ -9,9 +9,9 @@ const core=js.slice(0,js.indexOf('// ---- DOM ----'));
 const ctx=new Function(core+'\nreturn {WK_A,WK_B,solve,poseAt,propShapes,fitOf,figMarkup,TORSO,PROP,freshChecks,dayKey,gripPt};')();
 const {WK_A,WK_B,solve,poseAt,propShapes,gripPt}=ctx;
 const SEGS=[['pelvis','chest',13],['chest','neck',13],['neck','head',9],
- ['hpL','knL',19],['knL','ftL',19],['hpR','knR',19],['knR','ftR',19],
+ ['hpL','knL',19.75],['knL','ftL',19.75],['hpR','knR',19.75],['knR','ftR',19.75],
  ['shL','elL',13],['elL','haL',13],['shR','elR',13],['elR','haR',13],
- ['ftL','toeL',6.4],['ftR','toeR',6.4]];
+ ['ftL','toeL',7.65],['ftR','toeR',7.65]];
 const TOL=0.2, FLOOR=95.5;
 // feet allowed to travel (split-squat front foot & all pinned feet must NOT)
 const DRIFT_OK={'Neutral-grip lat pulldown':1.8,'Band pull-apart':1.8,'Face pull':1.8,

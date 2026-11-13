@@ -1,6 +1,6 @@
 // Shared geometry for the figure checks. World frame: y DOWN, floor at y=93, the figure is
 // about 80 units tall (1 unit ~ 2.2 cm). Every movement is sampled at N phases of one cycle.
-const N=64, FLOOR=93;
+const N=64, FLOOR=93, ANK=1.5, REST={ftL:ANK,ftR:ANK,toeL:ANK,toeR:ANK};
 const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const add=(a,b,k=1)=>[a[0]+b[0]*k,a[1]+b[1]*k,a[2]+b[2]*k];
 const len=v=>Math.hypot(v[0],v[1],v[2]), nrm=v=>{const n=len(v)||1;return v.map(x=>x/n);};
@@ -21,7 +21,10 @@ function sample(E,m,n=N){
   // a joint name, 'gpL'/'gpR' (the grip point in the fist), 'a+b' (midpoint) or a raw [x,y,z]
   C.J=(f,k)=>Array.isArray(k)?k:(k.includes('+')?mid(C.J(f,k.split('+')[0]),C.J(f,k.split('+')[1])):(f.j[k]||E.gripPt(f.j,k)));
   C.ang=(f,a,b,c)=>angV(sub(C.J(f,a),C.J(f,b)),sub(C.J(f,c),C.J(f,b)));          // joint angle at b
-  C.gap=(f,k)=>FLOOR-C.J(f,k)[1];                                                 // height above the floor
+  // height above the floor. For the ankle and ball-of-foot joints it is the height above where
+  // that joint RESTS when the sole is planted (ANK above the y = 93 plane since the 2026-11-13
+  // proportions), so "heel down" still reads as a gap of zero.
+  C.gap=(f,k)=>FLOOR-C.J(f,k)[1]-(REST[k]||0);
   C.tilt=(f,a,b)=>{const t=angV(sub(C.J(f,b),C.J(f,a)),UP);return Math.min(t,180-t);};  // segment vs vertical, 0..90
   C.pitch=(f,a,b)=>angV(sub(C.J(f,b),C.J(f,a)),UP);                               // directed: 0 = b straight above a
   C.fwd=f=>rotY([0,0,1],f.pose.yaw||0);                                           // the body's facing (horizontal)
