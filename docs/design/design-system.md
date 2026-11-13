@@ -88,10 +88,16 @@ Tapping the figure drops a sheet from the top (so it never covers the time): pos
 
 ## 5. The figure
 
-- **Ink rendering.** Trunk, head and right limbs are solid ink. A 0.42-unit hairline of paper runs round each right limb so it separates from the trunk.
-- **Left limbs are hatched, always.** Left and right never swap with depth. Each of the four left limb segments has its own hatch: period 1.5 units, line 0.62, set 22° off square to the bone, anchored to the limb so it rides with it, inside a 0.5-unit ink outline.
-- **Left hands and feet** are the solid left tone with a 0.4-unit ink outline. They are too small to hold a hatch.
-- **Small sizes.** Below 2.3 screen points per figure unit, or when the figure's own scale is under 0.8, the whole left side is the solid tone. This is what the strength cards and the launcher use.
+Rebuilt 2026-11-13 after Will's phone review. The rules live in one place, `inkFigure` in `src/eng2.js`, and each has a check in `qa/fig/checks.js`.
+
+- **Six parts.** Trunk (rib cage and a rounded pelvis), head with its neck, and four whole limbs. A limb is one continuous shape, shoulder to fingertips or hip to toes. Nothing is drawn across a knee, elbow, wrist or ankle.
+- **One outline rule.** Every part has the same ink outline, 0.45 units, on both sides. Right limbs, trunk and head are ink inside it. Left limbs are paper inside it, with engraved lines.
+- **Left limbs are hatched, always.** Left and right never swap with depth. The hatch is real lines, not a pattern: period 1.5 units, line 0.62, set 22° off square to each bone, anchored to the limb so it rides with it, mitred at the joint so it turns the corner without a seam, and it runs on through the left hand and foot.
+- **Crossings.** Where one part passes in front of another, a 0.45-unit paper gap runs along its edge, at that crossing only. A limb has no gap round its own root, so a near arm or leg grows out of the trunk.
+- **Pelvis.** The trunk ends in a rounded pelvis whose lower outer corners are the hip joints (radius 1.9). Legs hinge there; nothing pokes out in a fold.
+- **Stacking.** Whole limbs are ordered, never single bones. Which of two parts is in front is decided where they overlap on screen, and changes only when the depth difference there is more than 0.8 units, with hysteresis. The order is fixed per movement, camera and phase.
+- **Hands and feet** are built from 3D landmarks with thickness and drawn as one smooth outline. The foot is one simple shape from either side, with no arch. A hand seen edge-on is a slab about two units deep. A hand on the floor lies palm down with the fingers pointing ahead.
+- **Small sizes.** When the figure's own scale is under 0.8, or hatching is switched off (strength cards, launcher), the left limbs are the solid left tone inside the same outline.
 - **Implements** are ochre. A mat is ochre at 30%.
 - **Ground** is one ink hairline at 55%.
 - **Stage fit.** The figure is fitted to the real shape of its stage with margins taken from what is drawn, capped at 2.1 times. Standing movements grow to fill a tall stage. Wide, low movements reach both side margins (plank, bird dog); on a portrait phone the width is their limit, so paper remains above and below them. Only a landscape stage would fill that.
@@ -183,7 +189,11 @@ Rules: nothing during work except its last three seconds; respect the system set
 - Poster: appears at once, clears after 1.8 s or on a tap. It never delays the timer.
 - With Reduce Motion on: no slides, no stamp animation; the seal simply appears.
 
-## 11. What the native build must add
+## 11. App icon
+
+Three options are built by `node proto/icons/build.js` into `icons/` (180, 192, 512, maskable 192 and 512, 1024 master, SVG), awaiting Will's choice: A the figure at the finish, cream on vermilion; B the seal, a vermilion disc carrying an M on ink; C the ink figure reaching across the seal on paper. No hatching; the icon figure wears a heavier skin (about 1.6 times the limb width) on the same skeleton so it reads at 60 points. Nothing is wired into the pages until one is chosen.
+
+## 12. What the native build must add
 
 - Lock-screen Live Activity: time left, next movement, the phase colour as the tint.
 - The haptics above (the web build has none).

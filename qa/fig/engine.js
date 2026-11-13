@@ -31,7 +31,7 @@ function source(app,opts){
 }
 const EXPORTS=a=>`\n;({MOVES:${a.moves},poseAt,solve,figMarkup,fitOf,project,propShapes,torsoEdges,L,`+
   `setCam,getCam:()=>CAM,getPitch:()=>PITCH,`+
-  `setSkin:s=>{SKIN=s;},getSkin:()=>SKIN,limbHalf,farK,footOutline,footLandmarks,FOOT,footFrame,handPoly,handFrame,gripPt,INK,LIMB_L,TORSO,PROP})`;
+  `setSkin:s=>{SKIN=s;},getSkin:()=>SKIN,limbHalf,farK,footOutline,footLandmarks,FOOT,footFrame,handOutline,handLandmarks,hullLoop,handFrame,gripPt,inkGeom,inkFigure,inkSchedule,INKR,INK,LIMB_L,TORSO,PROP})`;
 function load(app,opts){
   const a=APPS[app];
   const E=vm.runInNewContext(source(app,opts)+EXPORTS(a),{Math,console,Object,Array,JSON,isFinite},{filename:app});

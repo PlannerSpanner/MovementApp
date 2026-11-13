@@ -31,9 +31,9 @@ const MOVES=[
 
 {n:"Wide-knee child's pose",pos:'kneeling',cue:"Knees wide, belly rests between them",dur:60,bil:false,cyc:4.4,belly:1,cam:58,
  A:{p:[0,83.5,-9],yaw:22,tw:0,s:[112,90],hf:4,ikL:{w:[-8,92.5,33]},ikR:{w:[10,92.5,33]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15],fpL:4,fyL:180,fpR:4,fyR:180},
  B:{p:[0,84.5,-10.5],yaw:22,tw:0,s:[116,92],hf:2,ikL:{w:[-8,92.5,33]},ikR:{w:[10,92.5,33]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15],fpL:4,fyL:180,fpR:4,fyR:180}},
 
 {n:"Hands-and-knees rocking",pos:'quadruped',cue:"Rock the hips gently, spine stays neutral",dur:60,bil:false,cyc:2.8,belly:1,
  A:{p:[-0.9,74,-2.22],yaw:22,tw:0,s:[78,78],hf:14,ikL:{w:[-7,93,25]},ikR:{w:[7,93,25]},
@@ -43,9 +43,9 @@ const MOVES=[
 
 {n:"Kneeling hip flexor stretch",pos:'kneeling',cue:"Tuck the pelvis, shift gently forward",dur:60,bil:true,cyc:3.6,belly:1,pin:"LR", prop:[{l:[[16,64,10],[16,93,10]]},{l:[[11,64,10],[21,64,10]]}],
  A:{p:[0,75,-2],yaw:24,tw:0,s:[4,4],hf:0,ikL:{w:[-8,72,2]},ikR:{w:[14,66,10]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17],fpL:4,fyL:180},
  B:{p:[0,75.5,1],yaw:24,tw:0,s:[-6,-6],hf:-8,ikL:{w:[-8,72,4]},ikR:{w:[14,66,10]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17],fpL:4,fyL:180}},
 
 {n:"Standing calf stretch",pos:'wall',cue:"Back heel presses down, back leg straight",dur:60,bil:true,cyc:3.6,belly:1,pin:"LR", prop:[{l:[[0,33,33],[0,93,33]]}],
  A:{p:[0,58,4],yaw:24,tw:0,s:[14,10],hf:-4,ikL:{w:[-9,60,31]},ikR:{w:[9,60,31]},

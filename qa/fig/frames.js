@@ -1,4 +1,5 @@
-// Frame pins: a hash of every movement's rendered markup (fit + 64 phases) for all five
+// Frame pins: a hash of every movement's rendered markup (fit + 64 phases, the legacy audit
+// render and the ink figure the pages draw) for all five
 // apps, from the real engine + data. The committed qa/fig/pins.json is the record of what
 // every movement looks like; an engine or data edit that changes a movement nobody meant to
 // touch shows up here as a changed hash, by name.
@@ -14,6 +15,8 @@ function pins(){
     E.MOVES.forEach((m,i)=>{const h=crypto.createHash('sha1');
       h.update(JSON.stringify(m.fit));
       for(let k=0;k<N;k++)h.update(E.figMarkup(m,m.fit,k/N));
+      // and the INK figure, which is what the pages draw (the stacking order included)
+      for(let k=0;k<N;k++)h.update(E.inkFigure(m,m.fit,k/N,null,{id:'p',hatch:true}));
       out[`${app}/${String(i+1).padStart(2,'0')} ${m.n}`]=h.digest('hex').slice(0,16);});}
   return out;
 }

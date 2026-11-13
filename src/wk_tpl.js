@@ -128,7 +128,7 @@ function figMarkup(m,fit,ph){
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
       // the foot paints OVER the end of its own shin, which it encloses
       parts.push({t:'pg',pts:footOutline(j,sd,v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[il].k),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.35});
-      parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
+      parts.push({t:'pg',pts:handOutline(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]},v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[ia].k),col,d:P['ha'+sd].d+0.01,w:0.35});
     });
   }else{
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
@@ -193,14 +193,10 @@ function freshChecks(st,day,sets){
   });
   return out;
 }
-// Ink rendering for the cards (direction A, 2026-11-13). The cards are thumbnails, far too small
-// for hatching, so this is the timer apps' small-size fallback: trunk, head and right limbs
-// solid ink (CSS --fi) with a hairline of paper round them, LEFT limbs a solid mid tone (--ft),
-// implements in ochre (--fo). Pure string mapping of figMarkup's four colours.
-function inkTone(mk){
-  return mk.split('fill="'+INK+'"/>').join('fill="var(--fi)" stroke="var(--fp)" stroke-width="0.42"/>')
-    .split(INK).join('var(--fi)').split(LIMB_L).join('var(--ft)').split(TORSO).join('var(--fi)').split(PROP).join('var(--fo)');
-}
+// The cards draw the INK figure (eng2.js inkFigure, the same rules as the timer apps). They are
+// thumbnails, far too small for hatching, so the left limbs take the solid left tone (--ft)
+// inside the same ink outline. figMarkup above is the legacy flat render the pose audit reads.
+const inkCard=(m,ph)=>inkFigure(m,m.fit,ph,null,{id:'wk',hatch:false});
 // session log shared with the timer apps: localStorage 'mvLog' = {"YYYY-MM-DD":[app ids]}
 function logAdd(G,day,id){const a=Array.isArray(G[day])?G[day]:[];if(a.indexOf(id)<0)a.push(id);G[day]=a;
   const ks=Object.keys(G).sort();while(ks.length>400)delete G[ks.shift()];return G;}
@@ -280,7 +276,7 @@ if(typeof IntersectionObserver!=='undefined'){
 }
 // paint every card once so nothing is blank before it first scrolls into view
 WORKOUTS.forEach(w=>w.moves.forEach((m,i)=>{
-  $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,0.33));
+  $('ly-'+w.id+'-'+i).innerHTML=inkCard(m,0.33);
 }));
 let t0=performance.now(),last=0;
 (function loop(now){
@@ -290,7 +286,7 @@ let t0=performance.now(),last=0;
       w.moves.forEach((m,i)=>{
         if(obs&&!vis['card-'+w.id+'-'+i])return;
         const ph=((now-t0)/1000%m.cyc)/m.cyc;
-        $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,ph));
+        $('ly-'+w.id+'-'+i).innerHTML=inkCard(m,ph);
       });
     });
   }

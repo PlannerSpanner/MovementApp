@@ -89,7 +89,7 @@ h1{font-size:clamp(2.2rem,13vw,4rem);line-height:.9;margin-top:.1em;text-transfo
   <div id="listB"></div>
 </div>
 <script>
-const BUILDV='10f88c51b9';
+const BUILDV='31e664893a';
 const WK_A=[
 {n:"Goblet squat",sets:3,reps:"8",cyc:3.0,pin:"LR",
  how:"Hold one dumbbell vertically against your chest, elbows tucked under it. Sit down and back until your elbows brush the insides of your knees, then drive back up through the whole foot.",
@@ -556,7 +556,7 @@ const FOOT={len:12.3,h0:-(L.ankUp+1.6)};
 function footLandmarks(J,s,k){
   const F=footFrame(J,s),ft=F.ft,ball=F.ball,f=F.f,n=F.n,mg=s==='L'?1:-1;
   const med=[F.sd[0]*mg,F.sd[1]*mg,F.sd[2]*mg];
-  const kf=n[1]<0.4?Math.max(0,Math.min(1,(ball[1]-91.4)/1.2)):0;
+  const kf=n[1]<0.4?Math.max(0,Math.min(1,(ball[1]-(91.4-L.ankUp))/1.2)):0;   // 1 = the ball is planted (it rests ankUp above y = 93)
   let fh=[f[0],0,f[2]]; fh=len(fh)<1e-3?f:nrm(fh);
   const td=nrm([f[0]+(fh[0]-f[0])*kf,f[1]+(fh[1]-f[1])*kf,f[2]+(fh[2]-f[2])*kf]);
   const dt=n[0]*td[0]+n[1]*td[1]+n[2]*td[2]; let tu=[n[0]-td[0]*dt,n[1]-td[1]*dt,n[2]-td[2]*dt]; tu=len(tu)<1e-3?n:nrm(tu);
@@ -567,15 +567,19 @@ function footLandmarks(J,s,k){
   // line) instead of dropping square to the sole: sheared by the shin's lean, up to 15 deg
   const usH=nrm(sub(ft,J['kn'+s])),dn=-(usH[0]*n[0]+usH[1]*n[1]+usH[2]*n[2]),df=usH[0]*f[0]+usH[1]*f[1]+usH[2]*f[2];
   const lean=dn>0.2?Math.max(-0.27,Math.min(0.27,df/dn)):0, HS=h=>-(h)*lean;   // shift along the foot at height h (h < 0 below the ankle)
+  // A foot IN LINE with its shin (kneeling, prone, a pointed foot): the heel no longer hangs below
+  // the ankle, it lies along the back of the shin. Its height shrinks to the shin's own half
+  // width so it is flush with the shin line (reviewer, 2026-11-13: a square step above the shin
+  // on every top-down foot, the "heel bulging behind the shin" Will rejected before).
+  const inl=smooth(Math.max(0,Math.min(1,(df-0.45)/0.4))),hh=h0+(-(tip+0.15)-h0)*inl;
   const pts=[
     {id:'ankle',p:P(0,0,0),r:0.6},
     {id:'malM',p:P(0.1,0.15,tip-0.25),r:0.55},{id:'malL',p:P(-0.3,-0.15,-(tip-0.25)),r:0.55},   // inner and outer ankle bones
     // The back of the heel is nearly FLUSH with the back of the shin (the Achilles line): it
     // reaches 0.2 behind the shin's back edge when the shin is square on the foot (Will, 2026-11-12: at most half a unit, which then holds up to a 15 deg lean), with a
     // small rounded corner at the bottom. hb = how far behind the ankle that is.
-    {id:'heelB',p:P(-(hb-0.55)+HS(h0+0.75),h0+0.75,0),r:0.55},             // back of the heel
-    {id:'heelM',p:P(-(hb-0.6)+HS(h0+0.5),h0+0.5,1.05),r:0.5},{id:'heelL',p:P(-(hb-0.6)+HS(h0+0.5),h0+0.5,-1.15),r:0.5},   // heel pad, 3.2 across
-    {id:'archT',p:P(3.3,h0+1.85,1.05),r:0.5},                  // top of the inner arch, off the floor
+    {id:'heelB',p:P(-(hb-0.55)+HS(hh+0.75),hh+0.75,0),r:0.55},             // back of the heel
+    {id:'heelM',p:P(-(hb-0.6)+HS(hh+0.5),hh+0.5,1.05),r:0.5},{id:'heelL',p:P(-(hb-0.6)+HS(hh+0.5),hh+0.5,-1.15),r:0.5},   // heel pad, 3.2 across
     {id:'edgeL',p:P(3.0,h0+0.45,-1.6),r:0.45},                 // the outside edge, low
     {id:'instep',p:P(3.2,0.3,0.1),r:0.6},
     {id:'mtp1',p:P(L.ft,h0+0.6,1.55),r:0.6},{id:'mtp5',p:P(L.ft-1.25,h0+0.5,-2.0),r:0.5},   // big-toe and little-toe joints
@@ -588,7 +592,7 @@ function footLandmarks(J,s,k){
    e1=nrm(e1); const e2=cross(us,e1),rr=tip-0.3;
    for(let a=0;a<6;a++){const c=Math.cos(a*Math.PI/3)*rr,q=Math.sin(a*Math.PI/3)*rr;
      pts.push({id:'ring',p:[ft[0]+e1[0]*c+e2[0]*q,ft[1]+e1[1]*c+e2[1]*q,ft[2]+e1[2]*c+e2[2]*q],r:0.6});}}
-  return {F,med,pts,tip,lean,archU:P(3.3,h0+1.1,1.0),heelSole:P(-(hb-0.6)+HS(h0),h0,0.65),ballSole:P(L.ft,h0,1.5)};
+  return {F,med,pts,tip,lean};
 }
 // resample a closed polygon evenly along its length and relax it, so the outline is one soft
 // curve with no facet where the hull steps from one landmark to the next
@@ -602,48 +606,28 @@ function smoothLoop(pl,n,it){
   for(let r=0;r<it;r++)out=out.map((p,j)=>{const a=out[(j+n-1)%n],b=out[(j+1)%n];return {x:(a.x+2*p.x+b.x)/4,y:(a.y+2*p.y+b.y)/4};});
   return out;
 }
-// pr(v) -> {x,y} fitted screen point; sc = units to screen. Returns the outline polygon.
-function footOutline(J,s,pr,sc,k){
-  const L=footLandmarks(J,s,k),S=[];
-  L.pts.forEach(m=>{const c=pr(m.p),r=m.r*sc;for(let a=0;a<16;a++)S.push({x:c.x+r*Math.cos(a*Math.PI/8),y:c.y+r*Math.sin(a*Math.PI/8),id:m.id});});
+// convex outline round a set of 3D landmark balls [{p,r}], projected by pr and scaled by sc:
+// the hull of the projected balls, resampled and relaxed into one soft closed curve of n points.
+// inset (screen units) shrinks every ball, for the paper shape inside an ink outline.
+function hullLoop(pts,pr,sc,inset,n){
+  const S=[];
+  pts.forEach(m=>{const c=pr(m.p),r=Math.max(0.04,m.r*sc-(inset||0));for(let a=0;a<16;a++)S.push({x:c.x+r*Math.cos(a*Math.PI/8),y:c.y+r*Math.sin(a*Math.PI/8)});});
   S.sort((a,b)=>a.x-b.x||a.y-b.y);
   const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x),lo=[],up=[];
   for(const q of S){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}
   for(let i=S.length-1;i>=0;i--){const q=S[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}
-  const H=lo.slice(0,-1).concat(up.slice(0,-1));
-  // The inner arch: when the MEDIAL side faces the camera, the sole edge between the heel pad
-  // and the big-toe joint is drawn up to the arch instead of straight across. From the
-  // outside, from above or from the front the edge stays straight (the outer edge is flat).
-  const o=pr([0,0,0]),ex=pr([1,0,0]),ey=pr([0,1,0]),ez=pr([0,0,1]);
-  const rx=[ex.x-o.x,ey.x-o.x,ez.x-o.x],ry=[ex.y-o.y,ey.y-o.y,ez.y-o.y];
-  let tc=cross(rx,ry); const tl=len(tc)||1; tc=[tc[0]/tl,tc[1]/tl,tc[2]/tl];
-  const face=Math.abs(L.med[0]*tc[0]+L.med[1]*tc[1]+L.med[2]*tc[2]);
-  // which side of the foot is toward the viewer: compare the depth order of the two ankle bones
-  const dM=pr(L.pts.find(q=>q.id==='malM').p),dL=pr(L.pts.find(q=>q.id==='malL').p),near=(dM.d!==undefined&&dL.d!==undefined)?(dM.d>=dL.d):true;
-  const m=near?Math.max(0,Math.min(1,(face-0.3)/0.45)):0;
-  if(m>0.02){const hs=pr(L.heelSole),bs=pr(L.ballSole),q=pr(L.archU),tol=0.45*sc,n=H.length;
-    const on=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l2));
-      return Math.hypot(a.x+dx*t-p.x,a.y+dy*t-p.y);};
-    const edgeOf=p=>{let b=-1,bd=tol;for(let i=0;i<n;i++){const d=on(p,H[i],H[(i+1)%n]);if(d<bd){bd=d;b=i;}}return b;};
-    const iA=edgeOf(hs),iB=edgeOf(bs);
-    if(iA>=0&&iB>=0){
-      // the sole runs along the hull from the heel-pad point to the ball point: replace that
-      // stretch (whichever way round is shorter) with a curve lifted to the arch
-      const snap=(p,i)=>{const a=H[i],b=H[(i+1)%n],dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l2));return {x:a.x+dx*t,y:a.y+dy*t};};
-      const hsS=snap(hs,iA),bsS=snap(bs,iB);   // start and end ON the hull, so the curve joins it without a kink
-      const fwd=(iB-iA+n)%n,bwd=(iA-iB+n)%n,go=iA===iB?(Math.hypot(hsS.x-H[iA].x,hsS.y-H[iA].y)<=Math.hypot(bsS.x-H[iA].x,bsS.y-H[iA].y)):fwd<=bwd,from=go?iA:iB,to=go?iB:iA,p0=go?hsS:bsS,p1=go?bsS:hsS;
-      if(Math.min(fwd,bwd)<n/2){const out=[];
-        for(let i=0;i<n;i++){const idx=(to+1+i)%n;out.push(H[idx]);if(idx===from)break;}
-        const mx=(p0.x+p1.x)/2,my=(p0.y+p1.y)/2; let ox=(q.x-mx)*m,oy=(q.y-my)*m;
-        // seen nearly end-on the span is short: keep the arch shallow so it never becomes a notch
-        const dep=Math.hypot(ox,oy),span=Math.hypot(p1.x-p0.x,p1.y-p0.y); if(dep>0.16*span){const k2=0.16*span/(dep||1);ox*=k2;oy*=k2;}
-        [[0,0],[0.12,0.25],[0.28,0.7],[0.5,1],[0.72,0.7],[0.88,0.25],[1,0]].forEach(([t,w])=>out.push({x:p0.x+(p1.x-p0.x)*t+ox*w,y:p0.y+(p1.y-p0.y)*t+oy*w,id:'arch'}));
-        return smoothLoop(out,64,4);}}}
-  return smoothLoop(H,64,4);
+  return smoothLoop(lo.slice(0,-1).concat(up.slice(0,-1)),n||64,4);
 }
-// The hand is one flat mitten continuing the forearm, with the thumb as a bulge on one edge.
-// handFrame returns the wrist, u (wrist -> fingertips), t (toward the THUMB, in the hand's plane)
-// and palm (the way the palm faces). Rebuilt 2026-11-13: the old frame took the thumb from the
+// pr(v) -> {x,y} fitted screen point; sc = units to screen. Returns the outline polygon.
+// ONE SIMPLE SHAPE (Will, 2026-11-13): the hull of the landmarks, the same from the inner side
+// and the outer side. The raised inner arch is gone: on the phone it never read as an arch.
+function footOutline(J,s,pr,sc,k,inset){
+  return hullLoop(footLandmarks(J,s,k).pts,pr,sc,inset,64);
+}
+// THE HAND IS A SET OF 3D LANDMARKS, like the foot (Will, 2026-11-13: a flat mitten turning
+// edge-on collapsed into a thin line). handFrame returns the wrist, u (wrist -> fingertips),
+// t (toward the THUMB, in the hand's plane), palm (the way the palm faces) and flat (0..1, how
+// far the hand is laid on a surface). Rebuilt 2026-11-13: the old frame took the thumb from the
 // elbow's bend plane even when the arm was straight, where that plane is noise, so hanging
 // arms read as turned inward (Will, on his phone).
 //  - NEUTRAL (g = 0) comes from where the FOREARM points in the body's own frame: down =
@@ -655,32 +639,39 @@ function footOutline(J,s,pr,sc,k){
 //    Negative would be supinated, which Will's distal-bicep rule forbids and the audit rejects.
 //  - A hand resting on a surface is laid flat on it, PALM DOWN, so the thumb falls on the
 //    inner side when the fingers point ahead.
+//  - FINGERS ON A SURFACE POINT AHEAD (Will, 2026-11-13: in cat-cows the hands flipped to point
+//    back at the knees). "Ahead" is away from the pelvis along the body (head-ward on all fours,
+//    in a plank, a cobra or a down dog; forward in a standing fold), or the body's facing when
+//    the hand is beside the hips (bench dips). Only a FOREARM LYING on the surface (forearm
+//    plank, side plank, thread the needle) takes the fingers along its own line. It was the
+//    forearm's compass direction for any slanted arm, which swings round as the shoulders move
+//    over planted hands.
 function handFrame(J,s,g,surf){
-  const el=J['el'+s],ha=J['ha'+s],sh=J['sh'+s]; let u=nrm(sub(ha,el));
+  const el=J['el'+s],ha=J['ha'+s]; let u=nrm(sub(ha,el));
   const lat=nrm(sub(J.shR,J.shL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);
   const hs=s==='L'?1:-1;                                   // palm = hs * (u x t)
-  const out=(u,t)=>{const c=cross(u,t);return {ha,u,t,palm:[c[0]*hs,c[1]*hs,c[2]*hs]};};
-  // A hand that would poke through the surface it rests on (the floor, or pose pL/pR = the
-  // height of a bench top) is laid FLAT on it instead: fingers along the surface in the
-  // forearm's compass direction (or the body's facing when the forearm is vertical), palm down.
-  // A forearm lying along the surface (side plank, forearm plank) rests the same way.
+  const out=(u,t,fl)=>{const c=cross(u,t);return {ha,u,t,palm:[c[0]*hs,c[1]*hs,c[2]*hs],flat:fl||0};};
   const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0, c01=x=>Math.max(0,Math.min(1,x));
   const lying=c01((1.6-Math.abs(ha[1]-S0))/0.8)*c01((2.6-Math.abs(el[1]-S0))/0.8);   // 0..1, graded so it cannot snap
   let flat=null, kf=0;
   if((over>0||lying>0)&&ha[1]<S0+1.5){
-    // fingers lie along the forearm's compass direction; as the forearm nears vertical that
-    // direction stops meaning anything and they turn to the body's facing instead. Graded
-    // (0.2 to 0.6 of horizontal reach), never a switch, so the hand cannot jump round.
-    const hu=[u[0],0,u[2]],lu=len(hu); let hb=[fw[0],0,fw[2]]; hb=len(hb)<1e-3?[0,0,1]:nrm(hb);
-    const wu=smooth(c01((lu-0.2)/0.4)); let h=lu<1e-3?hb:[hu[0]/lu*wu+hb[0]*(1-wu),0,hu[2]/lu*wu+hb[2]*(1-wu)];
+    // "ahead" for this hand (see above), graded between its two sources so it cannot jump
+    let v=sub(ha,J.pelvis);const dl=v[0]*lat[0]+v[1]*lat[1]+v[2]*lat[2];v=[v[0]-lat[0]*dl,0,v[2]-lat[2]*dl];
+    let fh=[fw[0],0,fw[2]]; if(len(fh)<0.2) fh=[upb[0],0,upb[2]]; fh=len(fh)<1e-3?[0,0,1]:nrm(fh);
+    const lv=len(v),wv=smooth(c01((lv-3)/5)); let hb=lv<1e-3?fh:[v[0]/lv*wv+fh[0]*(1-wv),0,v[2]/lv*wv+fh[2]*(1-wv)];
+    hb=len(hb)<1e-3?fh:nrm(hb);
+    const hu=[u[0],0,u[2]],lu=len(hu),wl=lu<1e-3?0:smooth(lying);
+    let h=wl>0?[hu[0]/lu*wl+hb[0]*(1-wl),0,hu[2]/lu*wl+hb[2]*(1-wl)]:hb;
     h=len(h)<1e-3?hb:nrm(h);
-    const dy=Math.max(0,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
+    // the hand lies level at the wrist's height; a wrist held above the surface slopes it down
+    // to the surface, a wrist a little under it slopes it up, so the fingers never dip below
+    const dy=Math.max(-0.35,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
     const c=cross(h,[0,1,0]);                              // palm down: t = -hs * (u x down), kept level
     flat={u:[h[0]*k,dy,h[2]*k],t:nrm([-hs*c[0],0,-hs*c[2]])};
     // the hand settles onto the surface over the first 4.5 units of contact instead of snapping
     // flat in one frame (a hand sweeping past the floor: arm sweeps with knee dip)
     kf=Math.max(lying,c01(over/4.5))*c01((S0+1.5-ha[1])/0.8);   // and fades out as the wrist sinks past the surface
-    if(kf>=1) return out(flat.u,flat.t);
+    if(kf>=1) return out(flat.u,flat.t,1);
   }
   const perp=(v)=>{const d=v[0]*u[0]+v[1]*u[1]+v[2]*u[2];return [v[0]-u[0]*d,v[1]-u[1]*d,v[2]-u[2]*d];};
   // neutral reference from the FOREARM'S DIRECTION IN THE BODY'S FRAME (see above). It does not
@@ -690,25 +681,42 @@ function handFrame(J,s,g,surf){
   let w=[cu[0]+0.3*pf[0]+0.3*pu[0],cu[1]+0.3*pf[1]+0.3*pu[1],cu[2]+0.3*pf[2]+0.3*pu[2]];
   if(len(w)<1e-3) w=perp([0,-1,0]); if(len(w)<1e-3) w=perp([1,0,0]); w=nrm(w);
   const tF=g?rotAxis(w,u,hs*R(g)):w;
-  if(!flat) return out(u,tF);
-  const e=smooth(kf),ub=nrm([u[0]+(flat.u[0]-u[0])*e,u[1]+(flat.u[1]-u[1])*e,u[2]+(flat.u[2]-u[2])*e]);
+  if(!flat) return out(u,tF,0);
+  const e=smooth(kf); let ub=nrm([u[0]+(flat.u[0]-u[0])*e,u[1]+(flat.u[1]-u[1])*e,u[2]+(flat.u[2]-u[2])*e]);
+  // part-way down, the fingertips may not pass through the surface either
+  if(ha[1]+ub[1]*6.1>S0+0.6){const dy=Math.max(-0.35,Math.min(1,(S0+0.6-ha[1])/6.1)),hl=Math.hypot(ub[0],ub[2]);
+    if(hl>1e-3){const k=Math.sqrt(1-dy*dy)/hl;ub=[ub[0]*k,dy,ub[2]*k];}}
   // the thumb TURNS about the forearm from its free direction to its flat one (never a straight
   // blend of the two vectors, which collapses when they are opposite: a seated fold). The turn
   // goes the short way, except that anything past 150 deg the short way goes round by
   // PRONATION instead: a hand never supinates to lie flat.
   const pj=v=>{const d=v[0]*ub[0]+v[1]*ub[1]+v[2]*ub[2];const q=[v[0]-ub[0]*d,v[1]-ub[1]*d,v[2]-ub[2]*d];return len(q)<1e-3?null:nrm(q);};
-  const a0=pj(tF),a1=pj(flat.t); if(!a0||!a1) return out(ub,a1||a0||flat.t);
+  const a0=pj(tF),a1=pj(flat.t); if(!a0||!a1) return out(ub,a1||a0||flat.t,kf);
   const cx=cross(a0,a1); let th=Math.atan2(cx[0]*ub[0]+cx[1]*ub[1]+cx[2]*ub[2],a0[0]*a1[0]+a0[1]*a1[1]+a0[2]*a1[2]);
   let tp=((hs*th)%(2*Math.PI)+2*Math.PI)%(2*Math.PI); if(tp>R(210)) tp-=2*Math.PI;
-  return out(ub,rotAxis(a0,ub,hs*tp*e));
+  return out(ub,rotAxis(a0,ub,hs*tp*e),kf);
 }
-// opt.fist: the hand is closed round an implement (a short rounded fist that the handle passes
-// through at the grip point) instead of the open mitten; opt.surf: see handFrame.
-function handPoly(J,s,g,opt){
-  const {ha,u,t}=handFrame(J,s,g||0,opt&&opt.surf);
-  const H=(a,b)=>[ha[0]+u[0]*a+t[0]*b,ha[1]+u[1]*a+t[1]*b,ha[2]+u[2]*a+t[2]*b];
-  if(opt&&opt.fist) return [H(-0.2,-1.2),H(1.4,-1.9),H(3.5,-1.9),H(4.6,-0.8),H(4.6,0.7),H(3.7,1.8),H(2.4,2.5),H(1.1,1.9),H(-0.2,1.2)];
-  return [H(-0.2,-1.0),H(1.3,-1.55),H(3.5,-1.6),H(5.3,-1.1),H(6.1,0),H(5.5,0.95),H(4.1,1.5),H(3.2,1.75),H(2.9,3.0),H(1.9,2.9),H(0.9,1.5),H(-0.2,1.0)];
+// Landmarks in the hand's own frame: a along the fingers from the wrist, b toward the thumb,
+// c out of the PALM. Each is a small ball of soft tissue, so the hand has real thickness: seen
+// edge-on it is a slab about 2 deep from the heel of the hand to the knuckles (as deep as the
+// wrist), tapering a little to fingers that curl toward the palm; never a line or a spike. The wrist ball is exactly as wide as the end of the forearm (k = that
+// limb's far-side narrowing). opt.fist: closed round an implement (the handle passes through at
+// the grip point, 3.4 from the wrist); opt.surf: see handFrame.
+function handLandmarks(J,s,g,opt,k){
+  const F=handFrame(J,s,g||0,opt&&opt.surf),ha=F.ha,u=F.u,t=F.t,n=F.palm;
+  const H=(a,b,c,r,id)=>({id,r,p:[ha[0]+u[0]*a+t[0]*b+n[0]*c,ha[1]+u[1]*a+t[1]*b+n[1]*c,ha[2]+u[2]*a+t[2]*b+n[2]*c]});
+  const wr=((SKIN&&SKIN.tip)||2.3)*(k||1)/2;
+  const pts=opt&&opt.fist?[H(0,0,0,wr,'wrist'),H(2.0,1.3,0.2,1.0,'knI'),H(2.0,-1.3,0.2,1.0,'knP'),H(3.8,1.2,0.5,1.0,'tipI'),H(3.8,-1.25,0.5,0.95,'tipP'),H(2.7,1.9,1.0,0.6,'thT')]
+   :[H(0,0,0,wr,'wrist'),H(0.9,-1.15,0.1,0.95,'heel'),H(1.3,1.3,0.3,0.95,'thB'),H(3.1,2.45,0.6,0.6,'thT'),
+     H(3.4,1.05,0,1.0,'knI'),H(3.2,-1.25,0,0.95,'knP'),H(5.3,0.75,0.45,0.75,'tipI'),H(5.7,-0.1,0.5,0.75,'tipM'),H(5.0,-1.05,0.4,0.7,'tipP')];
+  // soft tissue rests ON a surface, it does not pass through it: with the hand laid on the floor
+  // or a bench, no landmark sits lower than the ground line drawn 1.5 under the joint plane
+  if(F.flat>0){const lim=(opt&&opt.surf!=null?opt.surf:93)+1.5,w=Math.min(1,F.flat*4);
+    pts.forEach(q=>{const ov=q.p[1]+q.r-lim;if(ov>0)q.p=[q.p[0],q.p[1]-ov*w,q.p[2]];});}
+  return {F,pts};
+}
+function handOutline(J,s,g,opt,pr,sc,k,inset){
+  return hullLoop(handLandmarks(J,s,g,opt,k).pts,pr,sc,inset,40);
 }
 // where an implement sits in the fist: 3.4 beyond the wrist along the forearm. Props may name
 // 'gpL'/'gpR' (alone or as {j:'gpL',o:[..]}) to hang from the grip instead of the wrist joint.
@@ -778,6 +786,246 @@ function orbitPose(base,o,ph){
     return [f1,a1,-Math.acos(c2)*180/Math.PI,-a1];};
   p.lL=mk(-1); p.lR=mk(1);
   return p;
+}
+
+// ================= the ink figure (direction A; rebuilt 2026-11-13) =================
+// ONE SET OF RULES for every part, both sides (Will, 2026-11-13, after seeing on his phone:
+// outlines that differed by side, cream caps at knees and elbows, a box pelvis with the thighs
+// starting inside it, stacking that flickered, a hand collapsing to a line):
+//  1. PARTS. The figure is six parts: the trunk (rib cage + a rounded pelvis), the head with its
+//     neck, and four WHOLE LIMBS. A limb is one continuous shape, shoulder to fingertips or hip
+//     to toes: the union of its two bones and its hand or foot. Nothing is drawn across a knee,
+//     an elbow, a wrist or an ankle.
+//  2. OUTLINE. Every part has the same ink outline (INKR.OW), hatched or solid. A solid part is
+//     ink inside it; a hatched (left) limb is paper inside it with engraved lines.
+//  3. CROSSINGS. Where a part passes in front of another, a paper gap (INKR.GAP) runs along its
+//     edge, at that crossing only (it is a paper line drawn under the part's own ink, so on bare
+//     paper it does not exist). A limb has no gap round its own root, so a near arm or leg grows
+//     out of the trunk instead of being pinned onto it.
+//  4. PELVIS. The trunk ends in a rounded pelvis whose lower outer corners ARE the hip joints
+//     (a bar of radius INKR.RP from hip to hip). A thigh's root is always inside its corner, so
+//     the leg hinges at the hip joint and nothing pokes out when the body folds.
+//  5. ORDER. Whole parts are stacked, never single bones. Which of two parts is in front is
+//     decided where they overlap on screen (inkScore), and changes only when the depth
+//     difference there is clear (INKR.HYS, with hysteresis), so the order cannot flicker. The
+//     order is a pure function of movement, camera and phase (a schedule cached per movement).
+//  6. HATCHING is real lines, not a pattern: square to each bone and 22 deg off, anchored to the
+//     limb so they ride with it, mitred where two bones meet so the hatch turns the corner
+//     without a seam, and running on through the hand and the foot.
+// inkGeom() returns the geometry (qa/fig/ink.js checks every rule on it); inkFigure() draws it.
+const INKR={OW:0.45,GAP:0.45,PER:1.5,HW:0.62,TILT:22,RP:1.9,HYS:0.8,N:48,SKIP_A:3.4,SKIP_L:4.4};
+const SKIN0={joint:3,mid:3,tip:3,upper:{w:3,at:0.5},fore:{w:3,at:0.5},thigh:{w:3,at:0.5},shin:{w:3,at:0.5},torso:{chest:1,waist:1,at:0.5,stroke:2.6},far:1};
+const INK_PARTS=['T','H','LL','LR','AL','AR'];
+function polyCCW(p){let a=0;for(let i=0,n=p.length;i<n;i++){const q=p[(i+1)%n];a+=p[i].x*q.y-q.x*p[i].y;}return a<0?p.slice().reverse():p;}
+// one bone as a tapered capsule polygon in screen space (a, b already fitted). inset shrinks it
+// all round (the paper shape inside the ink outline); flat = square-cut far end (the shin ends
+// inside the foot).
+function capPoly(a,b,seg,sc,k,inset,flat){
+  const S=SKIN||SKIN0,pr=S[seg],prox=seg==='upper'||seg==='thigh',q=sc*(k||1),ins=inset||0;
+  const r0=Math.max(0.05,(prox?S.joint:S.mid)*q/2-ins),r1=Math.max(0.05,(prox?S.mid:S.tip)*q/2-ins),rm=Math.max(0.05,pr.w*q/2-ins);
+  const at=Math.max(0.05,Math.min(0.95,pr.at)),dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
+  const hw=t=>t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+  if(l<0.05){const r=Math.max(r0,r1,rm),pts=[];for(let i=0;i<16;i++)pts.push({x:a.x+r*Math.cos(i*Math.PI/8),y:a.y+r*Math.sin(i*Math.PI/8)});
+    return {pts:polyCCW(pts),a,b,ux:1,uy:0,nx:0,ny:1,l:0,hw:()=>r,r0:r,r1:r,flat:false};}
+  const ux=dx/l,uy=dy/l,nx=-uy,ny=ux,n=8,Lp=[],Rp=[],aD=[],aP=[];
+  for(let i=0;i<=n;i++){const t=i/n,h=hw(t),cx=a.x+dx*t,cy=a.y+dy*t;Lp.push({x:cx+nx*h,y:cy+ny*h});Rp.push({x:cx-nx*h,y:cy-ny*h});}
+  for(let i=1;i<6;i++){const c=Math.cos(i*Math.PI/6),s=Math.sin(i*Math.PI/6);
+    if(!flat)aD.push({x:b.x+r1*(c*nx+s*ux),y:b.y+r1*(c*ny+s*uy)});
+    aP.push({x:a.x-r0*(c*nx+s*ux),y:a.y-r0*(c*ny+s*uy)});}
+  return {pts:polyCCW(Lp.concat(aD,Rp.slice().reverse(),aP)),a,b,ux,uy,nx,ny,l,hw,r0,r1,flat:!!flat,Lp,Rp,aD};
+}
+// the capsule's outline WITHOUT its root: from `skip` along one edge, round the far end and
+// back to `skip` on the other edge (open). This is what a limb's paper gap is stroked along.
+function capOpen(C,skip){
+  if(!C.Lp||C.l<=skip+0.05)return null;
+  const t0=skip/C.l,E=(sg,t)=>{const h=C.hw(t);return {x:C.a.x+C.ux*C.l*t+sg*C.nx*h,y:C.a.y+C.uy*C.l*t+sg*C.ny*h};};
+  const n=C.Lp.length-1,o=[E(1,t0)];
+  for(let i=0;i<=n;i++)if(i/n>t0+0.02)o.push(C.Lp[i]);
+  C.aD.forEach(p=>o.push(p));
+  for(let i=n;i>=0;i--)if(i/n>t0+0.02)o.push(C.Rp[i]);
+  o.push(E(-1,t0));return o;
+}
+// clip the line c + e*t, t in [t0,t1], to a set of half-planes {x,y,nx,ny} (keep (p-x).n >= 0)
+function clipLine(cx,cy,ex,ey,t0,t1,planes){
+  for(const p of planes){const f0=(cx-p.x)*p.nx+(cy-p.y)*p.ny,fd=ex*p.nx+ey*p.ny;
+    if(Math.abs(fd)<1e-9){if(f0<0)return null;continue;}
+    const t=-f0/fd; if(fd>0){if(t>t0)t0=t;}else{if(t<t1)t1=t;}
+    if(t1-t0<0.5)return null;}
+  return t1-t0<0.5?null:[t0,t1];
+}
+// engraved lines for one capsule C (the INSET one): stations every PER along the bone, anchored
+// at its root so they ride with it, running on round both rounded ends, clipped to `planes`
+// (the mitre lines at its joints). Pushes [x0,y0,x1,y1] to out.
+function hatchCap(C,planes,out){
+  const T=R(INKR.TILT),ct=Math.cos(T),st=Math.sin(T),ex=C.nx*ct+C.ux*st,ey=C.ny*ct+C.uy*st,per=INKR.PER;
+  // the bone is divided evenly (spacing within a third of PER), so the first and last lines sit
+  // half a space inside its joints and the spacing carries across a joint without a doubled line
+  const end=C.l+(C.flat?0:C.r1),sp=C.l>per*0.75?C.l/Math.max(1,Math.round(C.l/per)):per;
+  for(let s=(Math.floor(-C.r0/sp)+0.5)*sp;s<=end;s+=sp){if(s<-C.r0)continue;
+    const cx=C.a.x+C.ux*s,cy=C.a.y+C.uy*s;let t0,t1;
+    if(s<0||s>C.l){const o=s<0?C.a:C.b,r=s<0?C.r0:C.r1,fx=cx-o.x,fy=cy-o.y,B=fx*ex+fy*ey,D=B*B-(fx*fx+fy*fy-r*r);
+      if(D<=0)continue;const q=Math.sqrt(D);t0=-B-q;t1=-B+q;}
+    else{const h=C.hw(C.l?s/C.l:0)/ct;t0=-h;t1=h;}
+    const c=clipLine(cx,cy,ex,ey,t0,t1,planes);if(c)out.push([cx+ex*c[0],cy+ey*c[0],cx+ex*c[1],cy+ey*c[1]]);}
+}
+// the same lines through a convex outline (a hand or a foot), square to its own axis (ux,uy) from o
+function hatchPoly(poly,o,ux,uy,planes,out){
+  const T=R(INKR.TILT),ct=Math.cos(T),st=Math.sin(T),nx=-uy,ny=ux,ex=nx*ct+ux*st,ey=ny*ct+uy*st,per=INKR.PER,n=poly.length;
+  const pl=planes.slice();let lo=1e9,hi=-1e9;
+  for(let i=0;i<n;i++){const a=poly[i],b=poly[(i+1)%n];pl.push({x:a.x,y:a.y,nx:-(b.y-a.y),ny:b.x-a.x});   // inward for a CCW loop
+    const s=(a.x-o.x)*ux+(a.y-o.y)*uy;if(s<lo)lo=s;if(s>hi)hi=s;}
+  lo-=2;hi+=2;
+  for(let s=(Math.floor(lo/per)+0.5)*per;s<=hi;s+=per){const cx=o.x+ux*s,cy=o.y+uy*s;
+    const c=clipLine(cx,cy,ex,ey,-40,40,pl);if(c)out.push([cx+ex*c[0],cy+ey*c[0],cx+ex*c[1],cy+ey*c[1]]);}
+}
+// the mitre between two bones meeting at J (screen), d1 = direction INTO the joint, d2 = out of
+// it. The mitre line is turned by the hatch tilt, so on a straight limb it lies ALONG the hatch
+// lines (each line is wholly one bone's or the other's, none is cut into a stub) and as the
+// joint bends the two sets of lines meet along it.
+function mitre(J,d1,d2){
+  let mx=d1.x+d2.x,my=d1.y+d2.y;const l=Math.hypot(mx,my);
+  if(l<0.05){mx=d1.x;my=d1.y;}else{mx/=l;my/=l;}
+  // the turn fades out as the joint folds: on a limb folded back on itself the mitre is the
+  // line between the two bones, and turning it would hand one bone's whole length to the other
+  const T=R(INKR.TILT)*smooth(Math.max(0,d1.x*d2.x+d1.y*d2.y)),c=Math.cos(T),s=Math.sin(T),hx=mx*c+my*s,hy=-mx*s+my*c;
+  return [{x:J.x,y:J.y,nx:-hx,ny:-hy},{x:J.x,y:J.y,nx:hx,ny:hy}];   // [keep the near bone's side, keep the far bone's side]
+}
+// one whole limb: key 'AL','AR','LL','LR'. full = the ink silhouette (three overlapping convex
+// pieces: two capsules and the hull of the hand or foot), ins = the same inset by the outline.
+function inkLimb(j,pose,pr,sc,key,held){
+  const s=key[1],o=s==='L'?'R':'L',arm=key[0]==='A',N=arm?['sh','el','ha']:['hp','kn','ft'];
+  const A=pr(j[N[0]+s]),B=pr(j[N[1]+s]),C=pr(j[N[2]+s]),oA=pr(j[N[0]+o]),oB=pr(j[N[1]+o]),oC=pr(j[N[2]+o]);
+  const k1=farK((A.d+B.d)/2,(oA.d+oB.d)/2),k2=farK((B.d+C.d)/2,(oB.d+oC.d)/2);
+  const hopt=arm?{fist:held&&held[s],surf:pose['p'+s]}:null;
+  const mk=ins=>({c1:capPoly(A,B,arm?'upper':'thigh',sc,k1,ins),c2:capPoly(B,C,arm?'fore':'shin',sc,k2,ins,!arm),
+    e:polyCCW(arm?handOutline(j,s,pose['g'+s],hopt,pr,sc,k2,ins):footOutline(j,s,pr,sc,k2,ins))});
+  // the extremity's own axis on screen (wrist to fingertips, ankle to ball); end-on it has none
+  let ax;if(arm){const F=handFrame(j,s,pose['g'+s]||0,hopt.surf),q=pr([F.ha[0]+F.u[0]*4,F.ha[1]+F.u[1]*4,F.ha[2]+F.u[2]*4]);ax={x:q.x-C.x,y:q.y-C.y};}
+  else{const q=pr(j['toe'+s]);ax={x:q.x-C.x,y:q.y-C.y};}
+  const al=Math.hypot(ax.x,ax.y);ax=al<1.2*sc?null:{x:ax.x/al,y:ax.y/al};
+  return {key,arm,left:s==='L',A,B,C,k1,k2,full:mk(0),ins:mk(INKR.OW),ax};
+}
+function inkHatch(Lm){
+  const F=Lm.ins,out=[],d1={x:F.c1.ux,y:F.c1.uy},d2={x:F.c2.ux,y:F.c2.uy};
+  const m1=mitre(Lm.B,d1,d2),ax=Lm.ax||d2;
+  // a hand or foot folded back along its own forearm or shin has no mitre with it: it is hatched whole
+  const m2=(d2.x*ax.x+d2.y*ax.y)<-0.5?[null,null]:mitre(Lm.C,d2,ax);
+  hatchCap(F.c1,[m1[0]],out);hatchCap(F.c2,m2[0]?[m1[1],m2[0]]:[m1[1]],out);hatchPoly(F.e,Lm.C,ax.x,ax.y,m2[1]?[m2[1]]:[],out);
+  return out;
+}
+// sample balls for the stacking order, in camera space (project(): x, y, depth d), unscaled
+function inkSamples(j){
+  const P=(v,r)=>{const q=project(v);return {x:q.x,y:q.y,d:q.d,r};},mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+  const S={T:[],H:[P(j.head,6.2),P(mix(j.neck,j.head,0.4),1.4)]};
+  [0.06,0.28,0.5,0.72,0.94].forEach(t=>{const l=mix(j.hpL,j.shL,t),r=mix(j.hpR,j.shR,t);[0.15,0.5,0.85].forEach(f=>S.T.push(P(mix(l,r,f),2.8)));});
+  ['L','R'].forEach(s=>{
+    const a=[];[0.12,0.3,0.5,0.7,0.9].forEach(t=>a.push(P(mix(j['sh'+s],j['el'+s],t),1.6)));[0.1,0.3,0.5,0.7,0.9].forEach(t=>a.push(P(mix(j['el'+s],j['ha'+s],t),1.5)));
+    a.push(P(mix(j['el'+s],j['ha'+s],1.23),1.9));S['A'+s]=a;
+    const g=[];[0.1,0.3,0.5,0.7,0.9].forEach(t=>g.push(P(mix(j['hp'+s],j['kn'+s],t),2.0)));[0.1,0.3,0.5,0.7,0.9].forEach(t=>g.push(P(mix(j['kn'+s],j['ft'+s],t),1.7)));
+    g.push(P(mix(j['ft'+s],j['toe'+s],0.3),2.0));g.push(P(j['toe'+s],1.8));S['L'+s]=g;});
+  return S;
+}
+// > 0: part A is in front of part B where they overlap on screen (weighted mean depth difference
+// over every pair of sample balls that overlap); 0 when they do not overlap at all
+function inkScore(A,B){let sw=0,sd=0;
+  for(const a of A)for(const b of B){const R2=a.r+b.r,dx=a.x-b.x,dy=a.y-b.y;if(Math.abs(dx)>=R2||Math.abs(dy)>=R2)continue;
+    const w=1-Math.hypot(dx,dy)/R2;if(w>0){sw+=w;sd+=w*(a.d-b.d);}}
+  INK_W=sw;return sw>0?sd/sw:0;
+}
+let INK_W=0;   // how much the last scored pair overlapped (the weight of that pair's say in the order)
+// the stacking order (back to front) at phase ph, for the camera setCam() last set. Built once
+// per movement and camera as a schedule of INKR.N steps: two laps of the cycle with hysteresis
+// on every pair of parts, the second lap kept. Each step keeps the pair states and scores for
+// the checks.
+function inkSchedule(m){
+  const key=CAM+'/'+PITCH;if(!m._ord)m._ord={};if(m._ord[key])return m._ord[key];
+  const N=INKR.N,K=INK_PARTS,rel={},S=[];let prev=null;
+  const mean=a=>a.reduce((s,q)=>s+q.d,0)/a.length;
+  for(let lap=0;lap<2;lap++)for(let i=0;i<N;i++){
+    const smp=inkSamples(solve(poseAt(m,i/N))),sc={};
+    const wt={};
+    for(let a=0;a<K.length;a++)for(let b=a+1;b<K.length;b++){const id=K[a]+K[b],v=inkScore(smp[K[a]],smp[K[b]]);sc[id]=v;wt[id]=INK_W;
+      if(rel[id]==null){
+        if(v>0.05)rel[id]=1;else if(v<-0.05)rel[id]=-1;
+        else{const d=mean(smp[K[a]])-mean(smp[K[b]]);rel[id]=K[a]==='T'&&d<0.3?-1:(d>=0?1:-1);}}   // a tie with the trunk: the limb is in front
+      else if(v>INKR.HYS)rel[id]=1;else if(v<-INKR.HYS)rel[id]=-1;}
+    // the order, back to front: repeatedly take a part that is behind every part still left. The
+    // pair states can disagree in a ring (A over B over C over A); then the part whose "must be
+    // behind me" pairs overlap least goes next, so a pair that really overlaps is never drawn
+    // the wrong way round for the sake of one that does not. Ties keep the previous step's order.
+    {const inFront=(x,y)=>{const a=K.indexOf(x),b=K.indexOf(y);return a<b?rel[x+y]>0:rel[y+x]<0;},w=(x,y)=>wt[K.indexOf(x)<K.indexOf(y)?x+y:y+x]||0;
+      let left=(prev||K).slice();const o=[];
+      while(left.length){let best=null,bc=1e9;
+        for(const x of left){let c=0;for(const y of left)if(y!==x&&inFront(x,y))c+=0.001+w(x,y);if(c<bc-1e-9){bc=c;best=x;}}
+        o.push(best);left=left.filter(x=>x!==best);}
+      prev=o;if(lap)S.push({order:o,rel:Object.assign({},rel),score:sc});}}
+  return m._ord[key]=S;
+}
+function inkOrder(m,ph){const S=inkSchedule(m);return S[Math.round((((ph%1)+1)%1)*INKR.N)%INKR.N].order;}
+// which limbs a held implement hangs from, read off its definition (gpL, haR, {j:'knL'}...)
+function inkHolders(def){const s=JSON.stringify(def),o=[];
+  ['L','R'].forEach(sd=>{if(new RegExp('"(gp|ha|el)'+sd+'"').test(s))o.push('A'+sd);if(new RegExp('"(kn|ft|toe)'+sd+'"').test(s))o.push('L'+sd);});return o;}
+// Geometry of the whole figure for one frame (screen space): parts, their order, the props.
+function inkGeom(m,fit,ph,v){
+  setCam(v||m);
+  const pose=poseAt(m,ph),j=solve(pose),sc=fit.sc;
+  const pr=q=>{const p=project(q);return {x:p.x*sc+fit.ox,y:p.y*sc+fit.oy,d:p.d};};
+  if(!m._held){const ps=JSON.stringify(m.prop||'');m._held={L:ps.indexOf('gpL')>=0,R:ps.indexOf('gpR')>=0};}
+  const limbs={};['LL','LR','AL','AR'].forEach(k=>limbs[k]=inkLimb(j,pose,pr,sc,k,m._held));
+  // trunk: the rib cage from the HIP JOINTS to the shoulders (waisted, bowed by `bend`), plus
+  // the pelvis bar from hip joint to hip joint
+  const S=SKIN||SKIN0,j2=Object.assign({},j,{pvL:j.hpL,pvR:j.hpR});
+  const e=SKIN&&SKIN.torso?torsoSkin(j2,pose.bend,8):torsoEdges(j2,pose.bend||0,6);
+  const torso=e.L.slice().reverse().map(pr).concat(e.R.map(pr));
+  const hd=pr(j.head),nk=pr(j.neck),dx=hd.x-nk.x,dy=hd.y-nk.y,dl=Math.hypot(dx,dy)||1,hr=L.hr*sc;
+  return {pose,j,sc,pr,limbs,order:inkOrder(m,ph),
+    trunk:{torso,sw:S.torso.stroke*sc,hpL:pr(j.hpL),hpR:pr(j.hpR),rp:INKR.RP*sc,belly:(m.belly&&typeof bellyPts==='function')?bellyPts(m,j,pose,fit).pts:null},
+    head:{c:hd,r:hr,n0:nk,n1:{x:hd.x-dx/dl*hr*0.8,y:hd.y-dy/dl*hr*0.8},nw:3.0*0.82*sc,ux:dx/dl,uy:dy/dl,nl:Math.max(0,dl-hr*0.8)},
+    props:(typeof propShapes==='function'?propShapes(m,j,pose):[]).map((s,i)=>Object.assign({hold:s.att?inkHolders(m.prop[i]):[]},s))};
+}
+function inkPropMk(s,pr,sc){
+  const F='var(--fo)',f1=p=>{const q=pr(p);return q.x.toFixed(1)+','+q.y.toFixed(1);},pw=(1.6*sc).toFixed(2);
+  if(s.t==='q')return `<polygon points="${s.pts.map(f1).join(' ')}" fill="${F}" fill-opacity="0.3"/>`;
+  const ln=(a,b,w)=>{const A=pr(a),B=pr(b);return `<line x1="${A.x.toFixed(1)}" y1="${A.y.toFixed(1)}" x2="${B.x.toFixed(1)}" y2="${B.y.toFixed(1)}" stroke="${F}" stroke-width="${w}" stroke-linecap="round"/>`;};
+  const ci=(c,r,fl)=>{const C=pr(c);return `<circle cx="${C.x.toFixed(1)}" cy="${C.y.toFixed(1)}" r="${(r*sc).toFixed(1)}" fill="${fl?F:'none'}"${fl===2?'':` stroke="${F}" stroke-width="${pw}"`}/>`;};
+  if(s.t==='l')return ln(s.a,s.b,(1.6*s.w*sc).toFixed(2));
+  if(s.t==='db')return ln(s.a,s.b,pw)+ci(s.a,s.r,2)+ci(s.b,s.r,2);
+  return ci(s.c,s.r,s.f?1:0);
+}
+// st = {id, hatch}: hatch false (or a figure drawn under 0.8 scale, where a limb holds too few
+// lines) fills the left limbs with the solid left tone (--ft) inside the same outline.
+function inkFigure(m,fit,ph,v,st){
+  const G=inkGeom(m,fit,ph,v),sc=G.sc,FI='var(--fi)',FP='var(--fp)',FT='var(--ft)',hx=!!(st&&st.hatch)&&sc>=0.8;
+  const f2=q=>q.x.toFixed(2)+','+q.y.toFixed(2),pd=p=>'M'+p.map(f2).join('L')+'Z',g2=(2*INKR.GAP).toFixed(2);
+  const mk={};
+  {const T=G.trunk,td=pd(T.torso),ln=(w,c)=>`<line x1="${T.hpL.x.toFixed(2)}" y1="${T.hpL.y.toFixed(2)}" x2="${T.hpR.x.toFixed(2)}" y2="${T.hpR.y.toFixed(2)}" stroke="${c}" stroke-width="${w.toFixed(2)}" stroke-linecap="round"/>`;
+   const bl=T.belly?T.belly.join(' '):'';
+   mk.T=`<g data-p="T"><path d="${td}" fill="none" stroke="${FP}" stroke-width="${(T.sw+2*INKR.GAP).toFixed(2)}" stroke-linejoin="round"/>`+ln(2*T.rp+2*INKR.GAP,FP)
+     +(bl?`<polygon points="${bl}" fill="none" stroke="${FP}" stroke-width="${g2}"/>`:'')
+     +`<path d="${td}" fill="${FI}" stroke="${FI}" stroke-width="${T.sw.toFixed(2)}" stroke-linejoin="round"/>`+ln(2*T.rp,FI)+(bl?`<polygon points="${bl}" fill="${FI}"/>`:'')+'</g>';}
+  {const H=G.head,sk=Math.min(H.nl,(G.trunk.sw/2+INKR.GAP+0.4*sc)),nx0=H.n0.x+H.ux*sk,ny0=H.n0.y+H.uy*sk;
+   const c=(extra)=>`<circle cx="${H.c.x.toFixed(2)}" cy="${H.c.y.toFixed(2)}" r="${H.r.toFixed(2)}" ${extra}/>`;
+   // the neck has no gap of its own (its square end left a nick where trunk, arm and head meet); the head has
+   mk.H=`<g data-p="H">`
+     +c(`fill="none" stroke="${FP}" stroke-width="${g2}"`)
+     +`<line x1="${H.n0.x.toFixed(2)}" y1="${H.n0.y.toFixed(2)}" x2="${H.n1.x.toFixed(2)}" y2="${H.n1.y.toFixed(2)}" stroke="${FI}" stroke-width="${H.nw.toFixed(2)}" stroke-linecap="round"/>`+c(`fill="${FI}"`)+'</g>';}
+  for(const k in G.limbs){const Lm=G.limbs[k],F=Lm.full,I=Lm.ins,op=capOpen(F.c1,(Lm.arm?INKR.SKIP_A:INKR.SKIP_L)*sc);
+    let s=`<g data-p="${k}"><path d="${op?'M'+op.map(f2).join('L'):''}${pd(F.c2.pts)}${pd(F.e)}" fill="none" stroke="${FP}" stroke-width="${g2}" stroke-linejoin="round"/>`
+      +`<path d="${pd(F.c1.pts)}${pd(F.c2.pts)}${pd(F.e)}" fill="${FI}"/>`;
+    if(Lm.left){s+=`<path d="${pd(I.c1.pts)}${pd(I.c2.pts)}${pd(I.e)}" fill="${hx?FP:FT}"/>`;
+      if(hx)s+=`<path d="${inkHatch(Lm).map(l=>'M'+l[0].toFixed(2)+','+l[1].toFixed(2)+'L'+l[2].toFixed(2)+','+l[3].toFixed(2)).join('')}" fill="none" stroke="${FI}" stroke-width="${INKR.HW}"/>`;}
+    mk[k]=s+'</g>';}
+  // world-fixed props first, behind everything. A held implement is drawn just over the last of
+  // the limbs that hold it, and never under the trunk: at this size the implement is what shows
+  // the grip, so it must not be hidden by the hands (reviewer, 2026-11-13: goblet squat).
+  const seq=G.order.map(k=>({k,mk:mk[k]}));
+  let back='';
+  G.props.forEach(s=>{const p=inkPropMk(s,G.pr,sc);if(!s.att){back+=p;return;}
+    const iT=seq.findIndex(x=>x.k==='T');let at=0;
+    s.hold.forEach(h=>{const i=seq.findIndex(x=>x.k===h);if(i+1>at)at=i+1;});
+    if(at<=iT)at=iT+1;
+    seq.splice(at,0,{k:'P',mk:`<g data-p="P">${p}</g>`});});
+  return back+seq.map(x=>x.mk).join('');
 }
 
 // ---------- projection / pose blending (pure — qa/wk.js slices at the DOM marker) ----------
@@ -910,7 +1158,7 @@ function figMarkup(m,fit,ph){
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
       // the foot paints OVER the end of its own shin, which it encloses
       parts.push({t:'pg',pts:footOutline(j,sd,v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[il].k),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.35});
-      parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
+      parts.push({t:'pg',pts:handOutline(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]},v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[ia].k),col,d:P['ha'+sd].d+0.01,w:0.35});
     });
   }else{
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
@@ -975,14 +1223,10 @@ function freshChecks(st,day,sets){
   });
   return out;
 }
-// Ink rendering for the cards (direction A, 2026-11-13). The cards are thumbnails, far too small
-// for hatching, so this is the timer apps' small-size fallback: trunk, head and right limbs
-// solid ink (CSS --fi) with a hairline of paper round them, LEFT limbs a solid mid tone (--ft),
-// implements in ochre (--fo). Pure string mapping of figMarkup's four colours.
-function inkTone(mk){
-  return mk.split('fill="'+INK+'"/>').join('fill="var(--fi)" stroke="var(--fp)" stroke-width="0.42"/>')
-    .split(INK).join('var(--fi)').split(LIMB_L).join('var(--ft)').split(TORSO).join('var(--fi)').split(PROP).join('var(--fo)');
-}
+// The cards draw the INK figure (eng2.js inkFigure, the same rules as the timer apps). They are
+// thumbnails, far too small for hatching, so the left limbs take the solid left tone (--ft)
+// inside the same ink outline. figMarkup above is the legacy flat render the pose audit reads.
+const inkCard=(m,ph)=>inkFigure(m,m.fit,ph,null,{id:'wk',hatch:false});
 // session log shared with the timer apps: localStorage 'mvLog' = {"YYYY-MM-DD":[app ids]}
 function logAdd(G,day,id){const a=Array.isArray(G[day])?G[day]:[];if(a.indexOf(id)<0)a.push(id);G[day]=a;
   const ks=Object.keys(G).sort();while(ks.length>400)delete G[ks.shift()];return G;}
@@ -1062,7 +1306,7 @@ if(typeof IntersectionObserver!=='undefined'){
 }
 // paint every card once so nothing is blank before it first scrolls into view
 WORKOUTS.forEach(w=>w.moves.forEach((m,i)=>{
-  $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,0.33));
+  $('ly-'+w.id+'-'+i).innerHTML=inkCard(m,0.33);
 }));
 let t0=performance.now(),last=0;
 (function loop(now){
@@ -1072,7 +1316,7 @@ let t0=performance.now(),last=0;
       w.moves.forEach((m,i)=>{
         if(obs&&!vis['card-'+w.id+'-'+i])return;
         const ph=((now-t0)/1000%m.cyc)/m.cyc;
-        $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,ph));
+        $('ly-'+w.id+'-'+i).innerHTML=inkCard(m,ph);
       });
     });
   }

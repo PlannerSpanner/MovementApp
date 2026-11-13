@@ -48,11 +48,30 @@ by depth); the paper hairline where a right limb crosses the trunk stays; no nam
   cue, long text, Prev, Restart, Voice, background music, video) is in `#sheet`, behind a tap on
   the figure; it drops from the TOP so it never covers the time. `#mNum` still carries
   GET SET UP / MOVEMENT n OF N / COMPLETE (QA reads it) but lives in the sheet.
-- The figure is drawn in INK: `figMarkup(m,fit,ph,v,st)`; `st={id,hatch}` switches to CSS-variable
-  colours (`--fi` ink, `--fp` paper, `--ft` left tone, `--fo` implements), four hatched left
-  segments with one pattern each, tone fallback when `st.hatch` is false or `fit.sc < 0.8`.
-  WITHOUT `st` the output is the legacy colours byte for byte, which is what the audit and
-  pins render. wk_tpl.js uses `inkTone()` (cards are thumbnails: tone, no hatch).
+- THE INK FIGURE (rebuilt 2026-11-13 after Will rejected the first one on his phone: outlines
+  that differed by side, cream caps at knees and elbows, a box pelvis, flickering order, a hand
+  collapsing to a line). ALL rendering rules live in `inkFigure` / `inkGeom` in eng2.js;
+  `figMarkup(m,fit,ph,v,st)` with `st={id,hatch}` just calls it, and the strength cards call it
+  with `hatch:false` (`inkCard`). WITHOUT `st`, figMarkup is the legacy flat-colour render: nothing
+  on screen uses it any more, it is what the pose audit, qa/daily.js, qa/flow.js and qa/wk.js read.
+  The rules, each with a HARD check in qa/fig/checks.js (mutation-tested: break the rule, the
+  check fires):
+  1. Six PARTS: trunk, head+neck, four WHOLE limbs. A limb is one shape (two capsules + the hull
+     of the hand or foot, unioned by drawing one ink path then one inset paper path). Never draw
+     anything across a knee, elbow, wrist or ankle (`seam`).
+  2. ONE OUTLINE for every part on both sides (`INKR.OW`); a left limb is paper inside it with
+     hatch lines, a right limb ink (`outline`).
+  3. A paper GAP (`INKR.GAP`) under each part's edge shows only where it crosses another part. A
+     limb's gap skips its own root (`capOpen`), so a near limb grows out of the trunk.
+  4. PELVIS: the trunk's base corners are the HIP JOINTS (torsoSkin over `pvL/pvR := hpL/hpR`)
+     plus a rounded bar hip to hip, radius `INKR.RP` (`pelvis`). Do not go back to the pv box.
+  5. ORDER: whole parts, decided by `inkScore` (depth difference where the two parts overlap on
+     screen), flipped only past `INKR.HYS` with hysteresis; `inkSchedule` caches it per movement
+     and camera, so it is a pure function of phase (`order`). Held implements are drawn just
+     under the first limb that holds them, never under the trunk.
+  6. HATCH = real lines (`hatchCap`, `hatchPoly`), not `<pattern>`: anchored to each bone,
+     mitred at the joints (`mitre`), running on through the left hand and foot.
+  Small figures (`fit.sc < 0.8`) or `hatch:false`: the left tone `--ft` inside the same outline.
 - STAGE FIT: `fitOf(m,v,box)` fits to the real shape of the stage (`measure()` sets the SVG
   viewBox to `0 0 100 H`); margins come from what is drawn (FIT_R). Without `box`: the legacy
   square fit. `fitFor()` caches per stage height.
@@ -62,6 +81,8 @@ by depth); the paper hairline where a right limb crosses the trunk stays; no nam
   when finish() fires and by strength when a workout becomes fully checked; pruned to 400
   days. No streak count anywhere (Will chose the seal sheet over the parked streak design).
   Finish: celebration figure (CELE), `cDone` plus a 110 Hz thud and 1318 Hz ring at the stamp.
+- APP ICON: three options in `icons/` from `node proto/icons/build.js` (figure / seal / both),
+  awaiting Will's choice; `icon-app.png` and the pages are untouched until he picks.
 - index.html is BUILT now (src/home.html + d_daily.js + engine + pure app_tpl slice +
   src/home.js, Legge 1891 lines from docs/design/tao-legge.json). Never edit index.html.
 - The diagnostics panel sits at the TOP of the screen (the controls are in the bottom row).
@@ -141,10 +162,10 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     drawn foot (1.4 above the sole) and the foot paints over the shin end. Never orient a foot by
     "sole toward the floor". The legacy toe guess points a prone toe back toward the knee, so
     prone and kneeling feet carry authored contact (`fp 4, fy 180`), planted supine feet `fp 0`.
-    THE FOOT IS 14 3D LANDMARKS (`footLandmarks`: ankle, malleoli, heel, inner arch raised, outer
-    edge low, toe joints, toe tips), projected each frame; `footOutline` draws the hull of the
-    projected balls and lifts the sole edge to the arch only when that foot's MEDIAL side faces
-    the camera (medial by handedness). Never go back to a fixed 2D glyph or two flat polygons:
+    THE FOOT IS 3D LANDMARKS (`footLandmarks`: ankle, malleoli, heel, outer edge, toe joints, toe
+    tips), projected each frame; `footOutline` is the convex hull of the projected balls
+    (`hullLoop`). NO ARCH (Will, 2026-11-13: "use one simple foot shape for both inner and outer
+    views, drop the arch"; the `arch` check now fails on any concavity). Never go back to a fixed 2D glyph or two flat polygons:
     Will rejected both on his phone (jagged, shin cap escaping, arch on both sides).
     qa/fig/checks.js enforces: ankle inside the outline, shin end not past it, sole direction
     matching the contact, planted heel = flat foot, toes tucked only for the TUCKED list.
@@ -155,6 +176,12 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     bend plane: on a straight arm that plane is noise (the old bug), and blending the two flipped
     the thumb in one frame (lateral reaches). Pronation turns by handedness (`hs`), not by a sign
     guess. A hand or forearm resting on the floor or a bench (`pL`/`pR`) lies flat, palm DOWN.
+    FINGERS ON A SURFACE POINT AHEAD (2026-11-13: in cat-cows they followed the forearm's slant and
+    swung round to point at the knees): away from the pelvis along the body, or the body's facing
+    when the hand is beside the hips; only a forearm LYING on the surface takes the fingers along
+    its own line. THE HAND IS 3D LANDMARKS WITH THICKNESS (`handLandmarks`, `handOutline`), like
+    the foot, so edge-on it is a slab and not a line; landmarks never sink below the ground line
+    (`handWidth`, `handFloor`). `handFrame` also returns `flat` (0..1).
     qa/fig/checks.js hard flags: `thumb` (hanging arm: neutral = thumb forward, pronated = thumb
     to the midline), `palm` (flat hand palm down, thumb inner side), `handPop` (thumb swings over
     45 deg between two phases), `supinated` (also from geometry: a palm facing forward).
@@ -367,7 +394,7 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
                        # (pre-generated cue clips: scheduling, decode, failure modes,
                        # all 5 apps, fake DOM + WebKit + Chromium; needs `npx playwright install webkit`)
     npm run qa:fig     # the figure audit on its own: frame pins + rubric/numeric audit
-                       # (verbose) + eight-phase look sheets. In the gauntlet since
+                       # (verbose) + eight-phase look sheets (in the INK render since 2026-11-13). In the gauntlet since
                        # 2026-11-12. qa/fig/rubric.js = the executable checklist lines of
                        # docs/rubrics/*.md; qa/fig/checks.js = floor/miss/pop/hidden/short/
                        # merged/kneeBack/hyperExt at 64 phases; qa/fig/pins.json = a hash of

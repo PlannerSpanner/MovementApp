@@ -16,7 +16,7 @@
 //  footShape  the foot outline crosses itself, or has a corner sharper than TURN_LIMIT
 //  heel       heel length is outside 10-30% of the foot, or the foot is not 10-13 units long
 //  heelBack   in the foot's profile the back of the heel is more than 0.5 behind the shin's back edge
-//  arch       the raised arch is not on the medial (big-toe) side of that foot
+//  arch       the foot outline is not one simple convex shape (no arch notch: Will, 2026-11-13)
 //  sole       the foot faces the wrong way for its contact: sole down when the shin stands on it,
 //             TOP of the foot down when the shin lies along the floor (kneeling, prone), toes
 //             tucked only for the movements in TUCKED
@@ -24,7 +24,7 @@
 // or waived with a reason in waivers.json.
 const {N,FLOOR,sub,dot,len,nrm,cross,deg,angV:ang,sample}=require('./lib');
 const SEG=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
-const HARD=['floor','miss','pop','supinated','thumb','palm','handPop','ankle','shinPast','sole','footShape','heel','heelBack','arch'];
+const HARD=['floor','miss','pop','supinated','thumb','palm','handPop','ankle','shinPast','sole','footShape','heel','heelBack','arch','outline','seam','order','pelvis','handWidth','handFloor'];
 // sharpest corner allowed anywhere on a foot outline, in degrees of turning between two edges
 const TURN_LIMIT=50;
 // feet whose toes are tucked under (ball on the floor, heel up) while the shin is near the floor
@@ -54,7 +54,7 @@ function audit(E,m){
     fr.forEach(f=>{const j=f.j,g=f.pose['g'+s]||0,h=E.handFrame(j,s,g,f.pose['p'+s]);
       const lat=nrm(sub(j.shR,j.shL)),upb=nrm(sub(j.chest,j.pelvis)),fw=cross(upb,lat),med=s==='L'?lat:lat.map(x=>-x);
       const fore=nrm(sub(j['ha'+s],j['el'+s])),elbow=ang(sub(j['sh'+s],j['el'+s]),sub(j['ha'+s],j['el'+s]));
-      const flat=dot(h.u,fore)<0.9999&&Math.abs(h.t[1])<1e-6;   // the engine laid it fully on a surface
+      const flat=h.flat>=1;   // the engine laid it fully on a surface
       if(flat){
         if(h.palm[1]<0.9-Math.abs(h.u[1]))note('palm',1-h.palm[1],f.ph,`${s} hand lies on a surface with its palm not down (palm y ${h.palm[1].toFixed(2)})`);
         const hu=nrm([h.u[0],0,h.u[2]]),hf=nrm([fw[0]+upb[0],0,fw[2]+upb[2]]);
@@ -128,7 +128,10 @@ function audit(E,m){
         const rear=Math.min(...L.pts.map(q=>un(q)-q.r)),front=Math.max(...L.pts.map(q=>al(q.p)+q.r)),ratio=-rear/(front-rear);
         // foot 12.3 long (0.152 of stature); the heel is a small share of it BY DECISION: its back is
         // flush with the shin (Will, 2026-11-12), so all the length is in front of the ankle
-        if(ratio<0.08||ratio>0.30||front-rear<11.8||front-rear>12.8)heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
+        // (measured with the toes straight: on a heel-up foot they bend flat at the ball, and the
+        // length along the foot's own line stops meaning anything)
+        const tb=L.pts.find(q=>q.id==='toe2'),mb=L.pts.find(q=>q.id==='mtp1'),tv=sub(tb.p,mb.p),tm=dot(tv,L.med),toesStraight=dot(nrm([tv[0]-L.med[0]*tm,tv[1]-L.med[1]*tm,tv[2]-L.med[2]*tm]),F.f)>0.992;   // in the foot's side plane
+        if(toesStraight&&(ratio<0.08||ratio>0.30||front-rear<11.8||front-rear>13.0))heelBad=`heel is ${(100*ratio).toFixed(0)}% of a foot ${(front-rear).toFixed(1)} long`;
         // heel flush with the shin: measured in the foot's own profile (along the foot, behind the ankle),
         // the back of the heel may reach at most half a unit behind the shin's back edge
         const hbk=Math.max(...L.pts.filter(q=>/^heel|^ach/.test(q.id)).map(q=>-(un(q)-q.r)))-L.tip;
@@ -137,8 +140,11 @@ function audit(E,m){
         // landmarks, in the foot's side plane, measured square to the shin axis, behind it
         {const us=nrm(sub(F.ft,f.j['kn'+sd]));if(Math.abs(dot(F.f,us))<0.26){for(const q of L.pts.filter(q=>/^heel/.test(q.id))){let v=sub(q.p,F.ft);const dm=dot(v,L.med);v=[v[0]-L.med[0]*dm,v[1]-L.med[1]*dm,v[2]-L.med[2]*dm];
           const d=dot(v,us),pp=[v[0]-us[0]*d,v[1]-us[1]*d,v[2]-us[2]*d];if(dot(pp,F.f)<0){const ex=Math.hypot(pp[0],pp[1],pp[2])+q.r-L.tip;if(ex>heelBack)heelBack=ex;}}}}
-        const g=id=>L.pts.find(q=>q.id===id),aT=g('archT'),eL=g('edgeL');
-        if(!(ww(aT.p)>0.5&&ww(eL.p)<-0.5&&ww(g('mtp1').p)>0&&ww(g('mtp5').p)<0&&(hh(aT.p)-aT.r)-(hh(eL.p)-eL.r)>0.5))archBad++;
+        // one simple shape (Will, 2026-11-13: drop the arch): the outline is convex everywhere, so it
+        // is the same from the inner and the outer side; the big-toe joint is still medial
+        {const g=id=>L.pts.find(q=>q.id===id);let cv=true,sg=0;for(let a=0;a<n0;a++){const p0=pl[a],p1=pl[(a+1)%n0],p2=pl[(a+2)%n0],c=(p1.x-p0.x)*(p2.y-p1.y)-(p1.y-p0.y)*(p2.x-p1.x);
+            if(Math.abs(c)<1e-4*sc*sc)continue;if(!sg)sg=Math.sign(c);else if(Math.sign(c)!==sg){cv=false;break;}}
+          if(!cv||!(ww(g('mtp1').p)>0&&ww(g('mtp5').p)<0))archBad++;}
         // 4. contact type
         const ft=f.j['ft'+sd],kn=f.j['kn'+sd],gap=FLOOR-ft[1];
         if(gap<3.2&&!(f.pose.roll)&&!SIDEWAYS.includes(m.n)){const n=F.n,sh=sub(kn,ft),tilt=ang(sh,[0,-1,0]);
@@ -156,8 +162,66 @@ function audit(E,m){
       if(past>0.05*sc)add('shinPast',sd,`the ${nm} shin's flat end pokes ${past.toFixed(2)} screen units out of the foot at ph ${pastPh.toFixed(2)}`);
       if(heelBad)add('heel',sd,`${nm} foot: ${heelBad}`);
       if(heelBack>0.5)add('heelBack',sd,`${nm} foot: the back of the heel is ${heelBack.toFixed(2)} behind the back edge of the shin in profile (limit 0.5)`);
-      if(archBad)add('arch',sd,`${nm} foot: the raised arch is not on the medial (big-toe) side, or the outer edge is not low, in ${archBad} of ${N} frames`);
+      if(archBad)add('arch',sd,`${nm} foot: the outline is not one simple convex shape (an arch notch), or the big-toe joint is not medial, in ${archBad} of ${N} frames`);
       if(bad)add('sole',sd,`${nm} foot: ${why} (${bad} of ${N} frames, first at ph ${badPh.toFixed(2)})`);});}
+  // ---- the ink figure's own rules (eng2.js inkFigure), every frame. Added 2026-11-13 after Will
+  // found on his phone: outlines that differed by side, cream caps at knees and elbows, stacking
+  // that flickered, a pelvis corner poking past the hips, a hand collapsing to a line, and hands
+  // pointing backward in cat-cows.
+  //  outline    left and right limbs are drawn by the same layers with the same outline; the left
+  //             adds only its paper fill and hatch lines inside
+  //  seam       no ink crosses a limb at the elbow, knee, wrist or ankle: the paper shape inside
+  //             the outline is continuous through every joint
+  //  order      the stacking order of two parts changes only when their depth difference where
+  //             they overlap is clear (INKR.HYS), and at most 4 times a cycle
+  //  pelvis     the trunk's base corners are the hip joints and each thigh's root is inside the
+  //             pelvis corner, so nothing pokes out in a fold
+  //  handWidth  the hand beyond the wrist is never thinner than 1.7 units on screen (the wrist is 2.3)
+  //  handFloor  a hand flat on the floor: palm down, fingers AHEAD (away from the pelvis along the
+  //             body) unless the forearm itself lies on the floor, nothing below the ground line
+  if(E.inkGeom){const sc=m.fit.sc,I=E.INKR,bad={};const note=(k,id,v,ph,msg)=>{const q=k+'|'+id;if(!bad[q]||v>bad[q].v)bad[q]={k,id,v,ph,msg};};
+    const dPoly=(p,pl)=>Math.min(...pl.map((c,i)=>dSeg2(p,c,pl[(i+1)%pl.length])));
+    const sig=g=>g.replace(/ d="[^"]*"/g,'');
+    fr.forEach((f,fi)=>{const G=E.inkGeom(m,m.fit,f.ph);
+      if(fi%8===0){const mk=E.inkFigure(m,m.fit,f.ph,null,{id:'q',hatch:true}),grp=k=>{const a=mk.indexOf('<g data-p="'+k+'">');return a<0?'':mk.slice(a,mk.indexOf('</g>',a));};
+        [['AL','AR'],['LL','LR']].forEach(([l,r])=>{const gl=grp(l).split('<path').slice(1),gr=grp(r).split('<path').slice(1);
+          // right: gap + ink. left: the same two, then paper and (when hatched) lines, neither with an outline of its own
+          if(gr.length!==2||gl.length<3||gl.length>4||sig(gl[0])!==sig(gr[0])||sig(gl[1])!==sig(gr[1]))note('outline',l,1,f.ph,`${l} and ${r} are not drawn by the same outline layers`);
+          if(/stroke=/.test(gl[1]||'')||/stroke=/.test(gr[1]||'')||/stroke=/.test(gl[2]||''))note('outline',l,1,f.ph,`a limb shape in ${l}/${r} carries a stroke of its own`);});}
+      for(const k in G.limbs){const Lm=G.limbs[k],F=Lm.full,N=Lm.ins;
+        // outline width: every point of the inset hand/foot is OW inside the full one, both sides
+        const gap=N.e.map(p=>dPoly(p,F.e)),g0=Math.min(...gap),g1=Math.max(...gap);
+        if(g0<I.OW-0.2||g1>I.OW+0.3)note('outline',k,Math.abs(g1-I.OW),f.ph,`${k} hand/foot outline is ${g0.toFixed(2)} to ${g1.toFixed(2)} wide (rule ${I.OW})`);
+        if(Math.abs((F.c1.r0-N.c1.r0)-I.OW)>0.02&&N.c1.r0>0.06)note('outline',k,1,f.ph,`${k} limb outline is not ${I.OW}`);
+        // seams: walk the centre line through both joints; it must stay inside the paper shapes
+        const polys=[N.c1.pts,N.c2.pts,N.e],ins=p=>polys.some(pl=>inPoly(p,pl));
+        const walk=(a,b,c,nm,far)=>{for(let t=-1;t<=1.001;t+=0.1){const o=t<0?a:c,u=Math.abs(t),q=Math.min(1,(t<0?2:(far||2))*sc/(Math.hypot(o.x-b.x,o.y-b.y)||1));const p={x:b.x+(o.x-b.x)*u*q,y:b.y+(o.y-b.y)*u*q};
+          if(!ins(p)){note('seam',k+':'+nm,1,f.ph,`ink crosses the ${k} limb at the ${nm}`);return;}}};
+        walk(Lm.A,Lm.B,Lm.C,Lm.arm?'elbow':'knee');
+        if(Lm.ax)walk(Lm.B,Lm.C,{x:Lm.C.x+Lm.ax.x*3*sc,y:Lm.C.y+Lm.ax.y*3*sc},Lm.arm?'wrist':'ankle',0.8);   // 0.8: a hand or foot seen end-on is short on screen
+        if(!Lm.arm){const hp=k==='LL'?G.trunk.hpL:G.trunk.hpR;if(F.c1.r0>G.trunk.rp+1e-6||Math.hypot(Lm.A.x-hp.x,Lm.A.y-hp.y)>1e-6)note('pelvis',k,1,f.ph,`the ${k} thigh root (r ${(F.c1.r0/sc).toFixed(2)}) is not inside the pelvis corner (r ${I.RP})`);}
+        else{const s=k[1],nm=s==='L'?'left':'right',H=E.handLandmarks(f.j,s,f.pose['g'+s],{fist:m._held&&m._held[s],surf:f.pose['p'+s]},Lm.k2);
+          const hl=E.hullLoop(H.pts.filter(q=>q.id!=='wrist'),G.pr,sc,0,40);let w=1e9;
+          for(let a=0;a<12;a++){const cx=Math.cos(a*Math.PI/12),cy=Math.sin(a*Math.PI/12),v=hl.map(p=>p.x*cx+p.y*cy);w=Math.min(w,Math.max(...v)-Math.min(...v));}
+          if(w<1.7*sc)note('handWidth',s,1.7-w/sc,f.ph,`the ${nm} hand is only ${(w/sc).toFixed(2)} wide on screen (min 1.7)`);
+          const S0=f.pose['p'+s]==null?FLOOR:f.pose['p'+s],h=H.F;
+          if(h.flat>=0.25){const low=Math.max(...H.pts.map(q=>q.p[1]+q.r))-S0;if(low>1.7)note('handFloor',s+':dip',low,f.ph,`the ${nm} hand dips ${low.toFixed(2)} below the surface it rests on (ground line at 1.7)`);}
+          if(h.flat>=1){const j=f.j,lat=nrm(sub(j.shR,j.shL));let v=sub(j['ha'+s],j.pelvis);const dl=dot(v,lat);v=[v[0]-lat[0]*dl,0,v[2]-lat[2]*dl];
+            const fore=Math.abs(j['el'+s][1]-S0)<2.6;
+            if(h.palm[1]<0.85)note('handFloor',s+':palm',1,f.ph,`the ${nm} hand lies flat with its palm not down`);
+            if(!fore&&len(v)>8&&dot(nrm([h.u[0],0,h.u[2]]),nrm(v))<0.8)note('handFloor',s+':fingers',1,f.ph,`the ${nm} hand is flat on the floor ahead of the pelvis but its fingers do not point ahead`);}}
+      }
+      const T=G.trunk,n=T.torso.length/2;
+      if(Math.hypot(T.torso[n-1].x-T.hpL.x,T.torso[n-1].y-T.hpL.y)>1e-6||Math.hypot(T.torso[n].x-T.hpR.x,T.torso[n].y-T.hpR.y)>1e-6)note('pelvis','T',1,f.ph,'the trunk does not end at the hip joints');
+      // a held implement is never drawn under the trunk
+      if(m.prop){const mk=E.inkFigure(m,m.fit,f.ph,null,{id:'q',hatch:false}),iT=mk.indexOf('data-p="T"'),iP=mk.indexOf('data-p="P"');if(iP>=0&&iP<iT)note('order','prop',1,f.ph,'a held implement is drawn under the trunk');}
+    });
+    E.setCam(m);const S=E.inkSchedule(m),NS=S.length;
+    for(const id in S[0].rel){let fl=0;for(let i=0;i<NS;i++){const a=S[(i+NS-1)%NS],b=S[i];
+      if(a.rel[id]!==b.rel[id]){fl++;if(Math.abs(b.score[id])<I.HYS)note('order',id,1,i/NS,`${id} swap places with a depth difference of only ${b.score[id].toFixed(2)} (needs ${I.HYS})`);}}
+      if(fl>4)note('order',id+':n',fl,0,`${id} swap places ${fl} times in one cycle`);}
+    for(const q in bad)add(bad[q].k,bad[q].id,`${bad[q].msg} at ph ${bad[q].ph.toFixed(2)}`);
+  }
   for(const k in fr[0].j){const st=fr.map((f,i)=>len(sub(fr[(i+1)%N].j[k],f.j[k])));
     const nz=st.filter(x=>x>1e-3).sort((x,y)=>x-y); if(!nz.length)continue; const med=nz[nz.length>>1];
     const mx=Math.max(...st), at=st.indexOf(mx);

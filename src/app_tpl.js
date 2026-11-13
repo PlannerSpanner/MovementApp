@@ -128,21 +128,39 @@ function fitOf(m,v,box){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
 // (joint-attached) implement instead joins the painter's sort with its own depth,
 // floored just in front of the torso quad: it sits in a hand on the near side of the
 // body, so it may never vanish behind the torso (qa/daily.js hard invariant).
-// st (2026-11-13, direction A) = draw in INK instead of the three flat colours: trunk, head and
-// RIGHT limbs solid ink (CSS --fi) with a hairline of paper (--fp) round each right limb so it
-// separates from the trunk; LEFT limb segments engraved hatching, one pattern per segment,
-// anchored to the limb and set 22 deg off square to the bone, with an ink outline; left hands
-// and feet a solid mid tone (--ft). st.hatch false (the figure is too small on screen for a
-// 1.5-unit hatch) = the whole left side in the tone. st.id prefixes the pattern ids. Left and
-// right keep their identity whatever the depth. Without st: the legacy colours, byte for byte.
+// st = {id,hatch} (direction A) draws the INK figure instead: see inkFigure in eng2.js, which
+// owns every rendering rule. Without st: the legacy flat colours (what the pose audit reads).
+// the belly outline (prenatal apps): a full circle facing the viewer, a half-disc with its flat
+// edge on the trunk in profile, flattening smoothly in between so the shape never pops
+function bellyPts(m,j,pose,fit){
+    const u=nrm(sub(j.chest,j.pelvis));
+    const lat=rotY([1,0,0],pose.yaw);
+    const f=nrm(cross(u,lat));                       // trunk's true front, follows pitch
+    const mid=[(j.chest[0]*0.45+j.pelvis[0]*0.55),(j.chest[1]*0.45+j.pelvis[1]*0.55),(j.chest[2]*0.45+j.pelvis[2]*0.55)];
+    const cq=project(mid), fq=project(add(mid,f,4));
+    const cs={x:cq.x*fit.sc+fit.ox,y:cq.y*fit.sc+fit.oy};
+    let fx=fq.x*fit.sc+fit.ox-cs.x, fy=fq.y*fit.sc+fit.oy-cs.y;
+    const flen=Math.hypot(fx,fy), q=flen/(4*fit.sc);
+    const bd=project(add(mid,f,4.8)).d;
+    const k=Math.max(0,Math.min(1,(0.82-q)/0.32));
+    if(flen<0.5){fx=0;fy=1;}else{fx/=flen;fy/=flen;}
+    const px=-fy, py=fx, r=7.9*fit.sc;
+    const pts=[];
+    for(let a=-90;a<=90;a+=15){const ca=Math.cos(a*Math.PI/180),sa=Math.sin(a*Math.PI/180);
+      pts.push((cs.x+r*(sa*px+ca*fx)).toFixed(2)+','+(cs.y+r*(sa*py+ca*fy)).toFixed(2));}
+    for(let a=105;a<255;a+=15){const ca=Math.cos(a*Math.PI/180)*k,sa=Math.sin(a*Math.PI/180);
+      pts.push((cs.x+r*(sa*px+ca*fx)).toFixed(2)+','+(cs.y+r*(sa*py+ca*fy)).toFixed(2));}
+    return {pts,d:bd};
+}
 function figMarkup(m,fit,ph,v,st){
+  if(st)return inkFigure(m,fit,ph,v,st);   // direction A: the ink figure (eng2.js)
   setCam(v||m);
   const pose=poseAt(m,ph);
   const j=solve(pose), P={};
   for(const k in j){const q=project(j[k]);P[k]={x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};}
   // props rebuild every frame: joint-referenced points track the moving figure
   const S=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
-  const pw=(1.6*fit.sc).toFixed(2),PROP=st?'var(--fo)':PROP0;
+  const pw=(1.6*fit.sc).toFixed(2),PROP=PROP0;
   const shapes=propShapes(m,j,pose);
   const mkProp=s=>{
     // {q:[P,P,P,P]} = a pale filled patch on the floor (a mat), under everything
@@ -168,7 +186,7 @@ function figMarkup(m,fit,ph,v,st){
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
       // the foot paints OVER the end of its own shin, which it encloses
       parts.push({t:'pg',pts:footOutline(j,sd,v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[il].k),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.35});
-      parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
+      parts.push({t:'pg',pts:handOutline(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]},v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[ia].k),col,d:P['ha'+sd].d+0.01,w:0.35});
     });
   }else{
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
@@ -181,28 +199,7 @@ function figMarkup(m,fit,ph,v,st){
   else if(pose.bend){const e=torsoEdges(j,pose.bend,6),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
     parts.push({t:'qp',pts:[...e.L.slice().reverse().map(Q),...e.R.map(Q)],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});}
   else parts.push({t:'q',pts:[P.shL,P.shR,P.hpR,P.hpL],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});
-  if(m.belly){
-    const u=nrm(sub(j.chest,j.pelvis));
-    const lat=rotY([1,0,0],pose.yaw);
-    const f=nrm(cross(u,lat));                       // trunk's true front, follows pitch
-    const mid=[(j.chest[0]*0.45+j.pelvis[0]*0.55),(j.chest[1]*0.45+j.pelvis[1]*0.55),(j.chest[2]*0.45+j.pelvis[2]*0.55)];
-    const cq=project(mid), fq=project(add(mid,f,4));
-    const cs={x:cq.x*fit.sc+fit.ox,y:cq.y*fit.sc+fit.oy};
-    let fx=fq.x*fit.sc+fit.ox-cs.x, fy=fq.y*fit.sc+fit.oy-cs.y;
-    const flen=Math.hypot(fx,fy), q=flen/(4*fit.sc);
-    const bd=project(add(mid,f,4.8)).d;
-    // facing the viewer -> full circle; in profile -> half-disc with its flat edge on the trunk;
-    // in between, the back half flattens smoothly so the shape never pops
-    const k=Math.max(0,Math.min(1,(0.82-q)/0.32));
-    if(flen<0.5){fx=0;fy=1;}else{fx/=flen;fy/=flen;}
-    const px=-fy, py=fx, r=7.9*fit.sc;
-    const pts=[];
-    for(let a=-90;a<=90;a+=15){const ca=Math.cos(a*Math.PI/180),sa=Math.sin(a*Math.PI/180);
-      pts.push((cs.x+r*(sa*px+ca*fx)).toFixed(2)+','+(cs.y+r*(sa*py+ca*fy)).toFixed(2));}
-    for(let a=105;a<255;a+=15){const ca=Math.cos(a*Math.PI/180)*k,sa=Math.sin(a*Math.PI/180);
-      pts.push((cs.x+r*(sa*px+ca*fx)).toFixed(2)+','+(cs.y+r*(sa*py+ca*fy)).toFixed(2));}
-    parts.push({t:'bp',pts,d:bd});
-  }
+  if(m.belly){const bq=bellyPts(m,j,pose,fit);parts.push({t:'bp',pts:bq.pts,d:bq.d});}
   // neck line ends at the head circle's rim, so it can never lie across the face
   {
     const dx=P.head.x-P.neck.x, dy=P.head.y-P.neck.y, dl=Math.hypot(dx,dy)||1;
@@ -218,28 +215,6 @@ function figMarkup(m,fit,ph,v,st){
     parts.push({t:'p',mk:mkProp(s),d:Math.max(own,qd+0.06)});
   });
   parts.sort((x,y)=>x.d-y.d);
-  if(st){
-    const FI='var(--fi)',FP='var(--fp)',FT='var(--ft)',HX=[],hx=st.hatch&&fit.sc>=0.8;   // a limb under ~2.5 units wide holds too few lines
-    const hatch=(a,b)=>{const id=st.id+'-'+HX.length,ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+112;
-      HX.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="1.5" height="1.5" patternTransform="translate(${a.x.toFixed(2)} ${a.y.toFixed(2)}) rotate(${ang.toFixed(1)})"><rect width="1.5" height="1.5" fill="${FP}"/><rect width="1.5" height="0.62" fill="${FI}"/></pattern>`);return 'url(#'+id+')';};
-    const body=parts.map(p=>{
-      if(p.t==='p')return p.mk;
-      const left=p.col===LIMB_L;
-      if(p.t==='l'&&SKIN&&p.seg){const d=limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin');
-        if(!left)return `<path d="${d}" fill="${FI}" stroke="${FP}" stroke-width="0.42"/>`;
-        return hx?`<path d="${d}" fill="${hatch(p.a,p.b)}" stroke="${FI}" stroke-width="0.5"/>`:`<path d="${d}" fill="${FT}"/>`;}
-      if(p.t==='pg'){const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
-        let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);
-        return left?`<path d="${d}Z" fill="${FT}" stroke="${FI}" stroke-width="0.4" stroke-linejoin="round"/>`
-                   :`<path d="${d}Z" fill="${FI}" stroke="${FI}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;}
-      if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${left?FT:FI}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
-      if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${FI}" stroke="${FI}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
-      if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${FI}" stroke="${FI}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
-      if(p.t==='bp')return `<polygon points="${p.pts.join(' ')}" fill="${FI}"/>`;
-      if(p.t==='bc')return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${p.r.toFixed(2)}" fill="${FI}"/>`;
-      return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${FI}"/>`;}).join('');
-    return (HX.length?'<defs>'+HX.join('')+'</defs>':'')+propMk+body;
-  }
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
     if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin')}" fill="${p.col}"/>`;

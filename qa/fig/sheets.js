@@ -1,5 +1,5 @@
 // Phase sheets (gauntlet look step): every in-scope movement at phases 0, .125 ... .875
-// (4x2 grid), exactly as the app camera frames it, plus two orthographic truth insets
+// (4x2 grid), in the INK render the app ships, exactly as the app camera frames it, plus two orthographic truth insets
 // per cell (true side and true front) so a fault can be traced to pose vs camera.
 //   node qa/fig/sheets.js [app ...] [--only=substr]
 // Writes qa/screenshots/sheets/<app>-<nn>-<slug>.png (gitignored). The rubric lines marked LOOK in
@@ -33,11 +33,13 @@ function inset(E,m,ph,view){
     const E=load(app);
     for(let i=0;i<E.MOVES.length;i++){
       const m=E.MOVES[i]; if(only&&!m.n.toLowerCase().includes(only))continue;
+      // the figure AS SHIPPED: the ink render, fitted to the stage (timer apps hatched; strength cards toned)
+      const fit=E.figMarkup.length>3?E.fitOf(m,null,{w:100,h:100}):m.fit;
       const cells=PH.map(ph=>`<div class="c"><div class="t">ph ${ph}</div>
-        <svg viewBox="0 0 100 100" width="320" height="320"><line x1="0" y1="0" x2="0" y2="0"/>${E.figMarkup(m,m.fit,ph)}</svg>
+        <svg viewBox="0 0 100 100" width="320" height="320"><line x1="0" y1="0" x2="0" y2="0"/>${E.figMarkup.length>3?E.figMarkup(m,fit,ph,null,{id:'s'+i+'-'+ph,hatch:true}):E.inkFigure(m,m.fit,ph,null,{id:'s',hatch:false})}</svg>
         <div class="ins">${inset(E,m,ph,'side')}${inset(E,m,ph,'front')}</div></div>`).join('');
       await page.setContent(`<style>body{margin:0;font:13px sans-serif;background:#fff}h1{font-size:15px;margin:6px 8px}
-        .g{display:grid;grid-template-columns:repeat(4,326px);gap:2px}.c{border:1px solid #ddd;background:#fdf7e9}
+        .g{display:grid;grid-template-columns:repeat(4,326px);gap:2px}.c{border:1px solid #ddd;background:#f3ead6;--fi:#1b1814;--fp:#f3ead6;--fo:#d99a2b;--ft:#7f786b}
         .t{font-size:11px;color:#555;padding:2px 4px;background:#fff}.ins{display:flex;gap:4px;justify-content:center;background:#fff;padding:2px}
         svg{display:block}</style><div id="s"><h1>${E.label} ${i+1}. ${m.n} &nbsp; <small>cam ${m.cam||40} · cyc ${m.cyc}s · app camera above, body-frame side/front truth views below (orange = left, blue = right)</small></h1><div class="g">${cells}</div></div>`);
       const f=path.join(OUT,`${app}-${String(i+1).padStart(2,'0')}-${slug(m.n)}.png`);

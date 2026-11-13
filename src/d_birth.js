@@ -49,9 +49,9 @@ const MOVES=[
 {n:"Kneeling lunge with support",pos:'kneeling',cue:"Hand on a chair, shift gently forward",dur:60,bil:true,cyc:3.6,belly:1,pin:"LR",
  prop:[{l:[[16,64,10],[16,93,10]]},{l:[[11,64,10],[21,64,10]]}],
  A:{p:[0,75,-2],yaw:24,tw:0,s:[4,4],hf:0,ikL:{w:[-8,72,2]},ikR:{w:[14,66,10]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17],fpL:4,fyL:180},
  B:{p:[0,75.5,1],yaw:24,tw:0,s:[-8,-8],hf:-10,ikL:{w:[-8,72,4]},ikR:{w:[14,66,10]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-18,-8,-89,-6],ikFR:[6,93,17],fpL:4,fyL:180}},
 
 {n:"Standing wall pelvic tilts",pos:'wall',cue:"Flatten the low back on the exhale",dur:60,bil:false,cyc:3.4,belly:1,pin:"LR",
  prop:[{l:[[0,34,-8],[0,93,-8]]}],
@@ -69,9 +69,9 @@ const MOVES=[
 
 {n:"Wide-knee child's pose",pos:'kneeling',cue:"Knees wide, belly rests between them",dur:60,bil:false,cyc:4.4,belly:1,cam:58,
  A:{p:[0,83.5,-9],yaw:22,tw:0,s:[112,90],hf:4,ikL:{w:[-8,92.5,33]},ikR:{w:[10,92.5,33]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15]},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15],fpL:4,fyL:180,fpR:4,fyR:180},
  B:{p:[0,84.5,-10.5],yaw:22,tw:0,s:[116,92],hf:2,ikL:{w:[-8,92.5,33]},ikR:{w:[10,92.5,33]},
-    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15]}},
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[67,-22,-89,15],lR:[67,22,-89,-15],fpL:4,fyL:180,fpR:4,fyR:180}},
 
 {n:"Left side-lying rest",pos:'sidelying',posCue:'Lie on your left side.',cue:"Pillow between the knees, soft breathing",dur:60,bil:false,cyc:5.0,belly:1,
  A:{p:[0,80,0],yaw:70,tw:0,s:[76,80],hf:12,aL:[70,-16,82,-12],aR:[64,16,78,12],

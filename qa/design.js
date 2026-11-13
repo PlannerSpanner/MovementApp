@@ -1,6 +1,6 @@
 // Direction A (letterpress) design rules, as a gauntlet step. docs/design/design-system.md.
-//  pure   ink rendering of every movement (no legacy colour leaks, four hatched left segments
-//         with their own pattern, tone fallback, geometry identical to the legacy render),
+//  pure   ink rendering of every movement (no legacy colour leaks, six parts, left limbs hatched
+//         with real lines, tone fallback on the same silhouettes),
 //         stage-shaped fit (everything inside the box, never smaller than the old square fit),
 //         launcher helpers (week, month, daily line, next-up)
 //  pages  setup is not dimmed, the work screen's word budget, tap targets, phase frame colours,
@@ -26,17 +26,22 @@ const check=(name,ok,detail)=>{console.log(`${name.padEnd(64)} ${ok?'ok':'FAIL'}
    for(const ph of [0,0.25,0.5,0.75]){
      const legacy=E.figMarkup(m,fit,ph),ink=E.figMarkup(m,fit,ph,null,{id:'t',hatch:true}),small=E.figMarkup(m,fit,ph,null,{id:'t',hatch:false});
      if(HEX.some(h=>ink.includes(h)||small.includes(h)))leaks.push(`${app}/${m.n}`);
-     const ids=(ink.match(/<pattern id="[^"]+"/g)||[]),uses=(ink.match(/fill="url\(#t-\d+\)"/g)||[]);
-     const want=fit.sc>=0.8?4:0;
-     if(ids.length!==want||uses.length!==want||new Set(ids).size!==ids.length)pat.push(`${app}/${m.n} ph ${ph}: ${ids.length} patterns, ${uses.length} uses, want ${want}`);
-     if(small.includes('<pattern')||!small.includes('var(--ft)'))tone.push(`${app}/${m.n}`);
-     // geometry: the same path data, in the same order, as the legacy render
-     const ds=s=>(s.match(/ d="[^"]+"/g)||[]).join('|');
-     if(ds(legacy)!==ds(ink)||ds(legacy)!==ds(small))geo.push(`${app}/${m.n} ph ${ph}`);}}}
+     // six parts, each drawn once; the two left limbs carry engraved lines (real lines, no
+     // pattern) when the figure is big enough, the two right limbs never do
+     const grp=(mk,k)=>{const a=mk.indexOf('<g data-p="'+k+'">');return a<0?null:mk.slice(a,mk.indexOf('</g>',a));};
+     const P6=['T','H','LL','LR','AL','AR'],once=mk=>P6.every(k=>mk.split('<g data-p="'+k+'">').length===2);
+     const lines=g=>{const q=(g||'').split('<path').slice(1).filter(e=>/fill="none" stroke="var\(--fi\)"/.test(e));return q.length===1?(q[0].match(/M/g)||[]).length:(q.length?-1:0);};
+     const want=fit.sc>=0.8;
+     if(!once(ink)||!once(small)||ink.includes('<pattern')||['AL','LL'].some(k=>want?lines(grp(ink,k))<8:lines(grp(ink,k))!==0)||['AR','LR'].some(k=>lines(grp(ink,k))!==0))
+       pat.push(`${app}/${m.n} ph ${ph}: parts ${once(ink)}, hatch lines AL ${lines(grp(ink,'AL'))} LL ${lines(grp(ink,'LL'))} AR ${lines(grp(ink,'AR'))} LR ${lines(grp(ink,'LR'))}, want hatch ${want}`);
+     if(small.includes('<pattern')||!small.includes('var(--ft)')||['AL','LL'].some(k=>lines(grp(small,k))!==0))tone.push(`${app}/${m.n}`);
+     // the hatched and the toned render are the same silhouettes: the first two layers of every limb
+     const sil=mk=>['LL','LR','AL','AR'].map(k=>(grp(mk,k).match(/ d="[^"]+"/g)||[]).slice(0,2).join('|')).join('#');
+     if(sil(ink)!==sil(small))geo.push(`${app}/${m.n} ph ${ph}`);}}}
  check(`ink render: no legacy colour in ${n} movements`,!leaks.length,leaks[0]);
- check('ink render: four hatched left segments, one pattern each',!pat.length,pat[0]);
- check('ink render: small figures fall back to the tone, no pattern',!tone.length,tone[0]);
- check('ink render: path geometry identical to the legacy render',!geo.length,geo[0]);
+ check('ink render: six parts once each; left limbs hatched with real lines, right limbs never',!pat.length,pat[0]);
+ check('ink render: small figures fall back to the tone, no lines',!tone.length,tone[0]);
+ check('ink render: hatched and toned figures share the same silhouettes',!geo.length,geo[0]);
  check('stage fit: every joint inside a square, a tall and a wide stage',!inside.length,inside[0]);
  check('stage fit: never more than 2% smaller than the old square fit',!smaller.length,smaller[0]);
  // a wide, low movement fills the WIDTH of a tall stage (Will, 2026-11-13: bird dog)
@@ -89,7 +94,7 @@ const {serve}=require('./serve');
     check(`${scheme}: Pause and Skip are 56+ px tall in the bottom thumb row`,sizes.every(s=>s[2]>=56&&s[1]>=60&&s[3]<60),JSON.stringify(sizes));
     const numH=await page.$eval('#tm',e=>e.getBoundingClientRect().height/innerHeight);
     check(`${scheme}: numerals are ${(numH*100).toFixed(0)}% of the screen height`,numH>=0.09);
-    check(`${scheme}: hatching on at phone size (4 patterns)`,await page.$eval('#layer',e=>e.querySelectorAll('pattern').length===4));
+    check(`${scheme}: hatching on at phone size (both left limbs, no pattern)`,await page.$eval('#layer',e=>e.querySelectorAll('g[data-p]').length>=6&&e.querySelectorAll('g[data-p="AL"] path').length===4&&e.querySelectorAll('g[data-p="LL"] path').length===4&&e.querySelectorAll('g[data-p="AR"] path').length===2&&!e.querySelector('pattern')));
     await page.screenshot({path:path.join(OUT,`daily-${scheme}-3work.png`)});
     // form text behind a tap
     await page.click('#stage');await page.waitForTimeout(450);
