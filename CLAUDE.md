@@ -30,6 +30,42 @@ block, 3 → Daily 13); the rest are archived — NOTHING deleted — in `src/d_
 (+ `data2.js`/`mm_extra.js` kept intact) and documented in docs/movement-reference.md
 under "Retired — available for future versions".
 
+## Design: direction A, letterpress (2026-11-13, branch design-refresh)
+
+Canonical reference: docs/design/design-system.md (inks, type, layout, word budget, figure
+rendering, seals, finish, haptic spec for the native build). Research and sources:
+docs/design/research.md. Will's decisions: direction A complete; week circles SOLID (not
+bullseyes); movement name reversed out of a SOLID BAR; left limbs always the hatched ones (never
+by depth); the paper hairline where a right limb crosses the trunk stays; no name for the figure.
+- Four inks only, as CSS variables in every head (`--paper --ink --verm --ochre`, dark mode by
+  `prefers-color-scheme` swaps paper and ink). The per-app hue themes (BLUE/ROSE/VIOLET swap
+  tables in rebuild.py) no longer colour anything on screen; the tables are inert.
+- THE PHASE COLOURS THE FRAME (`.wrap` background: ready paper, setup ochre, work vermilion,
+  finish deep), never the stage. `setState()` in app_tpl.js owns the `state-*` classes.
+- SETUP IS NEVER DIMMED. The old 62% opacity is gone; qa/design.js fails the build if the
+  preview is not at full opacity and held still.
+- Work screen word budget: "Next" + the next name, plus Pause and Skip. Everything else (name,
+  cue, long text, Prev, Restart, Voice, background music, video) is in `#sheet`, behind a tap on
+  the figure; it drops from the TOP so it never covers the time. `#mNum` still carries
+  GET SET UP / MOVEMENT n OF N / COMPLETE (QA reads it) but lives in the sheet.
+- The figure is drawn in INK: `figMarkup(m,fit,ph,v,st)`; `st={id,hatch}` switches to CSS-variable
+  colours (`--fi` ink, `--fp` paper, `--ft` left tone, `--fo` implements), four hatched left
+  segments with one pattern each, tone fallback when `st.hatch` is false or `fit.sc < 0.8`.
+  WITHOUT `st` the output is the legacy colours byte for byte, which is what the audit and
+  pins render. wk_tpl.js uses `inkTone()` (cards are thumbnails: tone, no hatch).
+- STAGE FIT: `fitOf(m,v,box)` fits to the real shape of the stage (`measure()` sets the SVG
+  viewBox to `0 0 100 H`); margins come from what is drawn (FIT_R). Without `box`: the legacy
+  square fit. `fitFor()` caches per stage height.
+- Transition poster (`poster(g)`): a vermilion sheet for 1.8 s at each gap and at the start.
+  Visual only; it never delays the timer. Tests call `posterOff()`.
+- SEALS: localStorage `mvLog` = {"YYYY-MM-DD":[app ids]}, LOCAL days, written by `logDone()`
+  when finish() fires and by strength when a workout becomes fully checked; pruned to 400
+  days. No streak count anywhere (Will chose the seal sheet over the parked streak design).
+  Finish: celebration figure (CELE), `cDone` plus a 110 Hz thud and 1318 Hz ring at the stamp.
+- index.html is BUILT now (src/home.html + d_daily.js + engine + pure app_tpl slice +
+  src/home.js, Legge 1891 lines from docs/design/tao-legge.json). Never edit index.html.
+- The diagnostics panel sits at the TOP of the screen (the controls are in the bottom row).
+
 ## Build
 
     python3 src/rebuild.py     # stamps all four timer apps + strength + the daily-10
@@ -76,6 +112,19 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
     The ankle stays the authored joint: for a heel-up foot put the ankle `6.4*sin(fp)` above
     the floor. Both blend, so a foot rolls from flat onto its ball. Used by Reverse lunges,
     Split squat, Down dog, Deep squats, Clamshell, Plank hold, Bouncing. Absent = legacy.
+  - PROPORTIONS (2026-11-13, Drillis and Contini at the figure's height of 80.8 sole to crown;
+    table in docs/design/design-system.md). `L.th`/`L.sh` 19.75, `L.ft` 7.65 (ankle to ball),
+    `L.hipUp` 3.0, `L.ankUp` 1.5. POSE DATA KEPT ITS MEANING: `p` is the BASE of the drawn
+    trunk; the HIP JOINTS (`hpL/hpR`) sit hipUp up the lower spine inside the trunk shape, and
+    `pvL/pvR` are the trunk's base corners (torsoEdges draws from them). Head, shoulders, arms
+    and hand targets did not move. Planted sole-down foot targets are lifted ONCE, in
+    normalise(), by `footRetarget` (1.5 when flat, the pitched equivalent with `fp`; not for
+    `fy` beyond 90, not for side-lying `roll`); after normalise every ikF is exact. Floor
+    positions (A's `p` y of 68 or more) get `hs` so the hip joints do not swing when the spine
+    flexes (cat-cow, cobra, seated fold). In checks, `C.gap` for ankle and ball joints is
+    measured from their planted height. The heel stays flush with the shin and FOLLOWS THE
+    SHIN'S LINE (sheared by `lean`), because it now hangs 3.1 below the ankle. Arms were left
+    at 13 + 13 (3% short; changing the split moves every elbow).
   - FIGURE SKIN (applied 2026-11-12, Will's export): `src/skin.json` is stamped into the engine
     as `SKIN` by build.py/rebuild.py (and by qa/fig/engine.js). Limbs are tapered filled shapes
     (`limbD`), the torso has a waist (`torsoSkin`), and with a skin the feet and hands are small
@@ -335,6 +384,8 @@ intros, and movement counts. Adjust its output path for this repo (was /mnt/user
                        # In the gauntlet it checks the APPROVED profile, src/skin.json (stamped
                        # into the engine by build.py; no file = today's skin, nothing to check).
                        # Tuning page: node proto/skin/build.js -> review/tune.html.
+    node qa/design.js  # direction A rules (in the gauntlet): ink render, stage fit, undimmed setup,
+                       # work-screen word budget, 56 pt thumb row, seal logging, launcher, dark mode
     npm run cues       # after editing any spoken text: enumerate strings + generate missing clips
     node tools/dump.js && python3 tools/strips.py   # fallback PIL contact sheets (needs Pillow)
     python3 tools/ascii.py <app> "<movement>" 0,3    # text-mode pose render
@@ -382,8 +433,7 @@ Hard-won lessons encoded in these tools:
 
 Built HTML at repo root for GitHub Pages. One commit per change set (stacked commits cancel
 Pages deploys). Pages auto-update themselves on launch/foreground via BUILDV content-hash
-stamps (written by build.py; rebuild.py also stamps index.html — so run rebuild after ANY
-index.html edit). No manual refresh needed on the phone after the first relaunch.
+stamps (written by build.py; rebuild.py builds and stamps index.html from src/home.html + src/home.js). No manual refresh needed on the phone after the first relaunch.
 
 One home-screen app: every page shares icon-app.png and web-app title "Movement";
 index.html is the launcher. Never add per-app icons (Will's explicit choice).
