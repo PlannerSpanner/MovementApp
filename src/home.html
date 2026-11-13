@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Movement">
+<meta name="theme-color" content="#f3ead6">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151310">
+<meta name="color-scheme" content="light dark">
+<link rel="apple-touch-icon" href="icon-app.png">
+<title>Movement</title>
+<style>
+/* The launcher. Direction A, letterpress (docs/design/design-system.md). Built by src/rebuild.py
+   from src/home.html + the engine + src/home.js: never edit index.html itself. */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--paper:#f3ead6;--ink:#1b1814;--verm:#d2432a;--ochre:#d99a2b;--mute:#7d7361;--tk:52%;
+  --fi:var(--ink);--fp:var(--paper);--fo:var(--ochre);
+  --caps:'DIN Condensed','Avenir Next Condensed','Arial Narrow',sans-serif;
+  --serif:'Baskerville','Hoefler Text',Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--paper:#151310;--ink:#efe5cf;--verm:#e2573c;--ochre:#e0a53a;--mute:#9a917f;--tk:46%}}
+html{font:-apple-system-body}
+body{font-family:var(--caps);font-size:1rem;min-height:100vh;background:var(--paper);color:var(--ink);
+  user-select:none;-webkit-user-select:none;
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right))
+          max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+svg{--ft:color-mix(in srgb,var(--fi) var(--tk),var(--fp))}
+.wrap{width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:calc(100vh - 44px)}
+.caps{text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+.tiny{font-size:.78rem}.mute{color:var(--mute)}
+h1{font-size:clamp(2.4rem,14vw,4.2rem);line-height:.9;margin-top:.1em;text-transform:uppercase;letter-spacing:.02em;font-weight:700}
+.rule{height:1px;background:var(--ink);margin:10px 0}
+.tao{font-family:var(--serif);font-style:italic;font-size:1.05rem;line-height:1.35}
+.stage{position:relative;width:100%;height:21vh;min-height:110px;margin:8px 0 4px}
+.stage svg{position:absolute;inset:0;width:100%;height:100%}
+.week{display:flex;gap:6px;justify-content:space-between;margin-top:8px}
+.day{flex:1;aspect-ratio:1;border:1px dashed var(--mute);border-radius:50%;display:grid;place-items:center;
+  font-size:.74rem;font-weight:700;color:var(--mute)}
+.day.done{border:0;background:var(--verm);color:#f3ead6;transform:rotate(-7deg)}
+.day.today:not(.done){border-color:var(--ink);color:var(--ink)}
+.btn{font:inherit;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;margin-top:8px;padding:8px 16px;
+  background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:4px;font-size:1.3rem;text-transform:uppercase;
+  letter-spacing:.14em;font-weight:700;text-decoration:none;cursor:pointer;text-align:left}
+.btn small{font-size:.8rem;letter-spacing:.14em;opacity:.75;white-space:nowrap}
+.btn.go{background:var(--verm);color:#f3ead6}
+.btn.did{border-style:dashed}
+.btn:active{transform:translateY(1px)}
+.pair{display:flex;gap:9px}.pair .btn{font-size:.95rem;letter-spacing:.1em;min-height:52px;padding:8px 12px}
+.foot{font-family:var(--serif);font-size:.86rem;line-height:1.4;color:var(--mute);margin-top:14px}
+.foot strong{font-weight:400;font-style:italic}
+/* the seal sheet: one solid seal for each day a session was finished. No streak count. */
+#sheet{display:none}
+.show-sheet #home{display:none}.show-sheet #sheet{display:block}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{font:inherit;font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;background:transparent;color:inherit;
+  border:1.5px solid currentColor;border-radius:4px;padding:8px 14px;min-height:48px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin:8px 0 18px}
+.grid .day{font-size:.7rem}
+.grid .hd{text-align:center;font-size:.7rem;color:var(--mute);font-weight:700;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+ <div id="home">
+  <div class="caps tiny mute" id="datebar"></div>
+  <h1>Movement</h1>
+  <div class="rule"></div>
+  <p class="tao" id="tao"></p>
+  <p class="caps tiny mute" id="taosrc" style="margin-top:4px"></p>
+  <div class="stage" id="stage"><svg id="fig" viewBox="0 0 100 100"><line id="shadow" stroke="var(--fi)" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/><g id="layer"></g></svg></div>
+  <div class="caps tiny mute">This week</div>
+  <div class="week" id="week"></div>
+  <a class="btn" id="go-morning-flow" href="morning-flow.html"><span>Morning Flow</span><small>13 min</small></a>
+  <a class="btn" id="go-daily-13" href="daily-13.html"><span>Daily 13</span><small>12 min</small></a>
+  <a class="btn" id="go-strength" href="strength.html"><span>Strength</span><small>A / B</small></a>
+  <div class="pair">
+    <a class="btn" id="go-hip-activation" href="hip-activation.html"><span>Hip activation</span></a>
+    <button class="btn" id="openSheet"><span>Seal sheet</span></button>
+  </div>
+  <details class="foot">
+    <summary class="caps tiny">Archive and notes</summary>
+    <p style="margin-top:8px"><a href="prenatal-stretch.html" style="color:inherit">Prenatal Stretch</a> (10 min) · <a href="prenatal-movement.html" style="color:inherit">Birth Prep</a> (14–27 min)</p>
+    <p style="margin-top:8px"><strong>Open in Safari</strong> — Chrome on iOS won't keep the screen awake or install to the home screen. <strong>Playing music?</strong> Start it before tapping Start in any timer.</p>
+  </details>
+ </div>
+ <div id="sheet">
+  <div class="top"><span class="caps">Seal sheet</span><button class="pill" id="closeSheet">Home</button></div>
+  <div class="rule"></div>
+  <div id="months"></div>
+  <p class="tao">No streak count. A missed day is an empty circle, nothing more.</p>
+ </div>
+</div>
+</body>
+</html>

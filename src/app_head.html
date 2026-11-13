@@ -2,102 +2,177 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Movement">
 <meta name="theme-color" content="#fdf7e9">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151310">
+<meta name="color-scheme" content="light dark">
 <link rel="apple-touch-icon" href="icon-app.png">
 <title>Morning Movement</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;
-  display:flex;flex-direction:column;align-items:center;
-  background:linear-gradient(160deg,#fdf7e9 0%,#fdf0dc 45%,#f4f3e3 100%);
-  color:#4a4237;padding:12px 14px 20px;user-select:none;-webkit-user-select:none;
-  -webkit-tap-highlight-color:transparent}
-.wrap{width:100%;max-width:400px;text-align:center}
-h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:#a5762a;margin-bottom:1px}
-.sub{font-size:0.55rem;letter-spacing:2px;color:#a4947a;margin-bottom:9px;text-transform:uppercase}
+/* Direction A, letterpress (docs/design/design-system.md). Four inks: paper, ink, vermilion,
+   ochre. Dark mode swaps paper and ink. The PHASE colours the frame round the paper; the
+   stage behind the figure is always plain paper. */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--paper:#f3ead6;--ink:#1b1814;--verm:#d2432a;--ochre:#d99a2b;--mute:#7d7361;--deep:#1b1814;--tk:52%;
+  --fi:var(--ink);--fp:var(--paper);--fo:var(--ochre);
+  --caps:'DIN Condensed','Avenir Next Condensed','Arial Narrow',sans-serif;
+  --serif:'Baskerville','Hoefler Text',Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--paper:#151310;--ink:#efe5cf;--verm:#e2573c;--ochre:#e0a53a;--mute:#9a917f;--deep:#000;--tk:46%}}
+html{font:-apple-system-body}
+html,body{height:100%}
+body{font-family:var(--caps);font-size:1rem;background:var(--paper);color:var(--ink);
+  user-select:none;-webkit-user-select:none;overflow:hidden}
+.wrap{position:fixed;inset:0;display:flex;background:var(--paper);transition:background .45s;
+  padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
+.wrap.state-trans{background:var(--ochre)}
+.wrap.state-work{background:var(--verm)}
+.wrap.state-done{background:var(--deep)}
+.wrap.poster-on{background:var(--verm)}
+#paper{flex:1;min-width:0;max-width:520px;margin:0 auto;background:var(--paper);border-radius:4px;position:relative;
+  overflow:hidden;display:flex;flex-direction:column;padding:14px 16px 12px}
+.caps{text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+.tiny{font-size:.78rem}.mute{color:var(--mute)}
+.serif{font-family:var(--serif);text-transform:none;letter-spacing:0;font-weight:400}
+.rule{height:1px;background:var(--ink);margin:10px 0}
+h1{font-size:clamp(2.2rem,13vw,4rem);line-height:.9;margin-top:.1em;text-transform:uppercase;letter-spacing:.02em;font-weight:700}
+.sub{font-size:.78rem;text-transform:uppercase;letter-spacing:.16em;font-weight:700;color:var(--mute)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{font:inherit;font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;background:transparent;color:inherit;
+  border:1.5px solid currentColor;border-radius:4px;padding:8px 14px;min-height:44px;min-width:76px;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pill:active{transform:translateY(1px)}
+.pill:disabled{opacity:.3;pointer-events:none}
+.pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.intro{font-family:var(--serif);font-size:.94rem;line-height:1.36;margin-top:2px}
+.intro strong{font-weight:400;font-style:italic}
+.safety{font-family:var(--serif);font-size:.86rem;line-height:1.4;border:1px solid var(--ink);border-radius:4px;padding:8px 11px;margin:0 0 10px}
 
-.num{font-size:0.6rem;letter-spacing:3px;color:#bd8629;margin-bottom:1px}
-.nm{font-size:1.06rem;font-weight:600;color:#7d5a1e;line-height:1.2;min-height:23px}
-.tg{font-size:0.66rem;color:#9c8b6d;font-style:italic;min-height:16px;margin-bottom:5px}
+/* the movement name: reversed out of a solid ink bar (setup, poster) */
+.namebar{background:var(--ink);color:var(--paper);text-transform:uppercase;letter-spacing:.1em;font-weight:700;
+  font-size:clamp(1.4rem,7.6vw,2.3rem);line-height:1;padding:.36em .45em .26em;text-align:left}
 
-.stage{position:relative;width:100%;background:none;border:none;padding:0;margin-bottom:8px}
-.stage svg{width:100%;height:auto;display:block}
-.side-badge{display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);
-  font-size:0.55rem;letter-spacing:1.5px;color:#a5762a;background:rgba(255,255,255,0.9);
-  border:1px solid rgba(180,140,60,0.3);border-radius:20px;padding:2px 10px;white-space:nowrap}
+.stage{position:relative;flex:1 1 0;min-height:120px;width:100%;margin:6px 0}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+svg{--ft:color-mix(in srgb,var(--fi) var(--tk),var(--fp))}
+.tm{font-weight:700;font-size:clamp(5.5rem,34vw,10rem);line-height:.82;letter-spacing:-.01em;text-align:left;
+  font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:4px;margin-top:10px}
+.dot{flex:1;height:5px;background:var(--mute);opacity:.35}
+.dot.done{background:var(--ink);opacity:1}
+.dot.active{background:var(--verm);opacity:1}
+.getset{display:none;flex-direction:column;gap:2px;background:var(--ochre);color:#1b1814;border-radius:4px;padding:8px 12px;margin-top:10px}
+.getset #mTarget{font-size:1rem;line-height:1.2;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.bar{display:flex;gap:10px;align-items:stretch;margin-top:10px}
+.bar .pill{min-height:58px}
+.next{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;border:1.5px solid var(--ink);border-radius:4px;padding:6px 12px}
+.next b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:1.25rem;line-height:1.1}
+.next b.long{white-space:normal;font-size:.98rem;letter-spacing:.08em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.side-badge{display:none;font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;font-weight:700;color:var(--verm);margin-top:6px}
 .side-badge.visible{display:block}
 
-.barrow{display:flex;align-items:center;gap:9px;margin-bottom:8px}
-.tm{font-size:1.5rem;font-weight:200;color:#4a4237;font-variant-numeric:tabular-nums;
-  letter-spacing:1px;min-width:62px;text-align:left}
-.track{flex:1;height:7px;background:#f0e5cd;border-radius:6px;overflow:hidden}
-.fill{height:100%;width:0%;background:#dd9a3c;border-radius:6px;transition:width 0.25s linear}
-.count{font-size:0.62rem;letter-spacing:1px;color:#a4947a;min-width:34px;text-align:right}
+/* ---- states ---- */
+#hdDone,#doneBox,#mName{display:none}
+.state-ready .tm,.state-ready .dots,.state-ready .next,.state-ready #bNext{display:none}
+.state-ready #bMain{flex:1;font-size:1.35rem;min-height:64px;background:var(--verm);color:#f3ead6;border-color:var(--ink)}
+.state-ready .stage{max-height:40vh}
+.state-trans #hdReady,.state-work #hdReady,.state-done #hdReady{display:none}
+.state-trans #mName{display:block}
+.state-trans .tm{font-size:clamp(3.4rem,19vw,5.6rem)}
+.state-trans .getset{display:flex}
+.state-trans .next{display:none}
+.state-trans .bar .pill{flex:1}
+.state-done #paper{background:var(--verm);color:var(--paper);--fi:var(--paper);--fp:var(--verm)}
+.state-done #hdDone,.state-done #doneBox{display:block}
+.state-done .tm,.state-done .dots,.state-done .bar,.state-done .getset{display:none}
+.state-done .stage{max-height:40vh}
+#doneBox h2{font-size:clamp(2.6rem,15vw,4.4rem);line-height:.9;text-transform:uppercase;letter-spacing:.02em}
+#finLine{font-family:var(--serif);font-style:italic;font-size:1.1rem;line-height:1.35;margin:.3em 0 14px}
+#finLine strong{display:none}
+#doneBox .pill{width:100%;min-height:58px;font-size:1.2rem;margin-top:12px;justify-content:space-between}
 
-.dots{display:flex;justify-content:center;gap:5px;margin-bottom:9px}
-.dot{width:8px;height:8px;border-radius:50%;background:#f0e5cd;transition:all 0.35s}
-.dot.active{background:#dd9a3c;box-shadow:0 0 7px rgba(221,154,60,0.5)}
-.dot.done{background:#ecca8e}
+/* week row: one solid seal per finished day */
+.week{display:flex;gap:6px;justify-content:space-between}
+.day{flex:1;aspect-ratio:1;border:1px dashed currentColor;border-radius:50%;display:grid;place-items:center;
+  font-size:.74rem;font-weight:700;position:relative;opacity:.9}
+.day.done{border:0;background:var(--verm);color:#f3ead6}
+.state-done .day.done{background:var(--ink);color:var(--paper)}
+@media (prefers-color-scheme:dark){.state-done .day.done{background:var(--paper);color:var(--ink)}}
+.day.stamp{animation:stamp .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-18deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-7deg);opacity:1}}
 
-.cue{padding:9px 12px;background:rgba(255,255,255,0.62);border-radius:11px;
-  border:1px solid rgba(144,127,97,0.16);font-size:0.7rem;color:#665c48;
-  line-height:1.5;text-align:left;margin-bottom:9px;min-height:52px}
-.cue strong{color:#a5762a}
+/* transition poster: a flat vermilion sheet over the paper for the first moment of each change */
+#poster{position:absolute;inset:0;z-index:6;background:var(--verm);color:var(--paper);display:none;flex-direction:column;padding:14px 16px}
+#poster.on{display:flex}
+#poster .mid{margin:auto 0}
+#poster .namebar{background:var(--paper);color:var(--verm)}
+#poSub{font-size:1.1rem;margin-top:14px}
 
-.row{display:flex;gap:9px;justify-content:center;margin-bottom:8px}
-button{border:none;border-radius:50px;font-family:inherit;cursor:pointer;transition:all 0.18s}
-.btn-primary{background:#dd9a3c;color:#fff;font-size:0.95rem;font-weight:600;
-  padding:11px 34px;letter-spacing:1px;box-shadow:0 2px 6px rgba(221,154,60,0.3)}
-.btn-primary:active{transform:scale(0.96);background:#c8862e}
-.btn-sec{background:rgba(255,255,255,0.78);color:#a5762a;font-size:0.74rem;
-  padding:8px 16px;border:1px solid rgba(165,118,42,0.22)}
-.btn-sec:active{background:#fff}
-.btn-sec.on{background:rgba(221,154,60,0.15);border-color:rgba(221,154,60,0.45)}
-.btn-sec:disabled{opacity:0.28;pointer-events:none}
-.btn-sec svg{width:13px;height:13px;fill:currentColor;vertical-align:-2px}
-.vid{font-size:0.63rem;color:#a4947a;text-decoration:none;display:inline-block;margin-top:2px}
-.vid:active{color:#a5762a}
-.state-done .nm{color:#c8862e}
+/* form text and the rarely used controls live behind a tap on the figure; the sheet drops from
+   the top so it never covers the time */
+.sheet{position:absolute;left:0;right:0;top:0;z-index:5;background:var(--paper);color:var(--ink);border-bottom:2px solid var(--ink);
+  padding:16px;transform:translateY(-105%);transition:transform .28s;max-height:74%;overflow:auto;-webkit-overflow-scrolling:touch}
+.sheet.on{transform:none}
+.sheet .nm2{font-size:1.5rem;line-height:1.05;margin:2px 0 6px}
+.sheet .cue,.sheet #shCue{font-family:var(--serif);font-size:1.02rem;line-height:1.4}
+.sheet #shCue{font-style:italic;margin-bottom:6px}
+.sheet .cue strong{font-weight:400;font-style:italic}
+.sheet .row{display:flex;gap:8px;margin:12px 0 4px;flex-wrap:wrap}
+.sheet .row .pill{flex:1;min-width:0;font-size:.85rem;padding:8px 6px}
+.vid{font-family:var(--serif);font-size:.95rem;color:inherit;display:inline-block;margin:6px 0}
+@media (prefers-reduced-motion:reduce){.sheet,.wrap{transition:none}.day.stamp{animation:none;transform:rotate(-7deg)}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
-  <h1>Morning Movement</h1>
-  <div class="sub">Mobility · Control · Stability</div>
+<div class="wrap state-ready" id="app"><div id="paper">
+  <div id="poster"><div class="caps tiny" id="poCount"></div><div class="mid"><div class="namebar" id="poName"></div><div class="caps" id="poSub"></div></div></div>
 
-  <div class="num" id="mNum">READY</div>
-  <div class="nm" id="mName">Tap Start to begin</div>
-  <div class="tg" id="mTarget"></div>
+  <div id="hdReady">
+    <div class="top"><div class="sub">Mobility · Control · Stability</div><a class="pill" href="index.html">Home</a></div>
+    <h1>Morning Movement</h1>
+    <div class="rule"></div>
+    <p class="intro" id="intro"></p>
+  </div>
+  <div class="namebar" id="mName">Tap Start to begin</div>
+  <div class="caps tiny" id="hdDone">Movement complete</div>
 
-  <div class="stage">
-    <div class="side-badge" id="badge">BOTH SIDES · SWITCH AT HALFWAY</div>
+  <div class="stage" id="stage">
     <svg id="fig" viewBox="0 0 100 100">
-      <ellipse id="shadow" fill="#e8dcc0" opacity="0.5"/>
+      <line id="shadow" stroke="var(--fi)" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>
       <g id="layer"></g>
     </svg>
   </div>
 
-  <div class="barrow">
-    <div class="tm" id="tm">0:00</div>
-    <div class="track"><div class="fill" id="fill"></div></div>
-    <div class="count" id="count">–/13</div>
+  <div id="doneBox">
+    <h2>Done</h2>
+    <p id="finLine"></p>
+    <div class="week" id="week"></div>
+    <a class="pill" href="index.html"><span>Home</span><span class="tiny">Seal sheet</span></a>
   </div>
 
+  <div class="tm" id="tm">0:00</div>
   <div class="dots" id="dots"></div>
-  <div class="cue" id="cue"><strong>Morning Movement</strong> runs about 10 minutes: standing mobility, then floor work, then core. Short setup pauses appear before position changes. Two-sided movements chime at the halfway point. No impact — safe for the right peroneal tendon.</div>
+  <div class="getset"><span class="caps tiny">Get set</span><span id="mTarget"></span></div>
+  <div class="bar">
+    <button class="pill" id="bMain">Start</button>
+    <div class="next"><span class="caps tiny">Next</span><b class="caps" id="nx"></b></div>
+    <button class="pill" id="bNext">Skip</button>
+  </div>
 
-  <div class="row">
-    <button class="btn-primary" id="bMain">Start</button>
-    <button class="btn-sec on" id="bVoice">Voice</button>
+  <div class="sheet" id="sheet">
+    <div class="caps tiny mute" id="mNum">READY</div>
+    <div class="caps nm2" id="shName"></div>
+    <div id="shCue"></div>
+    <div class="side-badge" id="badge">BOTH SIDES · SWITCH AT HALFWAY</div>
+<div class="cue" id="cue"><strong>Morning Movement</strong> runs about 10 minutes.</div>
+    <div class="row">
+      <button class="pill" id="bPrev" disabled>Prev</button>
+      <button class="pill" id="bReset">Restart</button>
+      <button class="pill on" id="bVoice">Voice</button>
+      <button class="pill" id="bClose">Close</button>
+    </div>
+    <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
   </div>
-  <div class="row">
-    <button class="btn-sec" id="bPrev" disabled><svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>Prev</button>
-    <button class="btn-sec" id="bReset">Reset</button>
-    <button class="btn-sec" id="bNext">Next<svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg></button>
-  </div>
-  <a class="vid" id="vid" href="#" target="_blank" rel="noopener">Watch a video demo →</a>
-</div>
+</div></div>

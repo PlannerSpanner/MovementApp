@@ -50,22 +50,22 @@ BAN=("<strong>Listen to your body.</strong> Ease off anything that feels sharp o
      "and mention it to your provider. Breathe continuously — never hold your breath "
      "or bear down.")
 build(os.path.join(OUT,'morning-flow.html'),'d_flow.js',open('x_flow.js',encoding='utf-8').read(),
- 'Morning Flow','Dynamic Qi Gong · Targeted Rehab','icon-app.png','#eef6f8',BLUE,
+ 'Morning Flow','Dynamic Qi Gong · Targeted Rehab','icon-app.png','#f3ead6',BLUE,
  '<strong>Morning Flow</strong> runs about 13½ minutes: eight standing movements, continuous and rhythmic, then a five-movement ground finish. Each movement gets its own set-up countdown. Every one does double duty: it feels like a workout and targets a specific weak point.',
  '<strong>Done.</strong> Thoracic spine mobilised, serratus fired, hips open, needle threaded, cobra charmed. Go get it.',trall=True)
 # Morning Movement retired 2026-08-26: movements redistributed to Morning Flow and
 # Daily 13; leftovers archived in src/d_retired.js (data2.js/mm_extra.js kept intact).
 # The page template head that app once donated is frozen as src/app_head.html.
 build(os.path.join(OUT,'prenatal-stretch.html'),'d_stretch.js',open('x_stretch.js',encoding='utf-8').read(),
- 'Prenatal Stretch','Gentle · Stretch & Release','icon-app.png','#fdf4f1',ROSE,
+ 'Prenatal Stretch','Gentle · Stretch & Release','icon-app.png','#f3ead6',ROSE,
  '<strong>Prenatal Stretch</strong> runs about 10 minutes. Every position is seated, hands-and-knees, or standing with support — no lying flat on the back, no inversions, no balance challenges. Breathe continuously throughout.',
  '<strong>Done.</strong> Stretch goals: met. Butterflies earned. Sip some water.',banner=BAN)
 build(os.path.join(OUT,'prenatal-movement.html'),'d_birth.js',open('x_birth.js',encoding='utf-8').read(),
- 'Birth Prep','Pelvic mobility · Floor release','icon-app.png','#fdf7e9',A11,
+ 'Birth Prep','Pelvic mobility · Floor release','icon-app.png','#f3ead6',A11,
  '<strong>The idea:</strong> for perineal tearing, the ability to <em>relax and lengthen</em> the pelvic floor matters more than strength. This trains release and coordination, plus the hip and adductor mobility that lets the pelvic outlet open.',
  '<strong>Done.</strong> Clamshells opened, hips rocked and rolled. You’re on the ball.',banner=BAN,x2=True)
 build(os.path.join(OUT,'daily-13.html'),'d_daily.js',open('x_daily.js',encoding='utf-8').read(),
- 'Daily 13','Posture · Pull · Reset','icon-app.png','#f4f2fb',VIOLET,
+ 'Daily 13','Posture · Pull · Reset','icon-app.png','#f3ead6',VIOLET,
  '<strong>Daily 13</strong> runs about 12 minutes: postural maintenance, not training — nothing near failure, no recovery cost next to the Wed/Sat strength block. The theme is anterior-tilt correction. Hard rules: no pressing below parallel and nothing behind the neck (right AC joint); all pulling neutral or overhand, never underhand (bicep tendon rehab); no jumping or lateral bounding (right peroneal tendon). Each movement gets its own set-up countdown. Start standing, feet shoulder width.',
  '<strong>Done.</strong> Squats sunk, bugs dead, bridges built, posture reset. Carry yourself accordingly.',trall=True)
 # daily-10.html lives on as a redirect stub (the app was renamed Daily 13): old
@@ -106,6 +106,21 @@ _wv = hashlib.sha1(_wk.encode('utf-8')).hexdigest()[:10]
 _wk = _wk.replace('<script>\n', "<script>\nconst BUILDV='%s';\n" % _wv, 1)
 open(os.path.join(OUT, 'strength.html'), 'w', encoding='utf-8', newline='\n').write(_wk)
 
+# index.html — the launcher (direction A, 2026-11-13). BUILT, no longer hand-edited: src/home.html
+# + Daily 13's data (for the idle figure: Standing posture reset) + the engine + the pure slice
+# of app_tpl.js + src/home.js, with the daily Tao Te Ching lines (Legge 1891, public domain,
+# docs/design/tao-legge.json) inlined. Its BUILDV is stamped at the end of this script.
+import json as _json
+_tao = _json.load(open(os.path.join(ROOT, 'docs', 'design', 'tao-legge.json'), encoding='utf-8'))['lines']
+_pure = TPL[:TPL.index("const layer=document.getElementById")].replace('const PROPFIT=false;', 'const PROPFIT=true;')
+_hjs = open('home.js', encoding='utf-8').read()
+assert _hjs.count('/*TAO*/[]') == 1
+_hjs = _hjs.replace('/*TAO*/[]', _json.dumps([[l['text'], l['ch']] for l in _tao], ensure_ascii=False))
+_home = open('home.html', encoding='utf-8').read()
+assert _home.count('</body>') == 1
+_home = _home.replace('</body>', "<script>\nconst BUILDV='';\n" + open('d_daily.js', encoding='utf-8').read() + '\n' + ENG + '\n' + _pure + '\n' + _hjs + '</script>\n</body>')
+open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8', newline='\n').write(_home)
+
 # hip-activation.html is not built from src, but its CUES manifest is stamped here
 _hp = os.path.join(ROOT, 'hip-activation.html')
 _hs = open(_hp, encoding='utf-8').read()
@@ -128,7 +143,7 @@ for _f in os.listdir(OUT):
     shutil.copyfile(os.path.join(OUT, _f), os.path.join(ROOT, _f))
 shutil.rmtree(OUT, ignore_errors=True)
 
-# stamp index.html too (hand-edited, so the stamp is refreshed here; deterministic:
+# stamp index.html too (deterministic:
 # hash of the content with an emptied stamp, idempotent across rebuilds)
 _ip = os.path.join(ROOT, 'index.html')
 _s = open(_ip, encoding='utf-8').read()

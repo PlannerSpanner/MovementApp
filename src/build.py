@@ -48,13 +48,8 @@ def build(out, data_file, extra, title, sub, icon, theme, colors, intro, done_ms
     # banner CSS must be injected BEFORE the color swaps: the swap tables rewrite
     # #c8862e, so replacing the .state-done selector after them silently misses (ROSE bug)
     if banner:
-        head = head.replace('<div class="num" id="mNum">',
-            f'<div class="safety">{banner}</div>\n  <div class="num" id="mNum">')
-        head = head.replace('.state-done .nm{color:#c8862e}',
-            '.state-done .nm{color:%s}\n.safety{font-size:0.62rem;line-height:1.5;color:%s;background:%s;'
-            'border:1px solid %s;border-radius:10px;padding:7px 11px;margin-bottom:9px;text-align:left}'
-            '.safety strong{color:%s}' % (colors['accent'], colors['warnText'], colors['warnBg'],
-                                          colors['warnBorder'], colors['warnStrong']))
+        assert head.count('<p class="intro" id="intro">') == 1
+        head = head.replace('<p class="intro" id="intro">', f'<div class="safety">{banner}</div>\n    <p class="intro" id="intro">')
     for a, b in colors['css']:
         head = head.replace(a, b)
     body = TPL

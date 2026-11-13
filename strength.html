@@ -2,70 +2,73 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Movement">
-<meta name="theme-color" content="#f3f6e8">
+<meta name="theme-color" content="#f3ead6">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151310">
+<meta name="color-scheme" content="light dark">
 <link rel="apple-touch-icon" href="icon-app.png">
 <title>Strength</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;
-  background:linear-gradient(160deg,#f3f6e8 0%,#ecf2da 45%,#e8efe0 100%);
-  color:#46493a;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
-  padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right))
-          max(34px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
-.wrap{width:100%;max-width:420px;margin:0 auto}
-h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:#5c7d34;
-  margin-bottom:1px;text-align:center}
-.sub{font-size:0.55rem;letter-spacing:2px;color:#98a17e;margin-bottom:10px;text-transform:uppercase;text-align:center}
+/* Direction A, letterpress (docs/design/design-system.md): same inks as the timer apps. */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--paper:#f3ead6;--ink:#1b1814;--verm:#d2432a;--ochre:#d99a2b;--mute:#7d7361;--tk:52%;
+  --fi:var(--ink);--fp:var(--paper);--fo:var(--ochre);
+  --caps:'DIN Condensed','Avenir Next Condensed','Arial Narrow',sans-serif;
+  --serif:'Baskerville','Hoefler Text',Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--paper:#151310;--ink:#efe5cf;--verm:#e2573c;--ochre:#e0a53a;--mute:#9a917f;--tk:46%}}
+html{font:-apple-system-body}
+body{font-family:var(--caps);font-size:1rem;min-height:100vh;background:var(--paper);color:var(--ink);
+  user-select:none;-webkit-user-select:none;
+  padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right))
+          max(34px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+svg{--ft:color-mix(in srgb,var(--fi) var(--tk),var(--fp))}
+.wrap{width:100%;max-width:520px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{font-size:clamp(2.2rem,13vw,4rem);line-height:.9;margin-top:.1em;text-transform:uppercase;letter-spacing:.02em;font-weight:700}
+.sub{font-size:.78rem;letter-spacing:.16em;color:var(--mute);text-transform:uppercase;font-weight:700}
+.rule{height:1px;background:var(--ink);margin:10px 0}
+.pill,.tab,.wreset{font:inherit;font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;background:transparent;color:inherit;
+  border:1.5px solid currentColor;border-radius:4px;padding:8px 14px;min-height:48px;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.tabs{display:flex;gap:10px;margin-bottom:12px}
+.tab{flex:1;min-height:58px;font-size:1.15rem}
+.tab.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-.tabs{display:flex;gap:7px;margin-bottom:9px}
-.tab{flex:1;border:1px solid rgba(92,125,52,0.28);border-radius:50px;background:rgba(255,255,255,0.55);
-  color:#5c7d34;font-family:inherit;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;
-  padding:9px 0;cursor:pointer;transition:all 0.15s}
-.tab.on{background:#7fa04a;border-color:#7fa04a;color:#fff;box-shadow:0 2px 6px rgba(107,138,60,0.3)}
+.rules{font-family:var(--serif);font-size:.94rem;line-height:1.4;margin-bottom:6px}
+.rules strong{font-weight:400;font-style:italic}
+.rules li{margin-left:18px;margin-top:2px}
 
-.rules{padding:9px 12px;background:rgba(255,255,255,0.62);border-radius:11px;
-  border:1px solid rgba(120,130,90,0.18);font-size:0.66rem;color:#565c44;
-  line-height:1.5;text-align:left;margin-bottom:10px}
-.rules strong{color:#5c7d34}
-.rules li{margin-left:14px;margin-top:2px}
-
-.mcard{background:rgba(255,255,255,0.62);border:1px solid rgba(120,130,90,0.16);
-  border-radius:14px;padding:11px 12px;margin-bottom:10px;
-  box-shadow:0 1px 2px rgba(90,100,70,0.05)}
-.mhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
-.mname{font-size:0.9rem;font-weight:600;color:#4d6428;line-height:1.25}
-.mnum{display:inline-block;font-size:0.6rem;font-weight:400;letter-spacing:1px;color:#98a17e;
-  margin-right:6px;font-variant-numeric:tabular-nums}
-.mreps{font-size:0.64rem;color:#5c7d34;letter-spacing:0.4px;white-space:nowrap;
-  font-variant-numeric:tabular-nums;background:rgba(255,255,255,0.75);
-  border:1px solid rgba(92,125,52,0.25);border-radius:20px;padding:2px 9px}
-.mrow{display:flex;gap:10px;align-items:center}
-.mfig{flex:0 0 45%;min-width:0}
+.mcard{border-top:1px solid var(--ink);padding:12px 0 14px}
+.mhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+.mname{font-size:1.3rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;line-height:1.1}
+.mnum{display:inline-block;font-size:.8rem;letter-spacing:.1em;color:var(--mute);margin-right:8px;font-variant-numeric:tabular-nums}
+.mreps{font-size:.9rem;font-weight:700;letter-spacing:.06em;white-space:nowrap;font-variant-numeric:tabular-nums;
+  border:1.5px solid var(--ink);border-radius:4px;padding:3px 9px 1px}
+.mreps .each{font-weight:400}
+.mrow{display:flex;gap:12px;align-items:center}
+.mfig{flex:0 0 46%;min-width:0}
 .mfig svg{width:100%;height:auto;display:block}
-.mhow{flex:1;font-size:0.67rem;color:#565c44;line-height:1.5}
-.mcues{list-style:none;margin-top:6px;border-top:1px solid rgba(120,130,90,0.14);padding-top:6px}
-.mcues li{font-size:0.64rem;color:#6a7052;line-height:1.55;padding-left:13px;position:relative}
-.mcues li::before{content:'—';position:absolute;left:0;color:#a9bd85}
-.msets{display:flex;align-items:center;gap:7px;margin-top:8px}
-.setbox{width:27px;height:27px;border-radius:50%;border:1.5px solid rgba(92,125,52,0.4);
-  background:transparent;color:#8a9470;font-family:inherit;font-size:0.66rem;cursor:pointer;
-  transition:all 0.15s;font-variant-numeric:tabular-nums}
-.setbox.on{background:#7fa04a;border-color:#7fa04a;color:#fff}
-.setlbl{font-size:0.56rem;letter-spacing:1.2px;text-transform:uppercase;color:#a0a78a}
-.wreset{display:block;margin:2px auto 8px;background:rgba(255,255,255,0.78);color:#5c7d34;
-  font-family:inherit;font-size:0.7rem;padding:8px 18px;border:1px solid rgba(92,125,52,0.25);
-  border-radius:50px;cursor:pointer}
-.wreset:active{background:#fff}
+.mhow{flex:1;font-family:var(--serif);font-size:.92rem;line-height:1.4}
+.mcues{list-style:none;margin-top:8px}
+.mcues li{font-family:var(--serif);font-size:.9rem;line-height:1.45;padding-left:16px;position:relative}
+.mcues li::before{content:'—';position:absolute;left:0;color:var(--mute)}
+.msets{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+/* a set is a seal: an empty dashed circle, solid vermilion once done */
+.setbox{width:46px;height:46px;border-radius:50%;border:1px dashed var(--ink);background:transparent;color:var(--ink);
+  font:inherit;font-size:1rem;font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.setbox.on{background:var(--verm);border:0;color:#f3ead6}
+.setlbl{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.wreset{display:flex;width:100%;margin:6px 0 10px}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="top"><div class="sub">Two-day reference · A / B</div><a class="pill" href="index.html">Home</a></div>
   <h1>Strength</h1>
-  <div class="sub">Two-day reference · A / B</div>
+  <div class="rule"></div>
 
   <div class="tabs">
     <button class="tab" id="tabA">Workout A</button>
@@ -86,7 +89,7 @@ h1{font-size:0.92rem;font-weight:400;letter-spacing:3px;text-transform:uppercase
   <div id="listB"></div>
 </div>
 <script>
-const BUILDV='9ae9cee040';
+const BUILDV='e4b515d335';
 const WK_A=[
 {n:"Goblet squat",sets:3,reps:"8",cyc:3.0,pin:"LR",
  how:"Hold one dumbbell vertically against your chest, elbows tucked under it. Sit down and back until your elbows brush the insides of your knees, then drive back up through the whole foot.",
@@ -897,6 +900,18 @@ function freshChecks(st,day,sets){
   });
   return out;
 }
+// Ink rendering for the cards (direction A, 2026-11-13). The cards are thumbnails, far too small
+// for hatching, so this is the timer apps' small-size fallback: trunk, head and right limbs
+// solid ink (CSS --fi) with a hairline of paper round them, LEFT limbs a solid mid tone (--ft),
+// implements in ochre (--fo). Pure string mapping of figMarkup's four colours.
+function inkTone(mk){
+  return mk.split('fill="'+INK+'"/>').join('fill="var(--fi)" stroke="var(--fp)" stroke-width="0.42"/>')
+    .split(INK).join('var(--fi)').split(LIMB_L).join('var(--ft)').split(TORSO).join('var(--fi)').split(PROP).join('var(--fo)');
+}
+// session log shared with the timer apps: localStorage 'mvLog' = {"YYYY-MM-DD":[app ids]}
+function logAdd(G,day,id){const a=Array.isArray(G[day])?G[day]:[];if(a.indexOf(id)<0)a.push(id);G[day]=a;
+  const ks=Object.keys(G).sort();while(ks.length>400)delete G[ks.shift()];return G;}
+const allChecked=(ck,sets)=>sets.every((n,i)=>{for(let s=0;s<n;s++)if(!(ck&&ck[i]&&ck[i][s]))return false;return true;});
 // ---- DOM ----
 const $=id=>document.getElementById(id);
 const WORKOUTS=[{id:'A',moves:WK_A},{id:'B',moves:WK_B}];
@@ -918,7 +933,7 @@ WORKOUTS.forEach(w=>{
     +`<div class="mhead"><div class="mname"><span class="mnum">${i+1}</span>${m.n}</div>`
     +`<div class="mreps">${setsTxt(m)}</div></div>`
     +`<div class="mrow"><div class="mfig"><svg viewBox="0 0 100 100">`
-    +`<ellipse id="sh-${w.id}-${i}" fill="#dde3c8" opacity="0.55"/><g id="ly-${w.id}-${i}"></g>`
+    +`<line id="sh-${w.id}-${i}" stroke="var(--fi)" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/><g id="ly-${w.id}-${i}"></g>`
     +`</svg></div><div class="mhow">${m.how}</div></div>`
     +`<ul class="mcues">${m.cues.map(c=>`<li>${c}</li>`).join('')}</ul>`
     +`<div class="msets" id="sets-${w.id}-${i}">${Array.from({length:m.sets},(_,s)=>
@@ -936,14 +951,15 @@ function paintChecks(){
 WORKOUTS.forEach(w=>{
   w.moves.forEach((m,i)=>{
     const g=groundOf(m,m.fit), sh=$('sh-'+w.id+'-'+i);
-    sh.setAttribute('cx',g.cx.toFixed(2));
-    sh.setAttribute('cy',g.cy.toFixed(2));
-    sh.setAttribute('rx','40');
-    sh.setAttribute('ry',g.ry.toFixed(2));
+    const gy=(g.cy+1.7*m.fit.sc).toFixed(2);
+    sh.setAttribute('x1',(g.cx-30).toFixed(2));sh.setAttribute('x2',(g.cx+30).toFixed(2));
+    sh.setAttribute('y1',gy);sh.setAttribute('y2',gy);
     for(let s=0;s<m.sets;s++){
       $('ck-'+w.id+'-'+i+'-'+s).onclick=()=>{
         const arr=checks[w.id][i]||(checks[w.id][i]=[]);
         arr[s]=!arr[s]; saveChecks(); paintChecks();
+        // the day's seal: logged when this workout becomes fully checked; unchecking never un-logs
+        if(arr[s]&&allChecked(checks[w.id],SETS[w.id]))store.set('mvLog',logAdd(store.get('mvLog',{})||{},dayKey(new Date()),'strength'));
       };
     }
   });
@@ -971,7 +987,7 @@ if(typeof IntersectionObserver!=='undefined'){
 }
 // paint every card once so nothing is blank before it first scrolls into view
 WORKOUTS.forEach(w=>w.moves.forEach((m,i)=>{
-  $('ly-'+w.id+'-'+i).innerHTML=figMarkup(m,m.fit,0.33);
+  $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,0.33));
 }));
 let t0=performance.now(),last=0;
 (function loop(now){
@@ -981,7 +997,7 @@ let t0=performance.now(),last=0;
       w.moves.forEach((m,i)=>{
         if(obs&&!vis['card-'+w.id+'-'+i])return;
         const ph=((now-t0)/1000%m.cyc)/m.cyc;
-        $('ly-'+w.id+'-'+i).innerHTML=figMarkup(m,m.fit,ph);
+        $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,ph));
       });
     });
   }

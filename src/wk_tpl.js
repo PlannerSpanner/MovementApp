@@ -186,6 +186,18 @@ function freshChecks(st,day,sets){
   });
   return out;
 }
+// Ink rendering for the cards (direction A, 2026-11-13). The cards are thumbnails, far too small
+// for hatching, so this is the timer apps' small-size fallback: trunk, head and right limbs
+// solid ink (CSS --fi) with a hairline of paper round them, LEFT limbs a solid mid tone (--ft),
+// implements in ochre (--fo). Pure string mapping of figMarkup's four colours.
+function inkTone(mk){
+  return mk.split('fill="'+INK+'"/>').join('fill="var(--fi)" stroke="var(--fp)" stroke-width="0.42"/>')
+    .split(INK).join('var(--fi)').split(LIMB_L).join('var(--ft)').split(TORSO).join('var(--fi)').split(PROP).join('var(--fo)');
+}
+// session log shared with the timer apps: localStorage 'mvLog' = {"YYYY-MM-DD":[app ids]}
+function logAdd(G,day,id){const a=Array.isArray(G[day])?G[day]:[];if(a.indexOf(id)<0)a.push(id);G[day]=a;
+  const ks=Object.keys(G).sort();while(ks.length>400)delete G[ks.shift()];return G;}
+const allChecked=(ck,sets)=>sets.every((n,i)=>{for(let s=0;s<n;s++)if(!(ck&&ck[i]&&ck[i][s]))return false;return true;});
 // ---- DOM ----
 const $=id=>document.getElementById(id);
 const WORKOUTS=[{id:'A',moves:WK_A},{id:'B',moves:WK_B}];
@@ -207,7 +219,7 @@ WORKOUTS.forEach(w=>{
     +`<div class="mhead"><div class="mname"><span class="mnum">${i+1}</span>${m.n}</div>`
     +`<div class="mreps">${setsTxt(m)}</div></div>`
     +`<div class="mrow"><div class="mfig"><svg viewBox="0 0 100 100">`
-    +`<ellipse id="sh-${w.id}-${i}" fill="#dde3c8" opacity="0.55"/><g id="ly-${w.id}-${i}"></g>`
+    +`<line id="sh-${w.id}-${i}" stroke="var(--fi)" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/><g id="ly-${w.id}-${i}"></g>`
     +`</svg></div><div class="mhow">${m.how}</div></div>`
     +`<ul class="mcues">${m.cues.map(c=>`<li>${c}</li>`).join('')}</ul>`
     +`<div class="msets" id="sets-${w.id}-${i}">${Array.from({length:m.sets},(_,s)=>
@@ -225,14 +237,15 @@ function paintChecks(){
 WORKOUTS.forEach(w=>{
   w.moves.forEach((m,i)=>{
     const g=groundOf(m,m.fit), sh=$('sh-'+w.id+'-'+i);
-    sh.setAttribute('cx',g.cx.toFixed(2));
-    sh.setAttribute('cy',g.cy.toFixed(2));
-    sh.setAttribute('rx','40');
-    sh.setAttribute('ry',g.ry.toFixed(2));
+    const gy=(g.cy+1.7*m.fit.sc).toFixed(2);
+    sh.setAttribute('x1',(g.cx-30).toFixed(2));sh.setAttribute('x2',(g.cx+30).toFixed(2));
+    sh.setAttribute('y1',gy);sh.setAttribute('y2',gy);
     for(let s=0;s<m.sets;s++){
       $('ck-'+w.id+'-'+i+'-'+s).onclick=()=>{
         const arr=checks[w.id][i]||(checks[w.id][i]=[]);
         arr[s]=!arr[s]; saveChecks(); paintChecks();
+        // the day's seal: logged when this workout becomes fully checked; unchecking never un-logs
+        if(arr[s]&&allChecked(checks[w.id],SETS[w.id]))store.set('mvLog',logAdd(store.get('mvLog',{})||{},dayKey(new Date()),'strength'));
       };
     }
   });
@@ -260,7 +273,7 @@ if(typeof IntersectionObserver!=='undefined'){
 }
 // paint every card once so nothing is blank before it first scrolls into view
 WORKOUTS.forEach(w=>w.moves.forEach((m,i)=>{
-  $('ly-'+w.id+'-'+i).innerHTML=figMarkup(m,m.fit,0.33);
+  $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,0.33));
 }));
 let t0=performance.now(),last=0;
 (function loop(now){
@@ -270,7 +283,7 @@ let t0=performance.now(),last=0;
       w.moves.forEach((m,i)=>{
         if(obs&&!vis['card-'+w.id+'-'+i])return;
         const ph=((now-t0)/1000%m.cyc)/m.cyc;
-        $('ly-'+w.id+'-'+i).innerHTML=figMarkup(m,m.fit,ph);
+        $('ly-'+w.id+'-'+i).innerHTML=inkTone(figMarkup(m,m.fit,ph));
       });
     });
   }

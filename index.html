@@ -2,156 +2,1060 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Movement">
-<meta name="theme-color" content="#f2ede1">
+<meta name="theme-color" content="#f3ead6">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151310">
+<meta name="color-scheme" content="light dark">
 <link rel="apple-touch-icon" href="icon-app.png">
 <title>Movement</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;
-  background:linear-gradient(165deg,#f6f1e4 0%,#eef0e2 45%,#e4ecea 100%);
-  color:#3a3d36;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
-  padding:max(28px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right))
-          max(44px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
-.container{width:100%;max-width:420px;margin:0 auto}
-header{margin:2px 4px 22px}
-h1{font-size:1.75rem;font-weight:700;letter-spacing:-0.02em;color:#3f4a3d}
-.date{font-size:0.8rem;color:#8a9080;margin-top:3px}
-.section-label{font-size:0.66rem;letter-spacing:1.8px;text-transform:uppercase;
-  font-weight:600;color:#9aa08e;margin:22px 4px 9px}
-.section-label:first-of-type{margin-top:0}
-.card{display:flex;align-items:center;gap:14px;text-decoration:none;
-  background:rgba(255,255,255,0.66);border:1px solid rgba(90,100,80,0.10);
-  border-radius:18px;padding:12px 14px 12px 12px;margin-bottom:10px;
-  box-shadow:0 1px 2px rgba(80,90,70,0.05);transition:transform 0.15s,box-shadow 0.15s}
-.card:active{transform:scale(0.98);background:rgba(255,255,255,0.9);
-  box-shadow:0 3px 10px rgba(80,90,70,0.10)}
-.thumb{flex:0 0 64px;width:64px;height:64px;border-radius:14px;overflow:hidden;
-  border:1px solid rgba(90,100,80,0.08)}
-.thumb svg{display:block;width:100%;height:100%}
-.body{flex:1;min-width:0}
-.row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:3px}
-.name{font-size:1.02rem;font-weight:600;color:var(--accent,#4f7d5e)}
-.time{font-size:0.66rem;color:#9aa08e;letter-spacing:0.5px;white-space:nowrap;
-  font-variant-numeric:tabular-nums;background:rgba(255,255,255,0.75);
-  border:1px solid rgba(90,100,80,0.12);border-radius:20px;padding:2px 8px}
-.desc{font-size:0.76rem;color:#61665a;line-height:1.45;display:-webkit-box;
-  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.footer{margin-top:26px;padding:12px 15px;background:rgba(255,255,255,0.45);
-  border-radius:12px;border:1px solid rgba(90,100,80,0.09);
-  font-size:0.68rem;color:#7a8072;line-height:1.55}
-.footer strong{color:#4a5548}
+/* The launcher. Direction A, letterpress (docs/design/design-system.md). Built by src/rebuild.py
+   from src/home.html + the engine + src/home.js: never edit index.html itself. */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--paper:#f3ead6;--ink:#1b1814;--verm:#d2432a;--ochre:#d99a2b;--mute:#7d7361;--tk:52%;
+  --fi:var(--ink);--fp:var(--paper);--fo:var(--ochre);
+  --caps:'DIN Condensed','Avenir Next Condensed','Arial Narrow',sans-serif;
+  --serif:'Baskerville','Hoefler Text',Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--paper:#151310;--ink:#efe5cf;--verm:#e2573c;--ochre:#e0a53a;--mute:#9a917f;--tk:46%}}
+html{font:-apple-system-body}
+body{font-family:var(--caps);font-size:1rem;min-height:100vh;background:var(--paper);color:var(--ink);
+  user-select:none;-webkit-user-select:none;
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right))
+          max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+svg{--ft:color-mix(in srgb,var(--fi) var(--tk),var(--fp))}
+.wrap{width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:calc(100vh - 44px)}
+.caps{text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+.tiny{font-size:.78rem}.mute{color:var(--mute)}
+h1{font-size:clamp(2.4rem,14vw,4.2rem);line-height:.9;margin-top:.1em;text-transform:uppercase;letter-spacing:.02em;font-weight:700}
+.rule{height:1px;background:var(--ink);margin:10px 0}
+.tao{font-family:var(--serif);font-style:italic;font-size:1.05rem;line-height:1.35}
+.stage{position:relative;width:100%;height:21vh;min-height:110px;margin:8px 0 4px}
+.stage svg{position:absolute;inset:0;width:100%;height:100%}
+.week{display:flex;gap:6px;justify-content:space-between;margin-top:8px}
+.day{flex:1;aspect-ratio:1;border:1px dashed var(--mute);border-radius:50%;display:grid;place-items:center;
+  font-size:.74rem;font-weight:700;color:var(--mute)}
+.day.done{border:0;background:var(--verm);color:#f3ead6;transform:rotate(-7deg)}
+.day.today:not(.done){border-color:var(--ink);color:var(--ink)}
+.btn{font:inherit;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;margin-top:8px;padding:8px 16px;
+  background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:4px;font-size:1.3rem;text-transform:uppercase;
+  letter-spacing:.14em;font-weight:700;text-decoration:none;cursor:pointer;text-align:left}
+.btn small{font-size:.8rem;letter-spacing:.14em;opacity:.75;white-space:nowrap}
+.btn.go{background:var(--verm);color:#f3ead6}
+.btn.did{border-style:dashed}
+.btn:active{transform:translateY(1px)}
+.pair{display:flex;gap:9px}.pair .btn{font-size:.95rem;letter-spacing:.1em;min-height:52px;padding:8px 12px}
+.foot{font-family:var(--serif);font-size:.86rem;line-height:1.4;color:var(--mute);margin-top:14px}
+.foot strong{font-weight:400;font-style:italic}
+/* the seal sheet: one solid seal for each day a session was finished. No streak count. */
+#sheet{display:none}
+.show-sheet #home{display:none}.show-sheet #sheet{display:block}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{font:inherit;font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;background:transparent;color:inherit;
+  border:1.5px solid currentColor;border-radius:4px;padding:8px 14px;min-height:48px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin:8px 0 18px}
+.grid .day{font-size:.7rem}
+.grid .hd{text-align:center;font-size:.7rem;color:var(--mute);font-weight:700;letter-spacing:.1em}
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <h1 id="greet">Good morning</h1>
-    <div class="date" id="datebar"></div>
-  </header>
-
-  <!-- ============================================================
-       TO ADD A NEW TIMER: copy one <a class="card"> block and change:
-         href        -> the filename, e.g. "strength-session.html"
-         --accent    -> name color, matched to that timer's theme
-         .thumb bg   -> the app's background gradient
-         thumb <svg> -> a signature-pose snippet (node tools/dump.js,
-                        then lift one frame from frames.json + shadow)
-         name / time / desc
-
-       NATURAL PALETTE (accents):
-         moss #4f7d5e   lake #3f7d94   terracotta #b5643c   clay #a8705a
-         amber #c08a2e  lichen #7d8f4e slate #5f6b78  plum #7a5d7e
-         rose #a86b74   bark #6d5a48
-       ============================================================ -->
-
-  <div class="section-label">Daily</div>
-
-  <a class="card" href="morning-flow.html" style="--accent:#3f7d94">
-    <span class="thumb" style="background:linear-gradient(165deg,#eef6f8,#dcebf1)"><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50.54" cy="88.83" rx="40" ry="9.00" fill="rgba(0,0,0,0.07)"/><line x1="54.29" y1="87.13" x2="60.99" y2="87.79" stroke="#245e70" stroke-width="2.74" stroke-linecap="round"/><line x1="64.14" y1="72.27" x2="54.29" y2="87.13" stroke="#245e70" stroke-width="3.43" stroke-linecap="round"/><line x1="58.22" y1="23.57" x2="56.96" y2="38.01" stroke="#245e70" stroke-width="3.43" stroke-linecap="round"/><line x1="56.96" y1="38.01" x2="55.30" y2="52.55" stroke="#245e70" stroke-width="3.43" stroke-linecap="round"/><line x1="55.29" y1="52.65" x2="64.14" y2="72.27" stroke="#245e70" stroke-width="3.43" stroke-linecap="round"/><polygon points="50.23,26.68 58.22,23.57 55.29,52.65 49.57,54.88" fill="#2e7d94" stroke="#2e7d94" stroke-width="2.97" stroke-linejoin="round"/><line x1="54.22" y1="25.12" x2="54.49" y2="20.87" stroke="#245e70" stroke-width="2.81" stroke-linecap="round"/><circle cx="54.85" cy="15.21" r="7.08" fill="#245e70"/><line x1="40.29" y1="89.77" x2="46.61" y2="90.60" stroke="#93b8c4" stroke-width="2.74" stroke-linecap="round"/><line x1="53.26" y1="76.11" x2="40.29" y2="89.77" stroke="#93b8c4" stroke-width="3.43" stroke-linecap="round"/><line x1="49.69" y1="40.84" x2="49.58" y2="54.78" stroke="#93b8c4" stroke-width="3.43" stroke-linecap="round"/><line x1="49.57" y1="54.88" x2="53.26" y2="76.11" stroke="#93b8c4" stroke-width="3.43" stroke-linecap="round"/><line x1="50.23" y1="26.68" x2="49.69" y2="40.84" stroke="#93b8c4" stroke-width="3.43" stroke-linecap="round"/></svg></span>
-    <span class="body">
-      <span class="row"><span class="name">Morning Flow</span><span class="time">13 min</span></span>
-      <span class="desc">Dynamic qi gong blended with targeted rehab — standing flow into a ground finish.</span>
-    </span>
-  </a>
-
-  <a class="card" href="daily-13.html" style="--accent:#6b5ca8">
-    <span class="thumb" style="background:linear-gradient(165deg,#f4f2fb,#e6e2f5)"><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="38.82" cy="86.38" rx="40" ry="9.00" fill="rgba(0,0,0,0.07)"/><line x1="34.0" y1="41.9" x2="41.1" y2="42.0" stroke="#b9a98b" stroke-width="2.38" stroke-linecap="round"/><circle cx="34.0" cy="41.9" r="2.5" fill="#b9a98b"/><circle cx="41.1" cy="42.0" r="2.5" fill="#b9a98b"/><line x1="35.0" y1="36.9" x2="42.1" y2="37.0" stroke="#b9a98b" stroke-width="2.38" stroke-linecap="round"/><circle cx="35.0" cy="36.9" r="2.5" fill="#b9a98b"/><circle cx="42.1" cy="37.0" r="2.5" fill="#b9a98b"/><line x1="43.52" y1="18.48" x2="38.58" y2="36.96" stroke="#453a70" stroke-width="4.46" stroke-linecap="round"/><line x1="35.32" y1="84.66" x2="44.83" y2="84.66" stroke="#453a70" stroke-width="3.57" stroke-linecap="round"/><line x1="62.57" y1="19.68" x2="43.52" y2="18.48" stroke="#453a70" stroke-width="4.46" stroke-linecap="round"/><line x1="45.13" y1="59.56" x2="35.32" y2="84.66" stroke="#453a70" stroke-width="4.46" stroke-linecap="round"/><line x1="28.38" y1="37.75" x2="45.13" y2="59.56" stroke="#453a70" stroke-width="4.46" stroke-linecap="round"/><polygon points="61.84,24.36 62.57,19.68 28.38,37.75 27.86,41.09" fill="#6b5ca8" stroke="#6b5ca8" stroke-width="3.86" stroke-linejoin="round"/><line x1="62.20" y1="22.02" x2="66.58" y2="18.22" stroke="#453a70" stroke-width="3.66" stroke-linecap="round"/><circle cx="72.14" cy="13.38" r="9.22" fill="#453a70"/><line x1="32.81" y1="88.10" x2="42.33" y2="88.11" stroke="#b0a6d4" stroke-width="3.57" stroke-linecap="round"/><line x1="43.93" y1="63.43" x2="32.81" y2="88.10" stroke="#b0a6d4" stroke-width="4.46" stroke-linecap="round"/><line x1="27.86" y1="41.09" x2="43.93" y2="63.43" stroke="#b0a6d4" stroke-width="4.46" stroke-linecap="round"/><line x1="42.68" y1="23.43" x2="37.54" y2="41.94" stroke="#b0a6d4" stroke-width="4.46" stroke-linecap="round"/><line x1="61.84" y1="24.36" x2="42.68" y2="23.43" stroke="#b0a6d4" stroke-width="4.46" stroke-linecap="round"/></svg></span>
-    <span class="body">
-      <span class="row"><span class="name">Daily 13</span><span class="time">12 min</span></span>
-      <span class="desc">Posture maintenance with dumbbells — anterior-tilt correction, pulling, breath reset.</span>
-    </span>
-  </a>
-
-  <div class="section-label">Strength</div>
-
-  <a class="card" href="strength.html" style="--accent:#7d8f4e">
-    <span class="thumb" style="background:linear-gradient(165deg,#f3f6e8,#e6eed8)"><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="55.75" cy="88.78" rx="40" ry="9.00" fill="rgba(0,0,0,0.07)"/><line x1="50.4" y1="78.0" x2="55.2" y2="72.5" stroke="#b9a98b" stroke-width="1.78" stroke-linecap="round"/><circle cx="50.7" cy="77.4" r="10.2" fill="#b9a98b" stroke="#b9a98b" stroke-width="1.78"/><circle cx="54.9" cy="73.1" r="10.2" fill="#b9a98b" stroke="#b9a98b" stroke-width="1.78"/><line x1="35.81" y1="59.91" x2="56.01" y2="65.86" stroke="#42591f" stroke-width="3.33" stroke-linecap="round"/><line x1="60.69" y1="45.55" x2="57.66" y2="59.65" stroke="#42591f" stroke-width="3.33" stroke-linecap="round"/><line x1="56.01" y1="65.86" x2="53.22" y2="86.55" stroke="#42591f" stroke-width="3.33" stroke-linecap="round"/><line x1="57.66" y1="59.65" x2="54.59" y2="73.76" stroke="#42591f" stroke-width="3.33" stroke-linecap="round"/><line x1="53.22" y1="86.55" x2="60.28" y2="86.73" stroke="#42591f" stroke-width="2.67" stroke-linecap="round"/><polygon points="59.06,49.03 60.69,45.55 35.81,59.91 34.65,62.39" fill="#5c7d34" stroke="#5c7d34" stroke-width="2.89" stroke-linejoin="round"/><line x1="59.87" y1="47.29" x2="62.84" y2="44.30" stroke="#42591f" stroke-width="2.73" stroke-linecap="round"/><circle cx="66.72" cy="40.39" r="6.89" fill="#42591f"/><line x1="34.65" y1="62.39" x2="54.03" y2="70.13" stroke="#a8bc85" stroke-width="3.33" stroke-linecap="round"/><line x1="59.06" y1="49.03" x2="55.02" y2="62.90" stroke="#a8bc85" stroke-width="3.33" stroke-linecap="round"/><line x1="54.03" y1="70.13" x2="51.22" y2="90.84" stroke="#a8bc85" stroke-width="3.33" stroke-linecap="round"/><line x1="55.02" y1="62.90" x2="51.01" y2="76.75" stroke="#a8bc85" stroke-width="3.33" stroke-linecap="round"/><line x1="51.22" y1="90.84" x2="58.26" y2="91.07" stroke="#a8bc85" stroke-width="2.67" stroke-linecap="round"/></svg></span>
-    <span class="body">
-      <span class="row"><span class="name">Strength</span><span class="time">A / B</span></span>
-      <span class="desc">Two-workout gym reference — form cues, looping demos, tap-to-track sets.</span>
-    </span>
-  </a>
-
-  <div class="section-label">Prenatal</div>
-
-  <a class="card" href="prenatal-stretch.html" style="--accent:#a86b74">
-    <span class="thumb" style="background:linear-gradient(165deg,#fdf4f1,#f9e7ee)"><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="56.65" cy="87.96" rx="40" ry="9.00" fill="rgba(0,0,0,0.07)"/><line x1="49.09" y1="70.27" x2="78.74" y2="56.45" stroke="#7d3f53" stroke-width="5.34" stroke-linecap="round"/><line x1="77.94" y1="33.61" x2="78.74" y2="56.45" stroke="#7d3f53" stroke-width="5.34" stroke-linecap="round"/><line x1="56.79" y1="29.38" x2="77.94" y2="33.61" stroke="#7d3f53" stroke-width="5.34" stroke-linecap="round"/><polygon points="33.38,31.30 56.79,29.38 49.09,70.27 32.37,71.64" fill="#a8546b" stroke="#a8546b" stroke-width="4.63" stroke-linejoin="round"/><line x1="78.74" y1="56.45" x2="57.64" y2="81.49" stroke="#7d3f53" stroke-width="5.34" stroke-linecap="round"/><polygon points="52.82,53.19 54.63,56.38 55.54,59.93 55.51,63.60 54.53,67.14 52.66,70.30 50.05,72.87 46.85,74.68 43.30,75.59 39.63,75.56 36.09,74.58 32.93,72.71 30.36,70.10 28.91,67.37 28.32,64.26 28.64,60.96 29.84,57.72 31.84,54.74 34.50,52.23 37.65,50.36 41.07,49.26 44.52,49.01 47.77,49.61" fill="#a8546b"/><line x1="45.09" y1="30.34" x2="45.60" y2="24.80" stroke="#7d3f53" stroke-width="4.38" stroke-linecap="round"/><circle cx="46.41" cy="16.02" r="11.03" fill="#7d3f53"/><line x1="32.37" y1="71.64" x2="31.98" y2="64.00" stroke="#cfa8b3" stroke-width="5.34" stroke-linecap="round"/><line x1="57.64" y1="81.49" x2="62.83" y2="82.46" stroke="#7d3f53" stroke-width="4.27" stroke-linecap="round"/><line x1="33.38" y1="31.30" x2="17.87" y2="45.68" stroke="#cfa8b3" stroke-width="5.34" stroke-linecap="round"/><line x1="53.55" y1="82.26" x2="58.76" y2="85.76" stroke="#cfa8b3" stroke-width="4.27" stroke-linecap="round"/><line x1="31.98" y1="64.00" x2="53.55" y2="82.26" stroke="#cfa8b3" stroke-width="5.34" stroke-linecap="round"/><line x1="17.87" y1="45.68" x2="31.98" y2="64.00" stroke="#cfa8b3" stroke-width="5.34" stroke-linecap="round"/></svg></span>
-    <span class="body">
-      <span class="row"><span class="name">Prenatal Stretch</span><span class="time">10 min</span></span>
-      <span class="desc">Gentle seated, kneeling, and supported stretches. Nothing flat on the back.</span>
-    </span>
-  </a>
-
-  <a class="card" href="prenatal-movement.html" style="--accent:#c08a2e">
-    <span class="thumb" style="background:linear-gradient(165deg,#fdf7e9,#f7ecd2)"><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="57.95" cy="87.05" rx="40" ry="9.00" fill="rgba(0,0,0,0.07)"/><circle cx="44.4" cy="68.0" r="11.6" fill="none" stroke="#b9a98b" stroke-width="2.07"/><polygon points="41.05,26.84 57.80,25.31 54.53,57.66 42.56,58.75" fill="#7d5a1e" stroke="#7d5a1e" stroke-width="3.36" stroke-linejoin="round"/><line x1="57.80" y1="25.31" x2="61.00" y2="41.49" stroke="#6d4f1c" stroke-width="3.87" stroke-linecap="round"/><line x1="49.42" y1="26.08" x2="49.55" y2="21.35" stroke="#6d4f1c" stroke-width="3.17" stroke-linecap="round"/><circle cx="49.73" cy="14.95" r="8.00" fill="#6d4f1c"/><line x1="64.91" y1="84.56" x2="69.68" y2="86.07" stroke="#6d4f1c" stroke-width="3.10" stroke-linecap="round"/><polygon points="54.80,42.77 56.72,44.62 58.09,46.90 58.83,49.46 58.87,52.12 58.23,54.70 56.94,57.03 55.10,58.95 52.82,60.32 50.26,61.06 47.60,61.11 45.01,60.47 42.68,59.18 40.77,57.33 39.40,55.05 38.66,52.49 38.61,49.83 39.25,47.25 40.54,44.92 42.39,43.00 44.67,41.63 47.23,40.89 49.89,40.84" fill="#7d5a1e"/><line x1="54.53" y1="57.66" x2="65.50" y2="70.47" stroke="#6d4f1c" stroke-width="3.87" stroke-linecap="round"/><line x1="61.00" y1="41.49" x2="63.33" y2="57.75" stroke="#6d4f1c" stroke-width="3.87" stroke-linecap="round"/><line x1="41.05" y1="26.84" x2="44.63" y2="42.69" stroke="#c2a473" stroke-width="3.87" stroke-linecap="round"/><line x1="65.50" y1="70.47" x2="64.91" y2="84.56" stroke="#6d4f1c" stroke-width="3.87" stroke-linecap="round"/><line x1="42.56" y1="58.75" x2="51.47" y2="67.84" stroke="#c2a473" stroke-width="3.87" stroke-linecap="round"/><line x1="44.63" y1="42.69" x2="49.07" y2="58.41" stroke="#c2a473" stroke-width="3.87" stroke-linecap="round"/><line x1="47.11" y1="87.92" x2="50.09" y2="89.65" stroke="#c2a473" stroke-width="3.10" stroke-linecap="round"/><line x1="51.47" y1="67.84" x2="47.11" y2="87.92" stroke="#c2a473" stroke-width="3.87" stroke-linecap="round"/></svg></span>
-    <span class="body">
-      <span class="row"><span class="name">Birth Prep</span><span class="time">14–27 min</span></span>
-      <span class="desc">Pelvic floor release and coordination, hip and adductor mobility, breath-paced tones.</span>
-    </span>
-  </a>
-
-  <div class="section-label">Before Training</div>
-
-  <a class="card" href="hip-activation.html" style="--accent:#4f7d5e">
-    <span class="thumb" style="background:linear-gradient(165deg,#eef4ec,#dfeae0)"><svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="66.5" rx="40" ry="8" fill="rgba(0,0,0,0.07)"/><line x1="61.13" y1="40.06" x2="75.82" y2="41.49" stroke="#3d5f48" stroke-width="4.10" stroke-linecap="round"/><line x1="48.39" y1="34.99" x2="61.13" y2="40.06" stroke="#3d5f48" stroke-width="4.10" stroke-linecap="round"/><line x1="26.03" y1="46.56" x2="10.92" y2="60.27" stroke="#3d5f48" stroke-width="4.10" stroke-linecap="round"/><line x1="16.72" y1="45.42" x2="26.03" y2="46.56" stroke="#3d5f48" stroke-width="4.10" stroke-linecap="round"/><circle cx="63.20" cy="36.48" r="8.46" fill="#3d5f48"/><line x1="10.92" y1="60.27" x2="16.34" y2="60.16" stroke="#3d5f48" stroke-width="3.28" stroke-linecap="round"/><line x1="51.66" y1="37.01" x2="56.43" y2="36.79" stroke="#3d5f48" stroke-width="3.36" stroke-linecap="round"/><polygon points="54.93,39.03 48.39,34.99 16.72,45.42 21.39,48.30" fill="#4f7d5e" stroke="#4f7d5e" stroke-width="3.55" stroke-linejoin="round"/><line x1="71.66" y1="44.51" x2="89.08" y2="46.32" stroke="#9dbfa8" stroke-width="4.10" stroke-linecap="round"/><line x1="54.93" y1="39.03" x2="71.66" y2="44.51" stroke="#9dbfa8" stroke-width="4.10" stroke-linecap="round"/><polygon points="36.81,41.81 37.12,44.61 36.69,47.39 35.56,49.97 33.80,52.17 31.53,53.83 28.91,54.86 26.11,55.16 23.32,54.74 20.75,53.61 18.55,51.84 16.88,49.58 15.86,46.95 16.22,46.86 17.27,46.61 18.93,46.20 21.10,45.67 23.63,45.05 26.34,44.38 29.05,43.72 31.57,43.10 33.74,42.57 35.41,42.16" fill="#4f7d5e"/><line x1="21.39" y1="48.30" x2="43.09" y2="60.65" stroke="#9dbfa8" stroke-width="4.10" stroke-linecap="round"/><line x1="43.09" y1="60.65" x2="19.91" y2="65.83" stroke="#9dbfa8" stroke-width="4.10" stroke-linecap="round"/><line x1="19.91" y1="65.83" x2="27.66" y2="66.38" stroke="#9dbfa8" stroke-width="3.28" stroke-linecap="round"/></svg></span>
-    <span class="body">
-      <span class="row"><span class="name">Hip Activation</span><span class="time">5 min</span></span>
-      <span class="desc">Fires the glute medius before your feet hit the ground. Do this before every run.</span>
-    </span>
-  </a>
-
-  <div class="footer">
-    <strong>Open in Safari</strong> — Chrome on iOS won't keep the screen awake or install to the home screen.<br>
-    <strong>Playing music?</strong> Start it before tapping Start in any timer.
+<div class="wrap" id="app">
+ <div id="home">
+  <div class="caps tiny mute" id="datebar"></div>
+  <h1>Movement</h1>
+  <div class="rule"></div>
+  <p class="tao" id="tao"></p>
+  <p class="caps tiny mute" id="taosrc" style="margin-top:4px"></p>
+  <div class="stage" id="stage"><svg id="fig" viewBox="0 0 100 100"><line id="shadow" stroke="var(--fi)" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/><g id="layer"></g></svg></div>
+  <div class="caps tiny mute">This week</div>
+  <div class="week" id="week"></div>
+  <a class="btn" id="go-morning-flow" href="morning-flow.html"><span>Morning Flow</span><small>13 min</small></a>
+  <a class="btn" id="go-daily-13" href="daily-13.html"><span>Daily 13</span><small>12 min</small></a>
+  <a class="btn" id="go-strength" href="strength.html"><span>Strength</span><small>A / B</small></a>
+  <div class="pair">
+    <a class="btn" id="go-hip-activation" href="hip-activation.html"><span>Hip activation</span></a>
+    <button class="btn" id="openSheet"><span>Seal sheet</span></button>
   </div>
+  <details class="foot">
+    <summary class="caps tiny">Archive and notes</summary>
+    <p style="margin-top:8px"><a href="prenatal-stretch.html" style="color:inherit">Prenatal Stretch</a> (10 min) · <a href="prenatal-movement.html" style="color:inherit">Birth Prep</a> (14–27 min)</p>
+    <p style="margin-top:8px"><strong>Open in Safari</strong> — Chrome on iOS won't keep the screen awake or install to the home screen. <strong>Playing music?</strong> Start it before tapping Start in any timer.</p>
+  </details>
+ </div>
+ <div id="sheet">
+  <div class="top"><span class="caps">Seal sheet</span><button class="pill" id="closeSheet">Home</button></div>
+  <div class="rule"></div>
+  <div id="months"></div>
+  <p class="tao">No streak count. A missed day is an empty circle, nothing more.</p>
+ </div>
 </div>
-
 <script>
-const BUILDV='4d57f768d4';
-const d = new Date(), h = d.getHours();
-document.getElementById('greet').textContent =
-  h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-document.getElementById('datebar').textContent =
-  d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+const BUILDV='614f647572';
+// Daily 13 — postural maintenance (renamed from Daily 10, 2026-08-26). tdur = length
+// of the GET SET UP gap BEFORE the movement (TR_ALL builds); setup = authored
+// transition script, spoken as "Next: <name>. <setup>". Position flow: standing (1-2)
+// → floor (3-9) → standing/bench (10-13); the two block changes carry 15s gaps.
+// Work 555s + gaps 160s = 715s. Deep squats, Reverse lunges and Plank hold moved in
+// verbatim from the retired Morning Movement app (data2.js); Wall slide retired to
+// src/d_retired.js.
+const MOVES=[
+{n:"Deep squats",pos:'standing',cue:"Sink until your hips are just below your knees, heels down",dur:30,bil:false,cyc:2.8,pin:"LR",
+ setup:"Stand tall, feet shoulder width, toes a little out.",
+ // 2026-11-12 (Will): just below parallel, heels down, NOT sitting on the heels. The hips go
+ // back along the body's own facing (the pelvis used to slide along the world axis, 22 deg
+ // off) and the arms are FK in both keys, reaching forward as the counterweight: the old
+ // bottom-only hand target made the standing arms strain toward a point 14 units away.
+ // M = halfway: hips already back, thighs about 45 deg, trunk and shins both leaning 14 deg.
+ A:{p:[0,55.2,0],yaw:22,tw:0,s:[3,3],hf:0,aL:[4,-10,4,-8],aR:[4,10,4,8],lL:[-3,-5,3,-4],lR:[3,5,-3,4],fpL:0,fpR:0,fyL:-12,fyR:12},
+ M:{p:[-3.3,61.1,-8.2],yaw:22,tw:0,s:[14,14],hf:-4,aL:[34,-8,42,-6],aR:[34,8,42,6],
+    lL:[0,0,0,0],lR:[0,0,0,0],fpL:0,fpR:0,fyL:-12,fyR:12},
+ B:{p:[-4.05,78.4,-10],yaw:22,tw:0,s:[25,25],hf:-8,aL:[62,-6,74,-4],aR:[62,6,74,4],
+    lL:[0,0,0,0],lR:[0,0,0,0],fpL:0,fpR:0,fyL:-12,fyR:12}},
 
-// auto-update: on every launch/foreground, swap in the latest deployed version
-// (stamp is written by src/rebuild.py; loop-guarded via sessionStorage)
+{n:"Reverse lunges",pos:'standing',cue:"Step back, front shin stays vertical",dur:30,bil:true,cyc:3.2,pin:"R",tdur:10,
+ setup:"Stay standing, feet under your hips. You'll step back one leg at a time.",
+ // 2026-11-12: the hips drop along the body's own back-front axis (they slid along the
+ // world axis, 24 deg off, which tipped the front shin 12 deg), so the front shin is vertical.
+ // The rear foot is an IK target: beside the front foot in A, planted at full step length by
+ // M (back leg long, hips half-way down), and it stays there while the hips finish the drop.
+ // Foot contact is authored: the rear foot lands on its BALL with the heel up (fp 58, ankle
+ // 5.4 above the floor) and the front foot stays flat, so no toe flips direction.
+ A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,2],aL:[-6,-10,-6,-8],aR:[6,10,6,8],ikFL:[-5.8,93,2.6],lR:[4,2,-4,2],fpL:0,fpR:0},
+ M:{p:[-5.7,64,-12.8],yaw:24,tw:0,s:[5,3],aL:[-2,-10,-2,-8],aR:[2,10,2,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0},
+ B:{p:[-7.7,71.2,-17.3],yaw:24,tw:0,s:[8,6],aL:[2,-10,4,-8],aR:[-2,10,-4,8],ikFL:[-22,87.6,-35.9],lR:[4,2,-4,2],fpL:58,fpR:0}},
+
+// Contralateral reach: right arm sweeps overhead while the left leg lengthens; the
+// mirror at halfway swaps the lead pair (punching-rotations precedent). Low back
+// stays glued to the floor: spine values are identical in every keyframe.
+{n:"Dead bug",pos:'supine',cue:"Ribs down, low back pressed into the floor",dur:45,bil:true,cyc:3.6,cam:62,tdur:15,
+ setup:"Lie on your back. Knees up over your hips, shins level, arms to the ceiling.",
+ A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[180,-6,180,-5],aR:[180,6,180,5],
+    lL:[176,-7,88,-5],lR:[176,7,88,5],fpL:-80,fpR:-80},
+ B:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,aL:[180,-6,180,-5],aR:[268,6,268,5],
+    lL:[97,-7,94,-5],lR:[176,7,88,5],fpL:-80,fpR:-80}},
+
+// Hip extension, not lumbar extension: the torso is one straight slab (s0 == s1) and
+// the top position is the straight knee-hip-shoulder diagonal — no extra arch.
+{n:"Glute bridge",pos:'supine',cue:"Tuck first, drive through the heels, squeeze tall",dur:45,bil:false,cyc:3.2,cam:52,tdur:10,
+ setup:"Stay on your back. Feet flat on the floor, hip width, heels close to your hands.",
+ // Foot contact authored (2026-11-12): both feet flat on the floor, toes pointing away from the head.
+ A:{p:[0,89.5,3],yaw:14,tw:0,s:[-84,-90],hf:-4,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
+    aL:[88,-8,88,-6],aR:[88,8,88,6],fpL:0,fpR:0},
+ B:{p:[0,79.6,3],yaw:14,tw:0,s:[-110,-110],hf:8,ikFL:[-0.9,93,22],ikFR:[9.7,93,19.3],
+    aL:[88,-8,88,-6],aR:[88,8,88,6],fpL:0,fpR:0}},
+
+// Ported from the Birth Prep clamshell (proven read): bottom leg static, top foot
+// pinned at the heels, and the top knee opens by swiveling about the hip→ankle axis —
+// so the heels stay welded by construction. Pelvis never rolls (p/yaw identical).
+{n:"Side-lying clamshell",pos:'sidelying',cue:"Heels glued together — only the top knee opens",dur:60,bil:true,cyc:2.6,cam:12,pitch:24,tdur:10,
+ setup:"Roll onto your side. Knees bent, heels together, head resting on your lower arm.",
+ // Rebuilt 2026-11-12 on the root roll: the body genuinely lies on its right side (roll 90:
+ // hips and shoulders stacked), facing the camera. The bottom (right) leg rests on the
+ // floor; the top (left) foot is IK-pinned on the bottom ankle and the top knee opens by
+ // swivelling about the hip-to-ankle axis, so the heels stay welded by construction. Before
+ // this it was a prone body seen from an angle, with the opening knee hidden behind the trunk.
+ A:{p:[-6,87.2,0],yaw:0,roll:90,tw:0,sl:-3,s:[0,0],hf:0,aR:[176,0,150,0],ikL:{w:[15,92.5,11]},swAL:8,
+    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:22,fpL:45,fpR:45},
+ B:{p:[-6,87.2,0],yaw:0,roll:90,tw:0,sl:-3,s:[0,0],hf:0,aR:[176,0,150,0],ikL:{w:[15,92.5,11]},swAL:8,
+    lR:[45,0,-45,0],ikFL:[-32.87,89.7,0],swL:-33,fpL:45,fpR:45}},
+
+// Contralateral reach on all fours (cat-cow's quadruped base): right arm and LEFT leg
+// extend to horizontal while the planted hand and kneeling leg never move; the mirror
+// at halfway swaps the pair (dead-bug precedent). Spine is one neutral slab in both
+// frames — the exercise is the rib-pelvis lock against gravity, not reach height.
+{n:"Bird dog",pos:'quadruped',cue:"Flat back — reach long, not high",dur:50,bil:true,cyc:4.0,cam:52,tdur:15,
+ setup:"Come to hands and knees. Hands under shoulders, knees under hips, back flat.",
+ // 2026-11-12: hands squared to the body, directly under the shoulders (they were 9.5 off),
+ // and the trunk is one flat slab that rises a little toward the shoulders (s 74) because
+ // this figure's arms are longer than its thighs: level, the elbows had to bend to 97 deg.
+ // M = the low forward slide (hand low and ahead, thigh half-way back): without it the hand
+ // cut the corner past the shoulder and the elbow winged out. Camera 52: at 70 (pure
+ // profile) the reaching far arm passed behind the head.
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
+ A:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[15.1,93,21.1]},swAR:90,
+    lL:[3,-5,-90,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
+ M:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[21.8,84,39.4]},swAR:90,
+    lL:[-44,-6,-91,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
+ B:{p:[0,74.5,0],yaw:20,tw:0,s:[74,74],hf:10,ikL:{w:[2,93,25.9]},ikR:{w:[24,67.8,45.4]},swAR:90,
+    lL:[-91,-6,-91,-5],lR:[3,5,-90,5],fpL:4,fpR:4,fyL:180,fyR:180}},
+
+// A=Y, M=T, B=W: the cycle sweeps Y->T->W->T->Y. Tiny floats — the work is the
+// scapular squeeze, not elevation. cam 72: the only view where the letters open.
+{n:"Prone Y-T-W raise",pos:'prone',cue:"Blades down and back — small floats, thumbs up",dur:45,bil:false,cyc:4.2,cam:40,pitch:58,tview:{cam:40,pitch:13},tdur:15,
+ prop:[{q:[[19.5,93,39.9],[38.8,93,16.9],[-24,93,-35.8],[-43.3,93,-12.8]]}],
+ setup:"Down to the floor, face down. Forehead down, arms overhead in a Y, thumbs up.",
+ // Two cameras (Will, 2026-11-12): the GET SET UP preview is side-on (tview) so face-down
+ // reads while you get to the floor; the work phase uses the raised camera so the letters
+ // read. The pale floor patch is a mat under the body: from above it says "lying down".
+ // 2026-11-12 (Will): raised camera (pitch 58) so the Y, the T and the W open up on screen;
+ // side-on at 13 deg they collapsed into one line. The body lies ACROSS the screen (yaw 50
+ // at camera 40) so the letters are not skewed. Arms are FK in the horizontal plane, a
+ // little above shoulder height (flex 94): Y = 35 deg off the spine, T = square, W = upper
+ // arms 45 deg below the T line with the forearms 45 deg above it (elbows 90 deg). FK keeps
+ // the arms dead straight through the Y-to-T sweep; hand targets cut the corner and bent them.
+ // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
+ A:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-35,94,-35],aR:[94,35,94,35],
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
+ M:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-90,94,-90],aR:[94,90,94,90],
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180},
+ B:{p:[0,90.5,4],yaw:50,tw:0,s:[91,90],hf:6,aL:[94,-135,94,-45],aR:[94,135,94,45],
+    lL:[-88,-6,-88,-5],lR:[-88,6,-88,5],fpL:4,fpR:4,fyL:180,fyR:180}},
+
+{n:"Side plank",pos:'sidelying',cue:"One straight line — push the floor away, hips high",dur:40,bil:true,cyc:4.2,cam:18,tdur:10,pin:"LR",
+ setup:"Roll onto your side. Prop up on your forearm, elbow under your shoulder, feet stacked.",
+ // Rebuilt 2026-11-12 on the root roll: a straight standing body rolled 77.9 deg onto its
+ // right side, so hips, shoulders and feet are genuinely stacked, the right elbow sits under
+ // the shoulder with the forearm on the floor, and head to heels is one line. Will: HOLD the
+ // line, no animated sag; the top leg is adducted so the feet stack; B is a breath (pelvis 0.15, top arm and head ease). It was a prone body with level hips.
+ A:{p:[0,78.7,0],yaw:0,roll:77.9,tw:0,s:[0,0],hf:0,aL:[4,0,4,0],ikR:{w:[26.9,92.5,12.5]},swAR:16,
+    lL:[0,13,0,13],lR:[0,0,0,0]},
+ B:{p:[0,78.85,0],yaw:0,roll:77.9,tw:0,s:[0,0],hf:2,aL:[6,0,7,0],ikR:{w:[26.9,92.5,12.5]},swAR:16,
+    lL:[0,13,0,13],lR:[0,0,0,0]}},
+
+{n:"Plank hold",pos:'quadruped',pin:"LR",cue:"One straight line, push the floor away",dur:60,bil:false,cyc:4.0,tdur:15,
+ setup:"Turn over into a forearm plank. Elbows under your shoulders, one straight line.",
+ // 2026-11-12 (Will): a FOREARM plank. Elbows on the floor under the shoulders, forearms
+ // pointing forward, shoulders-hips-ankles one line. B is a breath, not a sag.
+ A:{p:[0,83.45,0],yaw:24,tw:0,s:[82.4,82.4],hf:6,ikL:{w:[9.4,92.6,38.3]},ikR:{w:[22.2,92.6,32.6]},swAL:-90,swAR:90,
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3],fpL:45,fpR:45},
+ B:{p:[0,83.7,0],yaw:24,tw:0,s:[82.4,82.4],hf:7,ikL:{w:[9.4,92.6,38.3]},ikR:{w:[22.2,92.6,32.6]},swAL:-90,swAR:90,
+    aL:[0,0,0,0],aR:[0,0,0,0],lL:[-82.4,-3,-82.4,-3],lR:[-82.4,3,-82.4,3],fpL:45,fpR:45}},
+
+// Hinge held constant; elbows drive up and back toward the hips. Neutral grip:
+// dumbbell handles run front-to-back. Arm world targets in both frames (blendable).
+{n:"Dumbbell bent-over row",pos:'standing',cue:"Elbows to the hips — no torso heave",dur:45,bil:false,cyc:2.6,cam:48,tdur:15,
+ prop:[{db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.7]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.7]}],
+ setup:"Stand up and grab your dumbbells. Soft knees, hinge your chest toward the floor, back flat.",
+ // 2026-11-12 (Will): torso about 45 deg from the floor, flat back (it was 28 deg). Soft
+ // knees, hips back over the heels; the arms hang straight below the shoulders at the
+ // bottom and the hands finish beside the lower ribs with the elbows up and close.
+ A:{p:[-4,57.2,-9],yaw:24,tw:0,s:[45,45],hf:-8,ikL:{w:[-2.9,64.8,10.6]},ikR:{w:[9.9,64.8,4.9]},
+    swAL:-94,swAR:94,ikFL:[-5.3,93,0.3],ikFR:[3.8,93,-3.7]},
+ B:{p:[-4,57.2,-9],yaw:24,tw:0,s:[45,45],hf:-8,ikL:{w:[-8.5,54.2,0.5]},ikR:{w:[6.1,54.2,-6]},
+    swAL:-94,swAR:94,ikFL:[-5.3,93,0.3],ikFR:[3.8,93,-3.7]}},
+
+// STRICT PARTIAL: shoulders never sink below the elbows (upper arm parallel is the
+// hard floor of the rep). Hands are fixed world points on the bench edge.
+// 2026-11-12: the body is squared to the bench (yaw 0, camera 80 keeps the same view): at
+// yaw 14 the hands sat skewed under the shoulders and the right elbow flared 6 units out.
+// The bottom stops 1.5 short of parallel (a safety margin on the AC-joint rule, it sat
+// exactly on it) and the top is a straight arm.
+{n:"Bench dips",pos:'bench',cue:"Stop at parallel — shoulders down and back",dur:40,bil:false,cyc:3.0,cam:72,tdur:15,
+ prop:[{l:[[-12,74,0.5],[12,74,0.5]]},{l:[[-12,74,-6.5],[12,74,-6.5]]},
+       {l:[[-12,74,0.5],[-12,74,-6.5]]},{l:[[12,74,0.5],[12,74,-6.5]]},
+       {l:[[-11,74,0.5],[-11,93,0.5]]},{l:[[11,74,0.5],[11,93,0.5]]},
+       {l:[[-11,74,-6.5],[-11,93,-6.5]]},{l:[[11,74,-6.5],[11,93,-6.5]]}],
+ setup:"Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.",
+ A:{p:[0,75.05,6],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},swAL:-92,swAR:92,
+    ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0},
+ B:{p:[0,86,7],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},
+    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0}},
+
+// Static hold: the fight is grip + anti-shrug + anti-lean. Barely-visible sway.
+{n:"Dumbbell farmer hold",pos:'standing',cue:"Ribs stacked over pelvis — don't let the weights win",dur:35,bil:false,cyc:4.6,cam:40,tdur:15,pin:"LR",
+ prop:[{db:[{j:'gpL',o:[0,0,-2.4]},{j:'gpL',o:[0,0,2.4]},1.9]},
+       {db:[{j:'gpR',o:[0,0,-2.4]},{j:'gpR',o:[0,0,2.4]},1.9]}],
+ setup:"Pick up your dumbbells. Stand tall, shoulders packed down and back.",
+ // 2026-11-12: arms hang dead straight (FK); the old hand targets sat too close to the
+ // shoulders and bent the elbows to 155 deg. The sway is a breath.
+ A:{p:[0,55.2,0],yaw:24,tw:0,s:[2,1],hf:0,aL:[0,-5,0,-4],aR:[0,5,0,4],
+    lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
+ B:{p:[0,55.2,0],yaw:24,tw:0,s:[1,0],hf:0,aL:[0,-5,1,-4],aR:[0,5,1,4],
+    lL:[-2,-6,2,-5],lR:[2,6,-2,5]}},
+
+// The exhale reset: ribs settle down and in, pelvis neutral, breath into the low
+// back. br pairs the tone with the figure's breathing sway.
+{n:"Standing posture reset",pos:'standing',cue:"Exhale the ribs down — breathe into your low back",dur:30,bil:false,cyc:10,split:0.4,cam:40,tdur:15,br:true,pin:"LR",
+ setup:"Set the dumbbells down. Stand tall, feet hip width, arms easy at your sides.",
+ // 2026-11-12 (Will approved the timing): three breaths in the 30 s, about 4 s in and 6 s
+ // out (cyc 10, split 0.4). A is the STACK (ribs over pelvis); the inhale opens to B, a rib
+ // FLARE (low back arched: lower segment forward, upper segment back, head stacked); the
+ // longer exhale brings the ribs down to the stack again. Before this it was a
+ // whole-trunk forward lean on a 5 s cycle, and the exhale lifted the chest.
+ A:{p:[0,55.4,0],yaw:16,tw:0,s:[1,0],hf:0,aL:[6,-8,4,-6],aR:[6,8,4,6],
+    lL:[-2,-6,2,-5],lR:[2,6,-2,5]},
+ B:{p:[0,55.4,0],yaw:16,tw:0,s:[8,-7],hf:3,aL:[6,-8,4,-6],aR:[6,8,4,6],
+    lL:[-2,-6,2,-5],lR:[2,6,-2,5]}}
+];
+
+// ================= 3D skeleton =================
+const L={s1:13,s2:13,nh:9,hr:6.2,up:13,fo:13,th:19,sh:19,shW:7.0,hpW:5.0,ft:6.4};
+const R=d=>d*Math.PI/180;
+const rotY=(v,deg)=>{const c=Math.cos(R(deg)),s=Math.sin(R(deg));
+  return [v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c];};
+const add=(a,b,k)=>[a[0]+b[0]*k,a[1]+b[1]*k,a[2]+b[2]*k];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const len=v=>Math.hypot(v[0],v[1],v[2]);
+const nrm=v=>{const n=len(v)||1;return [v[0]/n,v[1]/n,v[2]/n];};
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+function rotAxis(v,k,th){const c=Math.cos(th),s=Math.sin(th),kv=cross(k,v),
+  kd=k[0]*v[0]+k[1]*v[1]+k[2]*v[2];
+  return [v[0]*c+kv[0]*s+k[0]*kd*(1-c),v[1]*c+kv[1]*s+k[1]*kd*(1-c),v[2]*c+kv[2]*s+k[2]*kd*(1-c)];}
+function dir(flex,abd){const cb=Math.cos(R(abd));
+  return [Math.sin(R(abd)),Math.cos(R(flex))*cb,Math.sin(R(flex))*cb];}
+function spineDir(flex){return [0,-Math.cos(R(flex)),Math.sin(R(flex))];}
+const rotZb=(v,deg)=>{const c=Math.cos(R(deg)),s=Math.sin(R(deg));
+  return [v[0]*c-v[1]*s, v[0]*s+v[1]*c, v[2]];};
+
+// two-link IK: end effector lands on target, bones keep their length
+function ik(S,T,l1,l2,ref,sign,swivel){
+  let d=sub(T,S); let D=len(d); if(D<1e-6){d=[0,1,0];D=1;}
+  const u=nrm(d), Dc=Math.max(Math.abs(l1-l2)+0.01,Math.min(l1+l2-0.01,D));
+  const cf=(l1*l1+Dc*Dc-l2*l2)/(2*l1*Dc), f=Math.acos(Math.max(-1,Math.min(1,cf)));
+  let ax=cross(u,ref); if(len(ax)<1e-6) ax=cross(u,[0,0,1]); ax=nrm(ax);
+  if(swivel) ax=nrm(rotAxis(ax,u,R(swivel)));   // spin the bend plane about the limb axis
+  return [add(S,rotAxis(u,ax,sign*f),l1), add(S,u,Dc)];
+}
+
+function solve(p){
+  const pelvis=p.p, yawP=p.yaw, tw=p.tw||0;
+  // root roll (2026-11-12): `roll` turns the WHOLE body about its own front-to-back axis
+  // before the yaw, so a figure can lie or prop on its side (side plank, clamshell).
+  // roll > 0 lowers the figure's right side; 90 = lying on the right side. Every
+  // body-frame vector below goes through rotR; zero/absent roll is exactly the old rotY.
+  const roll=p.roll||0, rotR=(v,deg)=>rotY(roll?rotZb(v,roll):v,deg);
+  const sl=p.sl||0;
+  const d1=rotR(rotZb(spineDir(p.s[0]),sl),yawP);
+  const chest=add(pelvis,d1,L.s1);
+  // tw = torso twist about the LOWER-SPINE AXIS, not the world vertical (changed
+  // 2026-10-12). Upright the two coincide, so it is the familiar shoulder yaw; hinged
+  // or on all fours it becomes a true thoracic roll -- one shoulder rises, the other
+  // drops -- which is what bent rotations and thread-the-needle actually do. The
+  // chest->neck segment carries 45% of it, the head, shoulders and FK arms the full angle.
+  const twist=(v,k)=>tw?rotAxis(v,d1,-R(tw*k)):v;
+  const neck =add(chest, twist(rotR(rotZb(spineDir(p.s[1]),sl),yawP),0.45),L.s2);
+  const head =add(neck,  twist(rotR(rotZb(spineDir(p.s[1]+(p.hf||0)),sl),yawP),1),L.nh);
+  // st (2026-11-12) = shoulder-line tilt in degrees, in the body's frontal plane: st > 0
+  // drops the right shoulder and lifts the left. A side bend (sl) alone slides the rib cage
+  // sideways with the shoulders level; a real one drops the near shoulder. Absent/zero =
+  // the old level shoulder line exactly.
+  const st=p.st||0;
+  const axS=twist(rotR(st?rotZb([1,0,0],st):[1,0,0],yawP),1), axH=rotR([1,0,0],yawP);
+  const shL=add(neck,axS,-L.shW), shR=add(neck,axS,L.shW);
+  const hpL=add(pelvis,axH,-L.hpW), hpR=add(pelvis,axH,L.hpW);
+  const J={pelvis,chest,neck,head,shL,shR,hpL,hpR};
+  const fk=(o,a,l1,l2,yaw)=>{const j1=add(o,rotR(dir(a[0],a[1]),yaw),l1);
+    return [j1,add(j1,rotR(dir(a[2],a[3]),yaw),l2)];};
+  // legs: IK to a world foot target if given, else forward kinematics
+  const legRef=rotR([0,0,1],yawP);
+  let knL,ftL,knR,ftR;
+  if(p.ikFL){[knL,ftL]=ik(hpL,p.ikFL,L.th,L.sh,legRef,1,p.swL);} else {[knL,ftL]=fk(hpL,p.lL,L.th,L.sh,yawP);}
+  if(p.ikFR){[knR,ftR]=ik(hpR,p.ikFR,L.th,L.sh,legRef,1,p.swR);} else {[knR,ftR]=fk(hpR,p.lR,L.th,L.sh,yawP);}
+  // floor clamp (2026-11-12): no knee, ankle, elbow or hand may be drawn under the floor.
+  // A joint that would sink is hinged back up about its parent joint -- the bone keeps its
+  // length and its compass direction, only its dip changes -- so the correction grows
+  // smoothly from zero as the joint reaches the floor and never pops. A pose that keeps
+  // everything above the floor is untouched (bit-identical). The clamp plane sits 0.6 below
+  // the floor line (about 1 cm, inside the stroke): a straight standing leg that is 0.2
+  // too long must not be kinked to fix what nobody can see.
+  const FLR=93.6;
+  const hinge=(o,j,l,alt)=>{
+    if(!(j[1]>FLR)) return j;
+    const dy=Math.max(-1,Math.min(1,(FLR-o[1])/l)), h=Math.sqrt(Math.max(0,1-dy*dy));
+    let hs=[j[0]-o[0],0,j[2]-o[2]];
+    if(len(hs)<1e-3) hs=[alt[0],0,alt[2]];
+    if(len(hs)<1e-3) hs=[0,0,1];
+    const hz=nrm(hs);
+    return [o[0]+hz[0]*h*l, o[1]+dy*l, o[2]+hz[2]*h*l];
+  };
+  const clampLimb=(o,j1,j2,l1,l2)=>{
+    const k=hinge(o,j1,l1,legRef);
+    const e0=k===j1?j2:add(k,sub(j2,j1),1);          // a moved mid joint carries its lower bone with it
+    return [k,hinge(k,e0,l2,sub(k,o))];
+  };
+  [knL,ftL]=clampLimb(hpL,knL,ftL,L.th,L.sh); [knR,ftR]=clampLimb(hpR,knR,ftR,L.th,L.sh);
+  Object.assign(J,{knL,ftL,knR,ftR});
+  const footOf=(kn,ft)=>{
+    const u=nrm(sub(ft,kn));
+    const perp=(r)=>{const d=r[0]*u[0]+r[1]*u[1]+r[2]*u[2];
+      return [r[0]-u[0]*d, r[1]-u[1]*d, r[2]-u[2]*d];};
+    const a=perp(rotR([0,0,1],yawP)), b=perp([0,1,0]);
+    let d=nrm(len(a)>=len(b)?a:b);
+    if(!isFinite(d[0])||len(d)<1e-3) d=rotR([0,0,1],yawP);
+    // a foot may not pass through the floor: if it would, lay it along the floor instead
+    const FL=93;
+    if(ft[1]+d[1]*L.ft > FL){
+      const dy=Math.max(-1,Math.min(1,(FL-ft[1])/L.ft));
+      const h=Math.sqrt(Math.max(0,1-dy*dy));
+      let hsrc=[d[0],0,d[2]];
+      if(len(hsrc)<1e-3) hsrc=[u[0],0,u[2]];
+      if(len(hsrc)<1e-3) hsrc=rotR([0,0,1],yawP);
+      const hz=nrm(hsrc);
+      d=[hz[0]*h, dy, hz[2]*h];
+    }
+    return add(ft,d,L.ft);
+  };
+  // Authored foot contact (2026-11-12). Without it the toe direction is the heuristic above,
+  // which guesses from the shin and can flip in one frame. A pose may instead say how each
+  // foot sits: fpL/fpR = foot pitch in degrees (0 = flat, toes level with the ankle; 60 =
+  // heel up on the ball of the foot, toes 60 deg below the ankle) and fyL/fyR = toe-out in
+  // degrees about the body's own facing (0 = straight ahead, 180 = toes trailing behind).
+  // The ankle (ft) stays the authored joint: for a heel-up foot, author the ankle
+  // L.ft*sin(fp) above the floor and the toe lands on it. Both numbers blend, so a foot can
+  // roll from flat to the ball with no flip. A toe is never drawn under the floor.
+  const footAt=(ft,fp,fy)=>{
+    const a=R(fp), b=R(fy||0), h=rotR([Math.sin(b),0,Math.cos(b)],yawP);
+    let dy=Math.sin(a); if(ft[1]+dy*L.ft>93) dy=Math.max(-1,Math.min(1,(93-ft[1])/L.ft));
+    const hl=Math.hypot(h[0],h[2])||1, k=Math.sqrt(Math.max(0,1-dy*dy))/hl;
+    return [ft[0]+h[0]*k*L.ft, ft[1]+dy*L.ft, ft[2]+h[2]*k*L.ft];
+  };
+  J.toeL=p.fpL==null?footOf(knL,ftL):footAt(ftL,p.fpL,p.fyL);
+  J.toeR=p.fpR==null?footOf(knR,ftR):footAt(ftR,p.fpR,p.fyR);
+  const tgt=s=>!s?null:(s.k?J[s.k]:s.w);
+  const tL=tgt(p.ikL), tR=tgt(p.ikR);
+  let elL,haL,elR,haR;
+  // optional arm swivel (swAL/swAR): spins the elbow's bend plane about the
+  // shoulder->hand axis, same as the leg swivels — undefined means unchanged
+  const fkA=(o,a)=>{const j1=add(o,twist(rotR(dir(a[0],a[1]),yawP),1),L.up);
+    return [j1,add(j1,twist(rotR(dir(a[2],a[3]),yawP),1),L.fo)];};
+  if(tL){[elL,haL]=ik(shL,tL,L.up,L.fo,axS,-1,p.swAL);} else {[elL,haL]=fkA(shL,p.aL);}
+  if(tR){[elR,haR]=ik(shR,tR,L.up,L.fo,axS, 1,p.swAR);} else {[elR,haR]=fkA(shR,p.aR);}
+  [elL,haL]=clampLimb(shL,elL,haL,L.up,L.fo); [elR,haR]=clampLimb(shR,elR,haR,L.up,L.fo);
+  return Object.assign(J,{elL,haL,elR,haR});
+}
+
+// spine curvature (added 2026-10-15): `bend` = degrees of arc the trunk curves through,
+// + = flexion (rounding, cat), - = extension (arching, cow / cobra). Like tw it is a
+// pose number that blends. It NEVER moves a joint -- pelvis, chest, neck, head and the
+// shoulder/hip corners are wherever solve() put them -- it only bows the torso's two
+// side edges between hip and shoulder along the trunk's rear normal (flexion) or front
+// normal (extension) by the arc's sagitta, (chord/2)*tan(bend/4). The renderers draw
+// those edges as a path when bend is non-zero and the legacy polygon when it is zero,
+// so every existing pose renders byte-identically. n = samples per edge (>=2).
+function torsoEdges(J,bend,n){
+  const c0=add(J.hpL,sub(J.hpR,J.hpL),0.5), c1=add(J.shL,sub(J.shR,J.shL),0.5);
+  const u=nrm(sub(c1,c0)), lat=nrm(add(sub(J.hpR,J.hpL),sub(J.shR,J.shL),1));
+  let f=cross(u,lat); if(len(f)<1e-6) f=[0,0,1]; f=nrm(f);          // trunk front
+  const sag=-(len(sub(c1,c0))/2)*Math.tan(R(bend)/4);                // + bend bows backward
+  const L=[],Rr=[];
+  for(let i=0;i<=n;i++){const t=i/n, k=sag*Math.sin(Math.PI*t);
+    L.push(add(add(J.hpL,sub(J.shL,J.hpL),t),f,k));
+    Rr.push(add(add(J.hpR,sub(J.shR,J.hpR),t),f,k));}
+  return {L,R:Rr};
+}
+
+// ---- figure skin (2026-11-12) ----
+// SKIN=null draws the legacy constant-width strokes, byte for byte. A skin object turns
+// each limb segment into a filled, variable-width shape (Illustrator's Width Tool): narrow
+// at the joints so bend angles stay crisp, swelling to `w` at fraction `at` along the bone.
+// The torso gets a waist and a slightly wider chest. It is a SKIN only: it is drawn from
+// the solved joints and moves none of them. Widths are in the same units as the legacy
+// stroke (3.0 = today's limb).
+//   {joint,mid,tip,                      width at shoulder/hip, elbow/knee, wrist/ankle
+//    upper:{w,at},fore:{w,at},thigh:{w,at},shin:{w,at},
+//    torso:{chest,waist,at,stroke}}      width factors at the shoulder line and the waist,
+//                                        where the waist sits (0 hip .. 1 shoulder), edge stroke
+let SKIN={"joint":3.0,"mid":3.2,"tip":2.3,"upper":{"w":3.6,"at":0.4},"fore":{"w":3.1,"at":0.3},"thigh":{"w":4.3,"at":0.38},"shin":{"w":3.5,"at":0.3},"torso":{"chest":1.01,"waist":0.85,"at":0.47,"stroke":3.2},"far":0.8};
+const smooth=x=>x*x*(3-2*x);
+// half-width of a limb segment at fraction t along the bone, in stroke units (no scale);
+// with no skin it is the legacy constant 1.5. qa/fig/skin.js measures overlap with this.
+function limbHalf(seg,t,k){
+  const S=SKIN; if(!S) return 1.5;
+  const pr=S[seg],prox=seg==='upper'||seg==='thigh',r0=(prox?S.joint:S.mid)/2,r1=(prox?S.mid:S.tip)/2,rm=pr.w/2;
+  const at=Math.max(0.05,Math.min(0.95,pr.at));
+  return (k||1)*(t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at)));
+}
+// screen-space outline of one limb segment from a to b ({x,y} already fitted), as a path d
+function limbD(a,b,seg,sc,k,flat){
+  const S=SKIN,pr=S[seg],prox=seg==='upper'||seg==='thigh';
+  sc*=(k||1);   // k = far-limb narrowing (farK); the centre line is untouched
+  const r0=(prox?S.joint:S.mid)*sc/2, r1=(prox?S.mid:S.tip)*sc/2, rm=pr.w*sc/2;
+  const at=Math.max(0.05,Math.min(0.95,pr.at));
+  const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
+  if(l<0.05){const r=Math.max(r0,r1,rm).toFixed(2);
+    return `M${(a.x-r).toFixed(2)},${a.y.toFixed(2)}a${r},${r} 0 1 0 ${(2*r).toFixed(2)},0a${r},${r} 0 1 0 ${(-2*r).toFixed(2)},0Z`;}
+  const nx=-dy/l,ny=dx/l,n=8,Lp=[],Rp=[];
+  for(let i=0;i<=n;i++){const t=i/n;
+    const h=t<at?r0+(rm-r0)*smooth(t/at):rm+(r1-rm)*smooth((t-at)/(1-at));
+    const cx=a.x+dx*t,cy=a.y+dy*t;
+    Lp.push((cx+nx*h).toFixed(2)+','+(cy+ny*h).toFixed(2));
+    Rp.unshift((cx-nx*h).toFixed(2)+','+(cy-ny*h).toFixed(2));}
+  // flat = a square-cut far end (the shin: its end is buried inside the foot, so there is no
+  // round cap to escape the foot outline and nothing has to bulge to hide one)
+  return 'M'+Lp.join('L')+(flat?`L${Rp[0]}L`:`A${r1.toFixed(2)},${r1.toFixed(2)} 0 0 0 ${Rp[0]}L`)+Rp.slice(1).join('L')
+    +`A${r0.toFixed(2)},${r0.toFixed(2)} 0 0 0 ${Lp[0]}Z`;
+}
+// Far-limb narrowing (Will, 2026-11-12): of each left/right pair, the limb FARTHER from the
+// camera is drawn narrower (SKIN.far, e.g. 0.78), so two thighs seen side-on stay two limbs
+// instead of merging into one. The factor eases in over 4 units of depth difference, so
+// nothing pops as limbs trade places. dThis/dOther = camera depth of this limb and its twin.
+function farK(dThis,dOther){
+  const S=SKIN; if(!S||!S.far||S.far>=1) return 1;
+  return 1-(1-S.far)*smooth(Math.max(0,Math.min(1,(dOther-dThis)/4)));
+}
+// ---- feet and hands as small 3D objects (drawn only with a skin) ----
+// The foot is built in its own frame and then projected by the camera, as two flat outlines
+// through one small volume: a PROFILE wedge (heel, arch, ball, toes) and a PLAN footprint
+// (narrow rounded heel widening to the forefoot). Side-on the wedge shows, from above the
+// footprint shows, in between both: the shape comes from the foot's orientation.
+// ORIENTATION IS ANATOMICAL, not "sole toward the floor" (Will, 2026-11-12). The shin has a
+// front: the side away from the folded thigh (for a straight leg, the body's own front).
+// The top of the foot continues the FRONT of the shin and the sole continues the back. So:
+// standing, the sole is down; on all fours or lying prone, with the foot in line with the
+// shin, the TOP of the foot is on the floor and the sole faces up; lying on the back the
+// toes point at the ceiling. footFrame returns f (ankle to ball), n (out of the top of the
+// foot), sd (across it).
+// The ankle joint (ft) sits INSIDE the volume, 1.4 above the sole and 2.2 in front of the
+// back of the heel, so the foot encloses the end of the shin. The toe joint is the BALL of
+// the foot, as the authored contact numbers (fp/fy) place it; with the sole down and the
+// ball on the floor the toes lie flat beyond it, so a heel-up foot pivots about its ball.
+// (A limb drawn with thickness already reaches about 1.4 below its joints, so a planted
+// sole sits level with a planted knee or shin.)
+function footFrame(J,s){
+  const ft=J['ft'+s],ball=J['toe'+s],kn=J['kn'+s],hp=J['hp'+s];
+  const d3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2], perp=(v,a)=>{const d=d3(v,a);return [v[0]-a[0]*d,v[1]-a[1]*d,v[2]-a[2]*d];};
+  let f=sub(ball,ft); if(len(f)<1e-3) f=[0,0,1]; f=nrm(f);
+  let us=sub(ft,kn); us=len(us)<1e-3?[0,1,0]:nrm(us);                       // down the shin
+  const lat=nrm(sub(J.hpR,J.hpL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);   // the body's own front
+  const back=perp(sub(hp,kn),us),bf=perp(fw,us);                            // the folded thigh is behind the shin
+  let sa=[bf[0]*0.35-back[0]/19,bf[1]*0.35-back[1]/19,bf[2]*0.35-back[2]/19];
+  if(len(sa)<1e-3) sa=perp([0,0,1],us); if(len(sa)<1e-3) sa=perp([1,0,0],us); sa=nrm(sa);   // front of the shin
+  const a=d3(f,us),b=d3(f,sa);
+  let n=[sa[0]*a-us[0]*b,sa[1]*a-us[1]*b,sa[2]*a-us[2]*b];
+  if(len(n)<0.3){n=perp([-us[0],-us[1],-us[2]],f); if(len(n)<1e-3) n=perp([0,-1,0],f);}
+  n=nrm(n);
+  return {ft,ball,f,n,sd:cross(f,n)};
+}
+// THE FOOT IS A SET OF 3D LANDMARKS (Will, 2026-11-12), in the foot's own frame: a along the
+// foot from the ankle (heel behind, toes ahead), h out of the top of the foot, w toward the
+// MEDIAL side (the big-toe side: +cross(f,n) for the left foot, the opposite for the right,
+// by handedness, so it is right in every pose). Each landmark is a small ball of soft
+// tissue. They are projected every frame and one smooth outline is drawn round them (the
+// hull of the projected balls), so the silhouette is right from the side, from above, from
+// the front and from any angle between, with no fixed 2D glyph.
+// Proportions, scaled to this figure (79 units tall; Drillis and Contini: foot length
+// 0.152 H = 12.0, foot breadth 0.055 H = 4.3). The heel reaches only 1.55 behind the ankle,
+// flush with the back of the shin (Will's eye on the phone overruled the 0.24-of-length heel,
+// which bulged behind the leg), so the drawn foot is 10.7 long; ball of the foot at 6.4, breadth 4.6 across the toe joints, inner arch raised
+// 0.8 off the sole (about 6% of foot length) with the OUTER edge low and nearly flat.
+// The ankle height is 1.6, half the published 0.039 H: the skeleton's ankle joint sits on
+// the floor line, and a taller foot would be drawn under the floor.
+// The toe joint of the skeleton is the ball of the foot (big-toe joint line), as the
+// authored contact numbers place it; with the sole down and the ball planted the toes lie
+// flat beyond it, so a heel-up foot pivots on its ball.
+const FOOT={len:10.7,h0:-1.6};
+function footLandmarks(J,s,k){
+  const F=footFrame(J,s),ft=F.ft,ball=F.ball,f=F.f,n=F.n,mg=s==='L'?1:-1;
+  const med=[F.sd[0]*mg,F.sd[1]*mg,F.sd[2]*mg];
+  const kf=n[1]<0.4?Math.max(0,Math.min(1,(ball[1]-91.4)/1.2)):0;
+  let fh=[f[0],0,f[2]]; fh=len(fh)<1e-3?f:nrm(fh);
+  const td=nrm([f[0]+(fh[0]-f[0])*kf,f[1]+(fh[1]-f[1])*kf,f[2]+(fh[2]-f[2])*kf]);
+  const dt=n[0]*td[0]+n[1]*td[1]+n[2]*td[2]; let tu=[n[0]-td[0]*dt,n[1]-td[1]*dt,n[2]-td[2]*dt]; tu=len(tu)<1e-3?n:nrm(tu);
+  const P=(a,h,w)=>[ft[0]+f[0]*a+n[0]*h+med[0]*w,ft[1]+f[1]*a+n[1]*h+med[1]*w,ft[2]+f[2]*a+n[2]*h+med[2]*w];
+  const T=(a,h,w)=>[ball[0]+td[0]*a+tu[0]*h+med[0]*w,ball[1]+td[1]*a+tu[1]*h+med[1]*w,ball[2]+td[2]*a+tu[2]*h+med[2]*w];
+  const h0=FOOT.h0,tip=((SKIN&&SKIN.tip)||2.3)*(k||1)/2,hb=tip+0.2;
+  const pts=[
+    {id:'ankle',p:P(0,0,0),r:0.6},
+    {id:'malM',p:P(0.1,0.15,tip-0.25),r:0.55},{id:'malL',p:P(-0.3,-0.15,-(tip-0.25)),r:0.55},   // inner and outer ankle bones
+    // The back of the heel is nearly FLUSH with the back of the shin (the Achilles line): it
+    // reaches 0.2 behind the shin's back edge when the shin is square on the foot (Will, 2026-11-12: at most half a unit, which then holds up to a 15 deg lean), with a
+    // small rounded corner at the bottom. hb = how far behind the ankle that is.
+    {id:'heelB',p:P(-(hb-0.55),h0+0.75,0),r:0.55},             // back of the heel
+    {id:'heelM',p:P(-(hb-0.6),h0+0.5,0.65),r:0.5},{id:'heelL',p:P(-(hb-0.6),h0+0.5,-0.75),r:0.5},   // heel pad
+    {id:'archT',p:P(2.5,h0+1.35,1.05),r:0.5},                  // top of the inner arch, off the floor
+    {id:'edgeL',p:P(2.4,h0+0.45,-1.5),r:0.45},                 // the outside edge, low
+    {id:'instep',p:P(2.7,0.35,0.1),r:0.6},
+    {id:'mtp1',p:P(6.4,h0+0.6,1.5),r:0.6},{id:'mtp5',p:P(5.2,h0+0.5,-2.0),r:0.5},   // big-toe and little-toe joints
+    {id:'toe1',p:T(2.35,h0+0.4,1.2),r:0.4},{id:'toe2',p:T(2.15,h0+0.4,0.2),r:0.4},{id:'toe5',p:T(1.0,h0+0.35,-1.9),r:0.35}];  // toe tips
+  // the shin's own cross-section at the ankle, as six small balls round the shin axis: the foot
+  // is exactly as thick as the shin where they meet (0.15 more, no bulge), whatever angle the
+  // foot makes with the shin, so the shin's square-cut end always lies inside the outline
+  {const us=nrm(sub(ft,J['kn'+s])),d0=us[0]*n[0]+us[1]*n[1]+us[2]*n[2];
+   let e1=[n[0]-us[0]*d0,n[1]-us[1]*d0,n[2]-us[2]*d0]; if(len(e1)<0.2){const d1=us[0]*f[0]+us[1]*f[1]+us[2]*f[2];e1=[f[0]-us[0]*d1,f[1]-us[1]*d1,f[2]-us[2]*d1];}
+   e1=nrm(e1); const e2=cross(us,e1),rr=tip-0.3;
+   for(let a=0;a<6;a++){const c=Math.cos(a*Math.PI/3)*rr,q=Math.sin(a*Math.PI/3)*rr;
+     pts.push({id:'ring',p:[ft[0]+e1[0]*c+e2[0]*q,ft[1]+e1[1]*c+e2[1]*q,ft[2]+e1[2]*c+e2[2]*q],r:0.45});}}
+  return {F,med,pts,tip,archU:P(2.6,h0+0.8,1.0),heelSole:P(-(hb-0.6),h0,0.65),ballSole:P(6.4,h0,1.5)};
+}
+// resample a closed polygon evenly along its length and relax it, so the outline is one soft
+// curve with no facet where the hull steps from one landmark to the next
+function smoothLoop(pl,n,it){
+  const m=pl.length,seg=[];let tot=0;
+  for(let i=0;i<m;i++){const a=pl[i],b=pl[(i+1)%m],l=Math.hypot(b.x-a.x,b.y-a.y);seg.push(l);tot+=l;}
+  if(tot<1e-6) return pl;
+  let out=[],i=0,acc=0;
+  for(let k=0;k<n;k++){const d=tot*k/n;while(i<m-1&&acc+seg[i]<d){acc+=seg[i];i++;}
+    const a=pl[i],b=pl[(i+1)%m],t=seg[i]?(d-acc)/seg[i]:0;out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});}
+  for(let r=0;r<it;r++)out=out.map((p,j)=>{const a=out[(j+n-1)%n],b=out[(j+1)%n];return {x:(a.x+2*p.x+b.x)/4,y:(a.y+2*p.y+b.y)/4};});
+  return out;
+}
+// pr(v) -> {x,y} fitted screen point; sc = units to screen. Returns the outline polygon.
+function footOutline(J,s,pr,sc,k){
+  const L=footLandmarks(J,s,k),S=[];
+  L.pts.forEach(m=>{const c=pr(m.p),r=m.r*sc;for(let a=0;a<16;a++)S.push({x:c.x+r*Math.cos(a*Math.PI/8),y:c.y+r*Math.sin(a*Math.PI/8),id:m.id});});
+  S.sort((a,b)=>a.x-b.x||a.y-b.y);
+  const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x),lo=[],up=[];
+  for(const q of S){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}
+  for(let i=S.length-1;i>=0;i--){const q=S[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}
+  const H=lo.slice(0,-1).concat(up.slice(0,-1));
+  // The inner arch: when the MEDIAL side faces the camera, the sole edge between the heel pad
+  // and the big-toe joint is drawn up to the arch instead of straight across. From the
+  // outside, from above or from the front the edge stays straight (the outer edge is flat).
+  const o=pr([0,0,0]),ex=pr([1,0,0]),ey=pr([0,1,0]),ez=pr([0,0,1]);
+  const rx=[ex.x-o.x,ey.x-o.x,ez.x-o.x],ry=[ex.y-o.y,ey.y-o.y,ez.y-o.y];
+  let tc=cross(rx,ry); const tl=len(tc)||1; tc=[tc[0]/tl,tc[1]/tl,tc[2]/tl];
+  const face=Math.abs(L.med[0]*tc[0]+L.med[1]*tc[1]+L.med[2]*tc[2]);
+  // which side of the foot is toward the viewer: compare the depth order of the two ankle bones
+  const dM=pr(L.pts.find(q=>q.id==='malM').p),dL=pr(L.pts.find(q=>q.id==='malL').p),near=(dM.d!==undefined&&dL.d!==undefined)?(dM.d>=dL.d):true;
+  const m=near?Math.max(0,Math.min(1,(face-0.3)/0.45)):0;
+  if(m>0.02){const hs=pr(L.heelSole),bs=pr(L.ballSole),q=pr(L.archU),tol=0.45*sc,n=H.length;
+    const on=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l2));
+      return Math.hypot(a.x+dx*t-p.x,a.y+dy*t-p.y);};
+    const edgeOf=p=>{let b=-1,bd=tol;for(let i=0;i<n;i++){const d=on(p,H[i],H[(i+1)%n]);if(d<bd){bd=d;b=i;}}return b;};
+    const iA=edgeOf(hs),iB=edgeOf(bs);
+    if(iA>=0&&iB>=0){
+      // the sole runs along the hull from the heel-pad point to the ball point: replace that
+      // stretch (whichever way round is shorter) with a curve lifted to the arch
+      const snap=(p,i)=>{const a=H[i],b=H[(i+1)%n],dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l2));return {x:a.x+dx*t,y:a.y+dy*t};};
+      const hsS=snap(hs,iA),bsS=snap(bs,iB);   // start and end ON the hull, so the curve joins it without a kink
+      const fwd=(iB-iA+n)%n,bwd=(iA-iB+n)%n,go=iA===iB?(Math.hypot(hsS.x-H[iA].x,hsS.y-H[iA].y)<=Math.hypot(bsS.x-H[iA].x,bsS.y-H[iA].y)):fwd<=bwd,from=go?iA:iB,to=go?iB:iA,p0=go?hsS:bsS,p1=go?bsS:hsS;
+      if(Math.min(fwd,bwd)<n/2){const out=[];
+        for(let i=0;i<n;i++){const idx=(to+1+i)%n;out.push(H[idx]);if(idx===from)break;}
+        const mx=(p0.x+p1.x)/2,my=(p0.y+p1.y)/2; let ox=(q.x-mx)*m,oy=(q.y-my)*m;
+        // seen nearly end-on the span is short: keep the arch shallow so it never becomes a notch
+        const dep=Math.hypot(ox,oy),span=Math.hypot(p1.x-p0.x,p1.y-p0.y); if(dep>0.16*span){const k2=0.16*span/(dep||1);ox*=k2;oy*=k2;}
+        [[0,0],[0.12,0.25],[0.28,0.7],[0.5,1],[0.72,0.7],[0.88,0.25],[1,0]].forEach(([t,w])=>out.push({x:p0.x+(p1.x-p0.x)*t+ox*w,y:p0.y+(p1.y-p0.y)*t+oy*w,id:'arch'}));
+        return smoothLoop(out,64,4);}}}
+  return smoothLoop(H,64,4);
+}
+// The hand is one flat mitten continuing the forearm, with the thumb as a bulge on one edge.
+// handFrame returns the wrist, u (wrist -> fingertips), t (toward the THUMB, in the hand's plane)
+// and palm (the way the palm faces). Rebuilt 2026-11-13: the old frame took the thumb from the
+// elbow's bend plane even when the arm was straight, where that plane is noise, so hanging
+// arms read as turned inward (Will, on his phone).
+//  - NEUTRAL (g = 0) comes from where the FOREARM points in the body's own frame: down =
+//    thumb forward (arms hanging, palms to the thighs; the bottom of a row), forward = thumb
+//    up (a handshake), up = thumb back (overhead, the top of a hammer curl or a neutral
+//    press), back = thumb down, out to the side or across the body = forward and a little up.
+//  - Grip (pose gL/gR, degrees about the forearm): 0 neutral, 90 PRONATED. The turn is by
+//    handedness (a right forearm pronates one way, a left the other), never by a guess.
+//    Negative would be supinated, which Will's distal-bicep rule forbids and the audit rejects.
+//  - A hand resting on a surface is laid flat on it, PALM DOWN, so the thumb falls on the
+//    inner side when the fingers point ahead.
+function handFrame(J,s,g,surf){
+  const el=J['el'+s],ha=J['ha'+s],sh=J['sh'+s]; let u=nrm(sub(ha,el));
+  const lat=nrm(sub(J.shR,J.shL)),upb=nrm(sub(J.chest,J.pelvis)),fw=cross(upb,lat);
+  const hs=s==='L'?1:-1;                                   // palm = hs * (u x t)
+  const out=(u,t)=>{const c=cross(u,t);return {ha,u,t,palm:[c[0]*hs,c[1]*hs,c[2]*hs]};};
+  // A hand that would poke through the surface it rests on (the floor, or pose pL/pR = the
+  // height of a bench top) is laid FLAT on it instead: fingers along the surface in the
+  // forearm's compass direction (or the body's facing when the forearm is vertical), palm down.
+  // A forearm lying along the surface (side plank, forearm plank) rests the same way.
+  const S0=surf==null?93:surf, over=ha[1]+u[1]*6.1-S0, lying=Math.abs(ha[1]-S0)<=1.6&&Math.abs(el[1]-S0)<=2.6;
+  if((over>0||lying)&&ha[1]<=S0+1.5){
+    let h=[u[0],0,u[2]]; if(len(h)<0.35) h=[fw[0],0,fw[2]]; if(len(h)<1e-3) h=[0,0,1]; h=nrm(h);
+    const dy=Math.max(0,Math.min(1,(S0-ha[1])/6.1)),k=Math.sqrt(1-dy*dy);
+    u=[h[0]*k,dy,h[2]*k];
+    const c=cross(h,[0,1,0]);                              // palm down: t = -hs * (u x down), kept level
+    return out(u,nrm([-hs*c[0],0,-hs*c[2]]));
+  }
+  const perp=(v)=>{const d=v[0]*u[0]+v[1]*u[1]+v[2]*u[2];return [v[0]-u[0]*d,v[1]-u[1]*d,v[2]-u[2]*d];};
+  // neutral reference from the FOREARM'S DIRECTION IN THE BODY'S FRAME (see above). It does not
+  // use the elbow's bend plane: blending the two cancelled where they disagreed and the thumb
+  // flipped in one frame (lateral reaches).
+  const cu=cross(lat,u),pf=perp(fw),pu=perp(upb);
+  let w=[cu[0]+0.3*pf[0]+0.3*pu[0],cu[1]+0.3*pf[1]+0.3*pu[1],cu[2]+0.3*pf[2]+0.3*pu[2]];
+  if(len(w)<1e-3) w=perp([0,-1,0]); if(len(w)<1e-3) w=perp([1,0,0]); w=nrm(w);
+  return out(u,g?rotAxis(w,u,hs*R(g)):w);
+}
+// opt.fist: the hand is closed round an implement (a short rounded fist that the handle passes
+// through at the grip point) instead of the open mitten; opt.surf: see handFrame.
+function handPoly(J,s,g,opt){
+  const {ha,u,t}=handFrame(J,s,g||0,opt&&opt.surf);
+  const H=(a,b)=>[ha[0]+u[0]*a+t[0]*b,ha[1]+u[1]*a+t[1]*b,ha[2]+u[2]*a+t[2]*b];
+  if(opt&&opt.fist) return [H(-0.2,-1.2),H(1.4,-1.9),H(3.5,-1.9),H(4.6,-0.8),H(4.6,0.7),H(3.7,1.8),H(2.4,2.5),H(1.1,1.9),H(-0.2,1.2)];
+  return [H(-0.2,-1.0),H(1.3,-1.55),H(3.5,-1.6),H(5.3,-1.1),H(6.1,0),H(5.5,0.95),H(4.1,1.5),H(3.2,1.75),H(2.9,3.0),H(1.9,2.9),H(0.9,1.5),H(-0.2,1.0)];
+}
+// where an implement sits in the fist: 3.4 beyond the wrist along the forearm. Props may name
+// 'gpL'/'gpR' (alone or as {j:'gpL',o:[..]}) to hang from the grip instead of the wrist joint.
+function gripPt(J,k){
+  const s=k.slice(-1),el=J['el'+s],ha=J['ha'+s],u=nrm(sub(ha,el));
+  return [ha[0]+u[0]*3.4,ha[1]+u[1]*3.4,ha[2]+u[2]*3.4];
+}
+
+// the torso's two side edges with the skin's waist and chest factors applied about the
+// trunk's centre line (3D, before projection). n samples; works with or without bend.
+function torsoSkin(J,bend,n){
+  const T=SKIN.torso,e=torsoEdges(J,bend||0,n),at=Math.max(0.05,Math.min(0.95,T.at));
+  const k=t=>t<at?1+(T.waist-1)*smooth(t/at):T.waist+(T.chest-T.waist)*smooth((t-at)/(1-at));
+  const Lp=[],Rp=[];
+  for(let i=0;i<=n;i++){const l=e.L[i],r=e.R[i],c=add(l,sub(r,l),0.5),h=sub(r,c),f=k(i/n);
+    Lp.push(add(c,h,-f));Rp.push(add(c,h,f));}
+  return {L:Lp,R:Rp};
+}
+
+// circular-path helper: knees or hips orbit while feet stay pinned
+function orbitPose(base,o,ph){
+  const p=Object.assign({},base);
+  if(o.swivel){ // knees orbit around a fixed hip-to-ankle axis; feet never move
+    p.swL=o.amp*Math.sin(ph); p.swR=o.amp*Math.sin(ph);
+    return p;
+  }
+  if(o.leg){ // standing hip CAR: one leg (o.leg 'L'/'R') circles from the hip with the knee
+    // bent ~90 deg (the shin follows the thigh); the other leg keeps base's planted target.
+    // o.fB/o.fA: thigh flex centre/amplitude (90 = forward horizontal, <0 = behind);
+    // o.aB/o.aA: abduction centre/amplitude. Phase 0 = forward, then out, then behind.
+    // o.alt (2026-10-15): the legs ALTERNATE within one cycle. The first half is o.leg's
+    // orbit, the second half the other leg's mirror image, and each orbit starts and ends
+    // with the foot planted on base's own target for that leg (both feet must carry ikF
+    // targets). The thigh runs through four stations -- down (planted, fitted so the
+    // straight leg's foot lands exactly on the target) -> behind -> out -> front -> down,
+    // i.e. back-to-front; the halfway mirror reverses it -- joined by a periodic
+    // Catmull-Rom spline so the foot lifts and lands smoothly. o.fr/o.out/o.bk override
+    // the station angles [thighFlex, abd, shinFlex, shinAbd] for the right leg.
+    if(o.alt){
+      const half=((ph/(2*Math.PI))%1+1)%1, leg=half<0.5?o.leg:(o.leg==='L'?'R':'L');
+      const th=(half<0.5?half:half-0.5)*4*Math.PI, sg=leg==='L'?-1:1;
+      const J=solve(base), hp=J['hp'+leg], tg=base['ikF'+leg];
+      const d=rotY(nrm(sub(tg,hp)),-base.yaw);                 // straight-leg direction, body frame
+      const fd=Math.atan2(d[2],d[1])*180/Math.PI, ad=Math.asin(Math.max(-1,Math.min(1,d[0])))*180/Math.PI;
+      const D=[fd,ad,fd,ad];
+      const M=(st)=>[st[0],sg*st[1],st[2],sg*st[3]];
+      const S=[D, M(o.bk||[-25,28,-115,10]), M(o.out||[30,56,-60,20]), M(o.fr||[85,6,-5,2])];
+      const seg=th/(Math.PI/2), i=Math.floor(seg)%4, t=seg-Math.floor(seg);
+      const P0=S[(i+3)%4],P1=S[i],P2=S[(i+1)%4],P3=S[(i+2)%4];
+      const cr=(a,b,c,e)=>0.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-e)*t*t+(-a+3*b-3*c+e)*t*t*t);
+      p['l'+leg]=[0,1,2,3].map(k=>cr(P0[k],P1[k],P2[k],P3[k]));
+      delete p['ikF'+leg];
+      return p;
+    }
+    const f1=o.fB+o.fA*Math.cos(ph), a1=o.aB+o.aA*Math.sin(ph), sg=o.leg==='L'?-1:1;
+    p['l'+o.leg]=[f1,sg*a1,f1-(o.knee==null?90:o.knee),sg*a1*0.35];
+    delete p['ikF'+o.leg];
+    return p;
+  }
+  if(o.hips){ // pelvis traces a circle, feet stay planted via leg IK
+    p.p=[base.p[0]+o.rx*Math.sin(ph), base.p[1]+(o.ry||0)*Math.cos(ph)*0.3, base.p[2]+o.rz*Math.cos(ph)];
+    return p;
+  }
+  const drop=(o.floorY-base.p[1])/L.th;
+  const mk=side=>{const f1=o.fB+o.fA*Math.sin(ph), a1=side*6+o.aA*Math.cos(ph);
+    let c2=Math.max(-1,Math.min(1,drop-Math.cos(R(f1))));
+    return [f1,a1,-Math.acos(c2)*180/Math.PI,-a1];};
+  p.lL=mk(-1); p.lR=mk(1);
+  return p;
+}
+
+// ---------- projection / drawing ----------
+const lerp=(a,b,t)=>a+(b-a)*t;
+const lerpA=(a,b,t)=>(a&&b)?a.map((v,i)=>lerp(v,b[i],t)):(a||b||null);
+function lerpT(A,B,t){if(!A&&!B)return null; if(A&&A.k)return A;
+  if(A&&B&&A.w&&B.w)return {w:lerpA(A.w,B.w,t)}; return A||B;}
+// A leg may be described by joint angles (lL/lR) or by a world foot target (ikFL/ikFR).
+// If the two keyframes disagree, convert the angle-based one to a foot target so the
+// pair can be interpolated in the same space.
+function normalise(m){
+  if(m._norm) return; m._norm=true;
+  const KF=[m.A,m.B,m.M].filter(Boolean);
+  // a foot listed in m.pin is nailed to wherever it starts, in every keyframe
+  if(m.pin){
+    const j=solve(m.A);
+    if(m.pin.indexOf('L')>=0){const t=j.ftL.slice(); KF.forEach(k=>k.ikFL=t.slice());}
+    if(m.pin.indexOf('R')>=0){const t=j.ftR.slice(); KF.forEach(k=>k.ikFR=t.slice());}
+  }
+  // if keyframes mix leg representations, convert the odd ones out to foot targets
+  [['ikFL','ftL'],['ikFR','ftR']].forEach(([ikf,joint])=>{
+    const n=KF.filter(k=>k[ikf]).length;
+    if(n>0&&n<KF.length) KF.forEach(k=>{ if(!k[ikf]) k[ikf]=solve(k)[joint].slice(); });
+  });
+  [['lL','ikFL','ftL'],['lR','ikFR','ftR']].forEach(([ang,ikf,joint])=>{
+    const a=m.A[ikf], b=m.B[ikf];
+    if(!!a===!!b) return;
+    [m.A,m.B].forEach(p=>{ if(!p[ikf]) p[ikf]=solve(p)[joint].slice(); });
+  });
+}
+function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B.swR||0,t),
+  swAL:lerp(A.swAL||0,B.swAL||0,t),swAR:lerp(A.swAR||0,B.swAR||0,t),sl:lerp(A.sl||0,B.sl||0,t),st:lerp(A.st||0,B.st||0,t),
+  p:lerpA(A.p,B.p,t),yaw:lerp(A.yaw,B.yaw,t),roll:lerp(A.roll||0,B.roll||0,t),tw:lerp(A.tw,B.tw,t),bend:lerp(A.bend||0,B.bend||0,t),
+  s:lerpA(A.s,B.s,t),hf:lerp(A.hf||0,B.hf||0,t),aL:lerpA(A.aL,B.aL,t),aR:lerpA(A.aR,B.aR,t),
+  ikL:lerpT(A.ikL,B.ikL,t),ikR:lerpT(A.ikR,B.ikR,t)};
+  if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
+  if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
+  // authored foot contact (eng2.js footAt): blend when either key carries it
+  ['fpL','fpR','fyL','fyR','gL','gR','pL','pR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
+  if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
+  if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
+  return o;}
+const easeQ=t=>t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function poseAt(m,ph){
+  normalise(m);
+  if(m.orb) return orbitPose(m.A,m.orb,ph*2*Math.PI);
+  // m.split (2026-11-12) = the fraction of the cycle spent going A -> B (default one half).
+  // Standing posture reset uses 0.4: a 4 s inhale out to B, a 6 s exhale back to A.
+  const sp=m.split||0.5, tri=ph<sp?ph/sp:(1-ph)/(1-sp);
+  // A-M-B is ONE eased sweep (2026-11-12): the ease runs over the whole half cycle and M is
+  // passed through at speed. Easing each segment separately stopped the figure dead at M.
+  if(m.M){const e=easeQ(tri); return e<0.5 ? blend(m.A,m.M,e*2) : blend(m.M,m.B,(e-0.5)*2);}
+  return blend(m.A,m.B,easeQ(tri));}
+// Camera: yaw CAM (per movement, m.cam, default 40) and pitch PITCH (per movement, m.pitch,
+// default 13 -- the fixed value until 2026-11-12). A higher pitch looks down on the figure,
+// which is the only way to open up anything that happens in the floor plane (prone Y-T-W).
+let CAM=40,PITCH=13;
+function setCam(m){CAM=m.cam||40;PITCH=m.pitch==null?13:m.pitch;}
+// m.tview (2026-11-12) = a second camera {cam,pitch} used only for the GET SET UP preview of
+// that movement (Prone Y-T-W: side-on while you get down, so face-down reads; the raised
+// camera once the work starts, so the letters read). fitOf / figMarkup / placeGround take
+// the view as an optional last argument; without it they use the movement's own camera.
+function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
+  const x=v[0]*c+v[2]*s, z=-v[0]*s+v[2]*c;
+  return {x,y:v[1]*Math.cos(R(PITCH))+z*Math.sin(R(PITCH)),d:z};}
+const LIMBS=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],
+             ['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
+const SEGS_SKIN=['upper','fore','upper','fore','thigh','shin','thigh','shin'];   // skin profile per limb (eng2.js SKIN)
+const INK='#6d4f1c',LIMB_L='#c2a473',TORSO='#7d5a1e',BELLY='#7d5a1e',PROP='#b9a98b',PROP0=PROP;
+// A prop point may be a world [x,y,z], a joint name ('haL'), a joint plus a
+// body-frame offset ({j:'haR',o:[x,y,z]} — o is rotated by the pose yaw), or the
+// midpoint of two joints plus an offset ({m:['haL','haR'],o:[x,y,z]}). Joint-referenced
+// points are re-resolved every frame, so an implement authored against the hands can
+// never drift out of them. Shapes: {l:[P,P]} line, {c:[P,r]} circle (+f:1 filled),
+// {db:[P,P,r]} dumbbell (handle line + filled end plates).
+function resPt(P,j,yaw,roll){
+  if(Array.isArray(P))return P;
+  if(typeof P==='string')return j[P]||gripPt(j,P);
+  let b;
+  if(P.m){const a=j[P.m[0]]||gripPt(j,P.m[0]),c=j[P.m[1]]||gripPt(j,P.m[1]);b=[(a[0]+c[0])/2,(a[1]+c[1])/2,(a[2]+c[2])/2];}
+  else b=j[P.j]||gripPt(j,P.j);
+  const o=P.o?rotY(roll?rotZb(P.o,roll):P.o,yaw||0):[0,0,0];
+  return [b[0]+o[0],b[1]+o[1],b[2]+o[2]];
+}
+function propShapes(m,j,pose){
+  if(!m.prop)return [];
+  const att=P=>!Array.isArray(P);   // any joint-referenced point = a held/attached implement
+  return m.prop.map(p=>{
+    if(p.q)return {t:'q',pts:p.q.map(P=>resPt(P,j,pose.yaw,pose.roll)),att:false};
+    if(p.l)return {t:'l',a:resPt(p.l[0],j,pose.yaw,pose.roll),b:resPt(p.l[1],j,pose.yaw,pose.roll),w:p.w||1,att:att(p.l[0])||att(p.l[1])};
+    if(p.db)return {t:'db',a:resPt(p.db[0],j,pose.yaw,pose.roll),b:resPt(p.db[1],j,pose.yaw,pose.roll),r:p.db[2],att:att(p.db[0])||att(p.db[1])};
+    return {t:'c',c:resPt(p.c[0],j,pose.yaw,pose.roll),r:p.c[1],f:p.f,att:att(p.c[0])};
+  });
+}
+// PROPFIT: include prop extent in the camera fit — needed when implements/furniture
+// define the frame (dumbbells, a bench, a wall). Off for the legacy apps so their
+// framing never shifts.
+const PROPFIT=true;
+// box (2026-11-13) = the real shape of the stage, {w,h} in viewBox units. With it the figure is
+// fitted to that shape with margins taken from what is actually drawn (head radius, limb
+// width, hand and foot length), so a wide, low movement fills the width instead of sitting in
+// a square with 8 units of air all round. Without it: the legacy square fit, unchanged.
+const FIT_R={head:6.4,haL:6.3,haR:6.3,toeL:4.6,toeR:4.6,ftL:3,ftR:3};
+function fitOf(m,v,box){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
+  for(let i=0;i<=24;i++){const pose=poseAt(m,i/24),jn=solve(pose);
+    const pts=[];
+    for(const k in jn)pts.push([jn[k],box?(FIT_R[k]||2.4):0]);
+    if(PROPFIT)propShapes(m,jn,pose).forEach(s=>{
+      if(s.t==='q')s.pts.forEach(v=>pts.push([v,0]));
+      else if(s.t==='c')pts.push([s.c,s.r]);
+      else if(s.t==='db'){pts.push([s.a,s.r]);pts.push([s.b,s.r]);}
+      else{pts.push([s.a,0]);pts.push([s.b,0]);}
+    });
+    for(const [v,r] of pts){const q=project(v);
+      a=Math.min(a,q.x-r);b=Math.max(b,q.x+r);c=Math.min(c,q.y-r);d=Math.max(d,q.y+r);}}
+  if(box){a-=1.5;b+=1.5;c-=1.5;d+=3;const sc=Math.min(box.w/(b-a),box.h/(d-c),2.1);
+    return {sc,ox:(box.w-(b-a)*sc)/2-a*sc,oy:(box.h-(d-c)*sc)/2-c*sc};}
+  a-=8;b+=8;c-=9;d+=8;
+  const sc=Math.min(100/(b-a),100/(d-c));
+  return {sc,ox:(100-(b-a)*sc)/2-a*sc,oy:(100-(d-c)*sc)/2-c*sc};}
+// Pure renderer (no DOM) so QA can assert on the real paint order. World-fixed props
+// (bench, wall, floor lines) paint first, behind everything — legacy behavior. A held
+// (joint-attached) implement instead joins the painter's sort with its own depth,
+// floored just in front of the torso quad: it sits in a hand on the near side of the
+// body, so it may never vanish behind the torso (qa/daily.js hard invariant).
+// st (2026-11-13, direction A) = draw in INK instead of the three flat colours: trunk, head and
+// RIGHT limbs solid ink (CSS --fi) with a hairline of paper (--fp) round each right limb so it
+// separates from the trunk; LEFT limb segments engraved hatching, one pattern per segment,
+// anchored to the limb and set 22 deg off square to the bone, with an ink outline; left hands
+// and feet a solid mid tone (--ft). st.hatch false (the figure is too small on screen for a
+// 1.5-unit hatch) = the whole left side in the tone. st.id prefixes the pattern ids. Left and
+// right keep their identity whatever the depth. Without st: the legacy colours, byte for byte.
+function figMarkup(m,fit,ph,v,st){
+  setCam(v||m);
+  const pose=poseAt(m,ph);
+  const j=solve(pose), P={};
+  for(const k in j){const q=project(j[k]);P[k]={x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};}
+  // props rebuild every frame: joint-referenced points track the moving figure
+  const S=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
+  const pw=(1.6*fit.sc).toFixed(2),PROP=st?'var(--fo)':PROP0;
+  const shapes=propShapes(m,j,pose);
+  const mkProp=s=>{
+    // {q:[P,P,P,P]} = a pale filled patch on the floor (a mat), under everything
+    if(s.t==='q')return `<polygon points="${s.pts.map(v=>{const q=S(v);return q.x.toFixed(1)+','+q.y.toFixed(1);}).join(' ')}" fill="${PROP}" fill-opacity="0.3"/>`;
+    if(s.t==='l'){const a=S(s.a),b=S(s.b);
+      return `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${PROP}" stroke-width="${(1.6*s.w*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;}
+    if(s.t==='db'){const a=S(s.a),b=S(s.b),r=(s.r*fit.sc).toFixed(1);
+      return `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="${PROP}" stroke-width="${pw}" stroke-linecap="round"/>`
+        +`<circle cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="${r}" fill="${PROP}"/>`
+        +`<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${r}" fill="${PROP}"/>`;}
+    const c=S(s.c);
+    return `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${(s.r*fit.sc).toFixed(1)}" fill="${s.f?PROP:'none'}" stroke="${PROP}" stroke-width="${pw}"/>`;
+  };
+  const propMk=shapes.filter(s=>!s.att).map(mkProp).join('');
+  const side=n=>n.endsWith('L')?LIMB_L:INK;
+  const parts=LIMBS.map(([x,y],i)=>({t:'l',a:P[x],b:P[y],d:(P[x].d+P[y].d)/2,col:side(y),w:1,seg:SEGS_SKIN[i]}));
+  if(SKIN){
+    // far-limb narrowing, then feet and hands as projected 3D shapes (eng2.js)
+    parts.forEach((p,i)=>{p.k=farK(p.d,parts[i<4?(i+2)%4:4+(i-2)%4].d);});
+    // a hand closes into a fist when the movement hangs an implement from its grip point
+    if(!m._held){const ps=JSON.stringify(m.prop||'');m._held={L:ps.indexOf('gpL')>=0,R:ps.indexOf('gpR')>=0};}
+    const held=m._held;
+    [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
+      // the foot paints OVER the end of its own shin, which it encloses
+      parts.push({t:'pg',pts:footOutline(j,sd,v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[il].k),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.35});
+      parts.push({t:'pg',pts:handPoly(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]}).map(S),col,d:P['ha'+sd].d+0.01,w:SKIN.tip*0.75*parts[ia].k});
+    });
+  }else{
+  parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});
+  parts.push({t:'l',a:P.ftR,b:P.toeR,d:(P.ftR.d+P.toeR.d)/2,col:INK,w:0.8});
+  }
+  // torso: the legacy quad, or -- when the pose carries a spine bend -- a path whose
+  // side edges bow with the curvature (torsoEdges in eng2.js; corners unchanged)
+  if(SKIN&&SKIN.torso){const e=torsoSkin(j,pose.bend,8),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
+    parts.push({t:'qp',sw:SKIN.torso.stroke,pts:[...e.L.slice().reverse().map(Q),...e.R.map(Q)],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});}
+  else if(pose.bend){const e=torsoEdges(j,pose.bend,6),Q=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
+    parts.push({t:'qp',pts:[...e.L.slice().reverse().map(Q),...e.R.map(Q)],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});}
+  else parts.push({t:'q',pts:[P.shL,P.shR,P.hpR,P.hpL],d:(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4});
+  if(m.belly){
+    const u=nrm(sub(j.chest,j.pelvis));
+    const lat=rotY([1,0,0],pose.yaw);
+    const f=nrm(cross(u,lat));                       // trunk's true front, follows pitch
+    const mid=[(j.chest[0]*0.45+j.pelvis[0]*0.55),(j.chest[1]*0.45+j.pelvis[1]*0.55),(j.chest[2]*0.45+j.pelvis[2]*0.55)];
+    const cq=project(mid), fq=project(add(mid,f,4));
+    const cs={x:cq.x*fit.sc+fit.ox,y:cq.y*fit.sc+fit.oy};
+    let fx=fq.x*fit.sc+fit.ox-cs.x, fy=fq.y*fit.sc+fit.oy-cs.y;
+    const flen=Math.hypot(fx,fy), q=flen/(4*fit.sc);
+    const bd=project(add(mid,f,4.8)).d;
+    // facing the viewer -> full circle; in profile -> half-disc with its flat edge on the trunk;
+    // in between, the back half flattens smoothly so the shape never pops
+    const k=Math.max(0,Math.min(1,(0.82-q)/0.32));
+    if(flen<0.5){fx=0;fy=1;}else{fx/=flen;fy/=flen;}
+    const px=-fy, py=fx, r=7.9*fit.sc;
+    const pts=[];
+    for(let a=-90;a<=90;a+=15){const ca=Math.cos(a*Math.PI/180),sa=Math.sin(a*Math.PI/180);
+      pts.push((cs.x+r*(sa*px+ca*fx)).toFixed(2)+','+(cs.y+r*(sa*py+ca*fy)).toFixed(2));}
+    for(let a=105;a<255;a+=15){const ca=Math.cos(a*Math.PI/180)*k,sa=Math.sin(a*Math.PI/180);
+      pts.push((cs.x+r*(sa*px+ca*fx)).toFixed(2)+','+(cs.y+r*(sa*py+ca*fy)).toFixed(2));}
+    parts.push({t:'bp',pts,d:bd});
+  }
+  // neck line ends at the head circle's rim, so it can never lie across the face
+  {
+    const dx=P.head.x-P.neck.x, dy=P.head.y-P.neck.y, dl=Math.hypot(dx,dy)||1;
+    const r=L.hr*fit.sc*0.8;
+    parts.push({t:'l',a:P.neck,b:{x:P.head.x-dx/dl*r,y:P.head.y-dy/dl*r},d:(P.neck.d+P.head.d)/2,col:INK,w:0.82});
+  }
+  parts.push({t:'h',c:P.head,d:P.head.d+0.02});
+  // held props: keep their own depth when already nearer, else floor to just in
+  // front of the torso quad — nearer limbs still paint over them
+  const qd=(P.shL.d+P.shR.d+P.hpL.d+P.hpR.d)/4;
+  shapes.filter(s=>s.att).forEach(s=>{
+    const own=s.t==='c'?project(s.c).d:Math.max(project(s.a).d,project(s.b).d);
+    parts.push({t:'p',mk:mkProp(s),d:Math.max(own,qd+0.06)});
+  });
+  parts.sort((x,y)=>x.d-y.d);
+  if(st){
+    const FI='var(--fi)',FP='var(--fp)',FT='var(--ft)',HX=[],hx=st.hatch&&fit.sc>=0.8;   // a limb under ~2.5 units wide holds too few lines
+    const hatch=(a,b)=>{const id=st.id+'-'+HX.length,ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+112;
+      HX.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="1.5" height="1.5" patternTransform="translate(${a.x.toFixed(2)} ${a.y.toFixed(2)}) rotate(${ang.toFixed(1)})"><rect width="1.5" height="1.5" fill="${FP}"/><rect width="1.5" height="0.62" fill="${FI}"/></pattern>`);return 'url(#'+id+')';};
+    const body=parts.map(p=>{
+      if(p.t==='p')return p.mk;
+      const left=p.col===LIMB_L;
+      if(p.t==='l'&&SKIN&&p.seg){const d=limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin');
+        if(!left)return `<path d="${d}" fill="${FI}" stroke="${FP}" stroke-width="0.42"/>`;
+        return hx?`<path d="${d}" fill="${hatch(p.a,p.b)}" stroke="${FI}" stroke-width="0.5"/>`:`<path d="${d}" fill="${FT}"/>`;}
+      if(p.t==='pg'){const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
+        let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);
+        return left?`<path d="${d}Z" fill="${FT}" stroke="${FI}" stroke-width="0.4" stroke-linejoin="round"/>`
+                   :`<path d="${d}Z" fill="${FI}" stroke="${FI}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;}
+      if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${left?FT:FI}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
+      if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${FI}" stroke="${FI}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+      if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${FI}" stroke="${FI}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+      if(p.t==='bp')return `<polygon points="${p.pts.join(' ')}" fill="${FI}"/>`;
+      if(p.t==='bc')return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${p.r.toFixed(2)}" fill="${FI}"/>`;
+      return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${FI}"/>`;}).join('');
+    return (HX.length?'<defs>'+HX.join('')+'</defs>':'')+propMk+body;
+  }
+  return propMk+parts.map(p=>{
+    if(p.t==='p')return p.mk;
+    if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin')}" fill="${p.col}"/>`;
+    if(p.t==='pg'){   // feet and hands: a smooth closed curve through the edge midpoints, each vertex a control point
+      const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
+      let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);
+      return `<path d="${d}Z" fill="${p.col}" stroke="${p.col}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;}
+    if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${p.col}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
+    if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${TORSO}" stroke="${TORSO}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+    if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${TORSO}" stroke="${TORSO}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+    if(p.t==='bp')return `<polygon points="${p.pts.join(' ')}" fill="${BELLY}"/>`;
+    if(p.t==='bc')return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${p.r.toFixed(2)}" fill="${BELLY}"/>`;
+    return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${INK}"/>`;}).join('');
+}
+
+// ---- launcher (index.html). Runs after d_daily.js + eng2.js + the pure slice of app_tpl.js,
+// so the idle figure is the real engine. Pure helpers first (qa/home.js evals everything above
+// the DOM marker); DOM wiring after it. ----
+const TAO=[["Let movement go on, and the condition of rest will gradually arise.", 15], ["Gravity is the root of lightness; stillness, the ruler of movement.", 26], ["The soft overcomes the hard; and the weak the strong.", 36], ["The highest excellence is like (that of) water.", 8], ["The partial becomes complete; the crooked, straight; the empty, full; the worn out, new.", 22], ["He who stands on his tiptoes does not stand firm; he who stretches his legs does not walk (easily).", 24], ["He who overcomes others is strong; he who overcomes himself is mighty.", 33], ["Purity and stillness give the correct law to all under heaven.", 45], ["the journey of a thousand li commenced with a single step.", 64], ["Man at his birth is supple and weak; at his death, firm and strong.", 76], ["Who can (make) the muddy water (clear)? Let it be still, and it will gradually become clear.", 15]];
+const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+// one line a day, the same all day, cycling through the list (LOCAL calendar day)
+const taoFor=(d,list)=>list.length?list[Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)%list.length]:null;
+const doneOn=(G,k)=>!!(G&&Array.isArray(G[k])&&G[k].length);
+// Monday-first week containing `now`: [{key,date,letter,done,today}]
+function weekOf(G,now){const dow=(now.getDay()+6)%7,out=[];
+  for(let i=0;i<7;i++){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow+i),k=dayKey(d);
+    out.push({key:k,date:d.getDate(),letter:'MTWTFSS'[i],done:doneOn(G,k),today:i===dow});}
+  return out;}
+// a month as a Monday-first grid: `lead` blank cells, then one cell per day
+function monthOf(G,y,mo,now){const n=new Date(y,mo+1,0).getDate(),lead=(new Date(y,mo,1).getDay()+6)%7,tk=dayKey(now),days=[];
+  for(let i=1;i<=n;i++){const k=dayKey(new Date(y,mo,i));days.push({key:k,date:i,done:doneOn(G,k),today:k===tk});}
+  return {lead,days,name:['January','February','March','April','May','June','July','August','September','October','November','December'][mo]+' '+y};}
+// which session to offer first: the first of the two daily timers not yet finished today
+const nextUp=(G,now)=>{const a=(G&&G[dayKey(now)])||[];return ['morning-flow','daily-13'].find(id=>a.indexOf(id)<0)||null;};
+// ---- DOM ----
+const $=id=>document.getElementById(id);
+const logRead=()=>{try{const o=JSON.parse(localStorage.getItem('mvLog')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}};
+const dayCell=c=>'<div class="day'+(c.done?' done':'')+(c.today?' today':'')+'">'+(c.done||!c.letter?c.date:c.letter)+'</div>';
+function render(){const now=new Date(),G=logRead(),h=now.getHours();
+  $('datebar').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+' · '+now.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  const t=taoFor(now,TAO);if(t){$('tao').textContent='“'+t[0]+'”';$('taosrc').textContent='Tao Te Ching '+t[1]+' · Legge, 1891';}
+  $('week').innerHTML=weekOf(G,now).map(dayCell).join('');
+  const up=nextUp(G,now),today=G[dayKey(now)]||[];
+  ['morning-flow','daily-13','strength','hip-activation'].forEach(id=>{const b=$('go-'+id);if(!b)return;b.classList.toggle('go',id===up);b.classList.toggle('did',today.indexOf(id)>=0);});
+  let mh='';for(let i=0;i<3;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1),M=monthOf(G,d.getFullYear(),d.getMonth(),now);
+    if(i&&!M.days.some(c=>c.done))continue;
+    mh+='<div class="caps tiny mute">'+M.name+'</div><div class="grid">'+'MTWTFSS'.split('').map(c=>'<div class="hd">'+c+'</div>').join('')
+      +'<div></div>'.repeat(M.lead)+M.days.map(dayCell).join('')+'</div>';}
+  $('months').innerHTML=mh;}
+render();
+$('openSheet').onclick=()=>{$('app').classList.add('show-sheet');window.scrollTo(0,0);};
+$('closeSheet').onclick=()=>$('app').classList.remove('show-sheet');
+// the idle figure: the standing breath loop, in ink, fitted to the shape of its stage
+const IDLE=MOVES.find(m=>m.n==='Standing posture reset')||MOVES[0];
+const FIGST={id:'hx',hatch:true};let BOX={w:100,h:100},fit=null;
+function measure(){try{const s=$('stage'),w=s.clientWidth,h=s.clientHeight;if(!(w>0&&h>0))return;
+  const H=Math.max(30,Math.min(240,Math.round(100*h/w)));BOX={w:100,h:H};$('fig').setAttribute('viewBox','0 0 100 '+H);
+  FIGST.hatch=w/100>=2.3;fit=fitOf(IDLE,null,BOX);
+  setCam(IDLE);const j=solve(poseAt(IDLE,0)),g=project([(j.ftL[0]+j.ftR[0])/2,93,(j.ftL[2]+j.ftR[2])/2]),sh=$('shadow');
+  const gx=g.x*fit.sc+fit.ox,gy=(g.y*fit.sc+fit.oy+1.7*fit.sc).toFixed(2),gw=Math.min(46,30*fit.sc);
+  sh.setAttribute('x1',(gx-gw).toFixed(2));sh.setAttribute('x2',(gx+gw).toFixed(2));sh.setAttribute('y1',gy);sh.setAttribute('y2',gy);}catch(e){}}
+measure();if(!fit)fit=fitOf(IDLE,null,BOX);
+if(window.addEventListener)window.addEventListener('resize',measure);
+let t0=performance.now(),last=0;
+(function loop(now){if(now-last>40){last=now;try{$('layer').innerHTML=figMarkup(IDLE,fit,((now-t0)/1000%IDLE.cyc)/IDLE.cyc,null,FIGST);}catch(e){}}
+  requestAnimationFrame(loop);})(performance.now());
+// auto-update: same launch/foreground freshness swap as the timer apps; also re-read the log
 async function freshCheck(){try{
+  if(typeof BUILDV==='undefined')return;
   const r=await fetch(location.href,{cache:'no-store'});
   const m=(await r.text()).match(/BUILDV='([0-9a-f]+)'/);
-  if(!m||!BUILDV||m[1]===BUILDV)return;
+  if(!m||m[1]===BUILDV)return;
   const n=Date.now(),l=+(sessionStorage.getItem('bvr')||0);
   if(n-l<15000)return;
   sessionStorage.setItem('bvr',String(n));
   try{await fetch(location.href,{cache:'reload'});}catch(e){}
   location.reload();
 }catch(e){}}
-addEventListener('pageshow',freshCheck);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')freshCheck();});
+if(window.addEventListener){
+  window.addEventListener('pageshow',()=>{render();freshCheck();});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){render();freshCheck();}});
+}
 </script>
 </body>
 </html>

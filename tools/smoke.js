@@ -51,7 +51,7 @@ function run(app){
   const layer=els['layer'];
   const drawn=layer&&layer._html&&layer._html.includes('<line')&&layer._html.includes('<circle');
   const feet=(layer._html.match(/<line/g)||[]).length;
-  const ground=els['shadow']&&els['shadow'].attrs.rx==='40';
+  const ground=els['shadow']&&els['shadow'].attrs.y1!=null;
   console.log(`${app.padEnd(20)} top-level ok | figure drawn: ${!!drawn} (${feet} lines) | ground placed: ${!!ground}`);
   if(!drawn||!ground) process.exitCode=1;
 }

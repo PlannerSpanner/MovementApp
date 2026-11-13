@@ -40,9 +40,9 @@ const {serve}=require('./serve');
   // manual navigation never lands in a gap
   await page.click('#bNext');
   check('next skips gaps', /MOVEMENT 6/.test(await page.textContent('#mNum')));
-  await page.click('#bPrev');
+  await page.$eval('#bPrev',e=>e.click());   // Prev lives in the form sheet now
   check('prev skips gaps', /MOVEMENT 5/.test(await page.textContent('#mNum')));
-  await page.click('#bPrev');
+  await page.$eval('#bPrev',e=>e.click());   // Prev lives in the form sheet now
   check('prev crosses the gap to MOVEMENT 4', /MOVEMENT 4/.test(await page.textContent('#mNum')));
   await page.click('#bNext');
   check('next crosses the gap to MOVEMENT 5', /MOVEMENT 5/.test(await page.textContent('#mNum')));

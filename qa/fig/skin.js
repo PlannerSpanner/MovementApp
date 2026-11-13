@@ -65,15 +65,20 @@ STAGES.forEach(([n,bg])=>{const T=theme(bg),a=contrast(T.L,bg),b=contrast(T.R,bg
   md.push(`| ${n} ${bg} | ${a.toFixed(1)} | ${b.toFixed(1)} | ${c.toFixed(1)} | ${d.toFixed(1)} |`);
   if(a<3)flag('contrast:'+n,`contrast: left limb on ${n} is ${a.toFixed(2)}:1 (needs 3:1)`);
   if(d<2)flag('legibility:'+n,`legibility: left against right on ${n} is ${d.toFixed(2)}:1 (needs 2:1)`);});
-// the pages as they ship: left limb against the darkest stop of each page's own background
-if(gate){const ROOT=path.join(__dirname,'..','..'),mixw=(c)=>require('./theme').mix(c,'#ffffff',0.55);
-  const PAGES=[['morning-flow.html','#e6f0f5'],['daily-13.html','#ece9f8'],['prenatal-stretch.html','#f1eefa'],['prenatal-movement.html','#fdf0dc'],['strength.html','#e8efe0']];
-  md.push('','## The shipped pages','','| page | left limb | darkest background | left : background | left : right |','|---|---|---|---|---|');
-  PAGES.forEach(([f,bg])=>{const h=fs.readFileSync(path.join(ROOT,f),'utf8'),m=h.match(/const INK='(#[0-9a-f]{6})',LIMB_L='(#[0-9a-f]{6})'/);
-    if(!m){flag('theme:'+f,'theme: cannot read the figure colours of '+f);return;}
-    const a=contrast(m[2],bg),d=contrast(m[2],m[1]);md.push(`| ${f} | ${m[2]} | ${bg} | ${a.toFixed(2)} | ${d.toFixed(2)} |`);
-    if(a<3)flag('theme:'+f,`theme: left limb in ${f} is ${a.toFixed(2)}:1 against ${bg} (needs 3:1)`);
-    if(d<2)flag('themeLR:'+f,`theme: left against right in ${f} is ${d.toFixed(2)}:1 (needs 2:1)`);});}
+// the pages as they ship (direction A, 2026-11-13): ink on paper, light and dark. The left side's
+// small-size tone is a mix of ink into paper (--tk); it must hold 3:1 against the paper and
+// 2:1 against the solid ink of the right side. Read from the page templates themselves.
+if(gate){const ROOT=path.join(__dirname,'..','..'),{mix}=require('./theme');
+  md.push('','## The shipped pages','','| template | scheme | paper | ink | left tone | tone : paper | tone : ink |','|---|---|---|---|---|---|---|');
+  ['app_head.html','wk_head.html','home.html'].forEach(f=>{const fp=path.join(ROOT,'src',f);if(!fs.existsSync(fp)){flag('theme:'+f,'theme: '+f+' is missing');return;}
+    const h=fs.readFileSync(fp,'utf8'),blocks=[['light',(h.match(/:root\{([^}]*)\}/)||[])[1]],['dark',(h.match(/prefers-color-scheme:dark\)\{:root\{([^}]*)\}/)||[])[1]]];
+    blocks.forEach(([sch,css])=>{const v=k=>((css||'').match(new RegExp('--'+k+':([^;]+)'))||[])[1];
+      const paper=v('paper'),ink=v('ink'),tk=parseFloat(v('tk'));
+      if(!paper||!ink||!(tk>0)){flag('theme:'+f+':'+sch,`theme: cannot read --paper/--ink/--tk (${sch}) in ${f}`);return;}
+      const tone=mix(paper,ink,tk/100),a=contrast(tone,paper),d=contrast(tone,ink);
+      md.push(`| ${f} | ${sch} | ${paper} | ${ink} | ${tone} | ${a.toFixed(2)} | ${d.toFixed(2)} |`);
+      if(a<3)flag('theme:'+f+':'+sch,`theme: left tone in ${f} (${sch}) is ${a.toFixed(2)}:1 against the paper (needs 3:1)`);
+      if(d<2)flag('themeLR:'+f+':'+sch,`theme: left tone against the ink in ${f} (${sch}) is ${d.toFixed(2)}:1 (needs 2:1)`);});});}
 md.push('','## Per movement','','| movement | limbs hidden (new) | pairs merged (new) | limbs that read at 28 pt, worst phase: today → profile |','|---|---|---|---|');
 let nM=0,worst=9,worstN='';
 for(const app of IN_SCOPE){const E=load(app,{noSkin:true});

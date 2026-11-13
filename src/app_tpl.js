@@ -64,7 +64,7 @@ function project(v){const c=Math.cos(R(CAM)),s=Math.sin(R(CAM));
 const LIMBS=[['shL','elL'],['elL','haL'],['shR','elR'],['elR','haR'],
              ['hpL','knL'],['knL','ftL'],['hpR','knR'],['knR','ftR']];
 const SEGS_SKIN=['upper','fore','upper','fore','thigh','shin','thigh','shin'];   // skin profile per limb (eng2.js SKIN)
-const INK='#6d4f1c',LIMB_L='#c2a473',TORSO='#7d5a1e',BELLY='#7d5a1e',PROP='#b9a98b';
+const INK='#6d4f1c',LIMB_L='#c2a473',TORSO='#7d5a1e',BELLY='#7d5a1e',PROP='#b9a98b',PROP0=PROP;
 // A prop point may be a world [x,y,z], a joint name ('haL'), a joint plus a
 // body-frame offset ({j:'haR',o:[x,y,z]} — o is rotated by the pose yaw), or the
 // midpoint of two joints plus an offset ({m:['haL','haR'],o:[x,y,z]}). Joint-referenced
@@ -94,10 +94,15 @@ function propShapes(m,j,pose){
 // define the frame (dumbbells, a bench, a wall). Off for the legacy apps so their
 // framing never shifts.
 const PROPFIT=false;
-function fitOf(m,v){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
+// box (2026-11-13) = the real shape of the stage, {w,h} in viewBox units. With it the figure is
+// fitted to that shape with margins taken from what is actually drawn (head radius, limb
+// width, hand and foot length), so a wide, low movement fills the width instead of sitting in
+// a square with 8 units of air all round. Without it: the legacy square fit, unchanged.
+const FIT_R={head:6.4,haL:6.3,haR:6.3,toeL:4.6,toeR:4.6,ftL:3,ftR:3};
+function fitOf(m,v,box){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
   for(let i=0;i<=24;i++){const pose=poseAt(m,i/24),jn=solve(pose);
     const pts=[];
-    for(const k in jn)pts.push([jn[k],0]);
+    for(const k in jn)pts.push([jn[k],box?(FIT_R[k]||2.4):0]);
     if(PROPFIT)propShapes(m,jn,pose).forEach(s=>{
       if(s.t==='q')s.pts.forEach(v=>pts.push([v,0]));
       else if(s.t==='c')pts.push([s.c,s.r]);
@@ -106,6 +111,8 @@ function fitOf(m,v){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
     });
     for(const [v,r] of pts){const q=project(v);
       a=Math.min(a,q.x-r);b=Math.max(b,q.x+r);c=Math.min(c,q.y-r);d=Math.max(d,q.y+r);}}
+  if(box){a-=1.5;b+=1.5;c-=1.5;d+=3;const sc=Math.min(box.w/(b-a),box.h/(d-c),2.1);
+    return {sc,ox:(box.w-(b-a)*sc)/2-a*sc,oy:(box.h-(d-c)*sc)/2-c*sc};}
   a-=8;b+=8;c-=9;d+=8;
   const sc=Math.min(100/(b-a),100/(d-c));
   return {sc,ox:(100-(b-a)*sc)/2-a*sc,oy:(100-(d-c)*sc)/2-c*sc};}
@@ -114,14 +121,21 @@ function fitOf(m,v){setCam(v||m);let a=1e9,b=-1e9,c=1e9,d=-1e9;
 // (joint-attached) implement instead joins the painter's sort with its own depth,
 // floored just in front of the torso quad: it sits in a hand on the near side of the
 // body, so it may never vanish behind the torso (qa/daily.js hard invariant).
-function figMarkup(m,fit,ph,v){
+// st (2026-11-13, direction A) = draw in INK instead of the three flat colours: trunk, head and
+// RIGHT limbs solid ink (CSS --fi) with a hairline of paper (--fp) round each right limb so it
+// separates from the trunk; LEFT limb segments engraved hatching, one pattern per segment,
+// anchored to the limb and set 22 deg off square to the bone, with an ink outline; left hands
+// and feet a solid mid tone (--ft). st.hatch false (the figure is too small on screen for a
+// 1.5-unit hatch) = the whole left side in the tone. st.id prefixes the pattern ids. Left and
+// right keep their identity whatever the depth. Without st: the legacy colours, byte for byte.
+function figMarkup(m,fit,ph,v,st){
   setCam(v||m);
   const pose=poseAt(m,ph);
   const j=solve(pose), P={};
   for(const k in j){const q=project(j[k]);P[k]={x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};}
   // props rebuild every frame: joint-referenced points track the moving figure
   const S=v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy};};
-  const pw=(1.6*fit.sc).toFixed(2);
+  const pw=(1.6*fit.sc).toFixed(2),PROP=st?'var(--fo)':PROP0;
   const shapes=propShapes(m,j,pose);
   const mkProp=s=>{
     // {q:[P,P,P,P]} = a pale filled patch on the floor (a mat), under everything
@@ -197,6 +211,28 @@ function figMarkup(m,fit,ph,v){
     parts.push({t:'p',mk:mkProp(s),d:Math.max(own,qd+0.06)});
   });
   parts.sort((x,y)=>x.d-y.d);
+  if(st){
+    const FI='var(--fi)',FP='var(--fp)',FT='var(--ft)',HX=[],hx=st.hatch&&fit.sc>=0.8;   // a limb under ~2.5 units wide holds too few lines
+    const hatch=(a,b)=>{const id=st.id+'-'+HX.length,ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+112;
+      HX.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="1.5" height="1.5" patternTransform="translate(${a.x.toFixed(2)} ${a.y.toFixed(2)}) rotate(${ang.toFixed(1)})"><rect width="1.5" height="1.5" fill="${FP}"/><rect width="1.5" height="0.62" fill="${FI}"/></pattern>`);return 'url(#'+id+')';};
+    const body=parts.map(p=>{
+      if(p.t==='p')return p.mk;
+      const left=p.col===LIMB_L;
+      if(p.t==='l'&&SKIN&&p.seg){const d=limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin');
+        if(!left)return `<path d="${d}" fill="${FI}" stroke="${FP}" stroke-width="0.42"/>`;
+        return hx?`<path d="${d}" fill="${hatch(p.a,p.b)}" stroke="${FI}" stroke-width="0.5"/>`:`<path d="${d}" fill="${FT}"/>`;}
+      if(p.t==='pg'){const n=p.pts.length,md=i=>((p.pts[i].x+p.pts[(i+1)%n].x)/2).toFixed(2)+','+((p.pts[i].y+p.pts[(i+1)%n].y)/2).toFixed(2);
+        let d='M'+md(n-1);for(let i=0;i<n;i++)d+='Q'+p.pts[i].x.toFixed(2)+','+p.pts[i].y.toFixed(2)+' '+md(i);
+        return left?`<path d="${d}Z" fill="${FT}" stroke="${FI}" stroke-width="0.4" stroke-linejoin="round"/>`
+                   :`<path d="${d}Z" fill="${FI}" stroke="${FI}" stroke-width="${(p.w*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;}
+      if(p.t==='l')return `<line x1="${p.a.x.toFixed(2)}" y1="${p.a.y.toFixed(2)}" x2="${p.b.x.toFixed(2)}" y2="${p.b.y.toFixed(2)}" stroke="${left?FT:FI}" stroke-width="${(3.0*(p.w||1)*fit.sc).toFixed(2)}" stroke-linecap="round"/>`;
+      if(p.t==='q')return `<polygon points="${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join(' ')}" fill="${FI}" stroke="${FI}" stroke-width="${(2.6*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+      if(p.t==='qp')return `<path d="M${p.pts.map(q=>q.x.toFixed(2)+','+q.y.toFixed(2)).join('L')}Z" fill="${FI}" stroke="${FI}" stroke-width="${((p.sw||2.6)*fit.sc).toFixed(2)}" stroke-linejoin="round"/>`;
+      if(p.t==='bp')return `<polygon points="${p.pts.join(' ')}" fill="${FI}"/>`;
+      if(p.t==='bc')return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${p.r.toFixed(2)}" fill="${FI}"/>`;
+      return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${FI}"/>`;}).join('');
+    return (HX.length?'<defs>'+HX.join('')+'</defs>':'')+propMk+body;
+  }
   return propMk+parts.map(p=>{
     if(p.t==='p')return p.mk;
     if(p.t==='l'&&SKIN&&p.seg)return `<path d="${limbD(p.a,p.b,p.seg,fit.sc,p.k,p.seg==='shin')}" fill="${p.col}"/>`;
@@ -212,33 +248,56 @@ function figMarkup(m,fit,ph,v){
     return `<circle cx="${p.c.x.toFixed(2)}" cy="${p.c.y.toFixed(2)}" r="${(L.hr*fit.sc).toFixed(2)}" fill="${INK}"/>`;}).join('');
 }
 const layer=document.getElementById('layer'), shadowEl=document.getElementById('shadow');
-function drawFig(m,fit,ph,v){layer.innerHTML=figMarkup(m,fit,ph,v);}
-// the floor is a fixed plane: its ellipse is placed once per movement and never moves
+// the figure is drawn in ink (figMarkup's st); the stage is the real shape of its box
+const FIGST={id:'hx',hatch:true};
+let BOX={w:100,h:100};
+function drawFig(m,fit,ph,v){layer.innerHTML=figMarkup(m,fit,ph,v,FIGST);}
+function fitFor(m,tv){const k=(tv?'t':'w')+BOX.h;if(!m._sf)m._sf={};return m._sf[k]||(m._sf[k]=fitOf(m,tv,BOX));}
+// the floor is a fixed plane: its hairline is placed once per movement and never moves
 let mirrorOn=false;
+let groundCx=50,groundW=30;
+function groundX(){const cx=mirrorOn?BOX.w-groundCx:groundCx;
+  shadowEl.setAttribute('x1',(cx-groundW).toFixed(2));shadowEl.setAttribute('x2',(cx+groundW).toFixed(2));}
 function applyMirror(on){
   mirrorOn=on;
-  if(on) layer.setAttribute('transform','translate(100 0) scale(-1 1)');
+  if(on) layer.setAttribute('transform','translate('+BOX.w+' 0) scale(-1 1)');
   else layer.removeAttribute('transform');
-  shadowEl.setAttribute('cx',(on?100-groundCx:groundCx).toFixed(2));
+  groundX();
 }
-let groundCx=50;
 function placeGround(m,fit,v){
   setCam(v||m);
   const j=solve(poseAt(m,0));
   const pts=['ftL','ftR','toeL','toeR','haL','haR','knL','knR'].map(k=>j[k]).filter(p=>p[1]>89.5);
   let gx=0,gz=0;
   if(pts.length){pts.forEach(p=>{gx+=p[0];gz+=p[2];});gx/=pts.length;gz/=pts.length;}
-  const g=project([gx,93,gz]);
-  groundCx=g.x*fit.sc+fit.ox;
-  shadowEl.setAttribute('cx',groundCx.toFixed(2));
-  shadowEl.setAttribute('cy',(g.y*fit.sc+fit.oy).toFixed(2));
-  shadowEl.setAttribute('rx','40');
-  shadowEl.setAttribute('ry',(40*Math.sin(R(PITCH))).toFixed(2));
+  const g=project([gx,93,gz]),gy=(g.y*fit.sc+fit.oy+1.7*fit.sc).toFixed(2);
+  groundCx=g.x*fit.sc+fit.ox;groundW=Math.min(46,30*fit.sc);
+  shadowEl.setAttribute('y1',gy);shadowEl.setAttribute('y2',gy);groundX();
 }
 MOVES.forEach(m=>{m.fit=fitOf(m);if(m.tview)m.fitT=fitOf(m,m.tview);});
 
 // ---------- timer ----------
 const $=id=>document.getElementById(id);
+// ---- session log: localStorage 'mvLog' = {"YYYY-MM-DD":["morning-flow",...]}, LOCAL calendar
+// days, one entry per app per day, written when finish() fires (no partial credit), pruned to
+// 400 days. Every page on the origin reads it: the launcher's week row and seal sheet.
+const APPID=(()=>{try{return (location.pathname.split('/').pop()||'app').replace(/\.html$/,'')||'app';}catch(e){return 'app';}})();
+const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function logRead(){try{const o=JSON.parse(localStorage.getItem('mvLog')||'{}');return o&&typeof o==='object'?o:{};}catch(e){return {};}}
+function logDone(){try{const G=logRead(),k=dayKey(new Date()),a=Array.isArray(G[k])?G[k]:[];if(a.indexOf(APPID)<0)a.push(APPID);G[k]=a;
+  const ks=Object.keys(G).sort();while(ks.length>400)delete G[ks.shift()];localStorage.setItem('mvLog',JSON.stringify(G));}catch(e){}}
+// Monday-to-Sunday row: a finished day is one solid seal carrying its date; stamp animates
+// today's; holdToday draws today still empty (the moment before the stamp)
+function weekRow(el,stamp,holdToday){try{const G=logRead(),now=new Date(),dow=(now.getDay()+6)%7;let h='';
+  for(let i=0;i<7;i++){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow+i),k=dayKey(d);
+    const done=!!(G[k]&&G[k].length)&&!(holdToday&&i===dow);
+    h+='<div class="day'+(done?' done':'')+(done&&stamp&&i===dow?' stamp':'')+'">'+(done?d.getDate():'MTWTFSS'[i])+'</div>';}
+  el.innerHTML=h;}catch(e){}}
+// the finish celebration: a light bounce with both arms up, facing the viewer
+const CELE={n:'celebrate',cyc:0.9,cam:-22,belly:MOVES[0].belly,
+ A:{p:[0,52.65,0],yaw:22,tw:0,s:[3,3],hf:-8,aL:[180,-24,180,-30],aR:[180,24,180,30],ikFL:[-5,90.5,-0.5],ikFR:[5,90.5,-0.5],fpL:38,fpR:38},
+ M:{p:[0,55.5,0],yaw:22,tw:0,s:[4,4],hf:-8,aL:[180,-28,180,-38],aR:[180,28,180,38],ikFL:[-5,93,1],ikFR:[5,93,1],fpL:0,fpR:0},
+ B:{p:[0,56.4,0],yaw:22,tw:0,s:[5,5],hf:-8,aL:[180,-32,180,-46],aR:[180,32,180,46],ikFL:[-5,93,1],ikFR:[5,93,1],fpL:0,fpR:0}};
 let idx=0,timeLeft=0,running=false,started=false,tick=null,voiceOn=true,actx=null,wl=null,swAt=false;
 // ---------- segments: movements plus derived setup gaps ----------
 // A gap is inserted wherever consecutive movements' pos tags differ. For a gap
@@ -268,12 +327,12 @@ const X2OPT=false;
 let dm=1;
 if(X2OPT){
   const mvT=MOVES.reduce((a,m)=>a+m.dur,0), trT=SEGS.reduce((a,s)=>a+(s.trans?s.dur:0),0);
-  $('mNum').insertAdjacentHTML('beforebegin',
-    '<style>.x2row{display:flex;gap:7px;justify-content:center;margin:0 0 11px}'
+  $('intro').insertAdjacentHTML('afterend',
+    '<style>.x2row{display:flex;gap:7px;margin:10px 0 0}'
     +'.x2b{font-family:inherit;cursor:pointer;font-size:0.66rem;letter-spacing:0.5px;'
-    +'padding:4px 13px;border-radius:20px;border:1px solid rgba(0,0,0,0.16);'
+    +'padding:10px 16px;min-height:44px;border-radius:4px;border:1.5px solid currentColor;text-transform:uppercase;font-weight:700;'
     +'background:transparent;color:inherit;opacity:0.5;transition:opacity 0.15s}'
-    +'.x2b.on{opacity:1;font-weight:600;background:rgba(255,255,255,0.6)}</style>'
+    +'.x2b.on{opacity:1;background:var(--ink);color:var(--paper);border-color:var(--ink)}</style>'
     +'<div class="x2row"><button class="x2b on" id="x1b"></button><button class="x2b" id="x2b"></button></div>');
   $('x1b').textContent=Math.round((mvT+trT)/60)+' min'; $('x2b').textContent=Math.round((mvT*2+trT)/60)+' min';
   const setM=k=>{if(started)return; dm=k;
@@ -281,12 +340,18 @@ if(X2OPT){
     timeLeft=MOVES[0].dur*dm; clock();};
   $('x1b').onclick=()=>setM(1); $('x2b').onclick=()=>setM(2);
 }
-// TR_ALL: restyle gap segments — tan countdown/bar + dimmed static figure — so a
-// glance tells setup time from work time. Colors are neutral tans no theme swaps touch.
-if(TR_ALL)$('mNum').insertAdjacentHTML('beforebegin',
-  '<style>.state-trans .num,.state-trans .tm{color:#8a7f6a}'
-  +'.state-trans .fill{background:#b9a98b}'
-  +'.state-trans #layer{opacity:0.62}</style>');
+// Setup is NEVER dimmed (Will, 2026-11-13): the preview is the figure at full ink, held still.
+// The phase is carried by the ochre frame, the name bar and the ochre "Get set" block.
+// ---- screen states and the stage ----
+let uiState='ready',curFit=null;
+function measure(){try{const st=$('stage'),w=st.clientWidth,h=st.clientHeight;if(!(w>0&&h>0))return;
+  const H=Math.max(40,Math.min(240,Math.round(100*h/w)));
+  if(H!==BOX.h){BOX={w:100,h:H};$('fig').setAttribute('viewBox','0 0 100 '+H);curFit=null;}
+  FIGST.hatch=w/100>=2.3;   // a 1.5-unit hatch under ~3.5 px shimmers: fall back to the tone
+}catch(e){}}
+function setState(k){uiState=k;try{const w=document.querySelector('.wrap');
+  ['ready','trans','work','done'].forEach(c=>w.classList.toggle('state-'+c,c===k));}catch(e){}
+  measure();}
 const dotsEl=$('dots');
 MOVES.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.id='d'+i;dotsEl.appendChild(d);});
 
@@ -330,8 +395,10 @@ function breathTone(f0,f1,d){try{const c=ac();if(c.state!=='running')acResume('b
   o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+d);}catch(e){}}
 const cTrans=()=>{hold(.95);chime(440,.12,1);setTimeout(()=>chime(554.37,.1,.8),150);setTimeout(()=>chime(659.25,.08,.6),300);};
 const cSwitch=()=>{hold(.8);chime(659.25,.1,.5);setTimeout(()=>chime(659.25,.1,.5),280);};
+// finish: the rising four notes, then a low thud and a high ring as the seal lands (2026-11-13)
 const cDone=()=>{hold(2.1);chime(440,.12,1.2);setTimeout(()=>chime(554.37,.1,1),200);
-  setTimeout(()=>chime(659.25,.1,1),400);setTimeout(()=>chime(880,.08,1.5),600);};
+  setTimeout(()=>chime(659.25,.1,1),400);setTimeout(()=>chime(880,.08,1.5),600);
+  setTimeout(()=>chime(110,.2,.35),1050);setTimeout(()=>chime(1318.5,.05,1.6),1100);};
 const vlog=m=>{try{console.warn('[voice] '+m);}catch(e){} try{dbg('warn: '+m);}catch(e){}};
 // iOS ring/silent switch: a page whose only audio output is Web Audio nodes gets the
 // 'ambient' audio session, which the hardware mute switch silences — Web Audio AND Web
@@ -474,7 +541,7 @@ function dbgEnable(how){if(DEBUG&&dbgEl){return;}DEBUG=true;dbg('debug view on (
   if(!dbgPoll)dbgPoll=setInterval(dbgRender,1000);dbgRender();}
 function dbgRender(){if(!DEBUG)return;try{
   if(!dbgEl){if(!document.body)return;dbgEl=document.createElement('div');
-    dbgEl.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:48vh;overflow:auto;z-index:9999;background:rgba(0,0,0,.88);color:#b6f2b6;font:11px/1.35 ui-monospace,Menlo,monospace;padding:6px 8px 12px;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text';
+    dbgEl.style.cssText='position:fixed;left:0;right:0;top:0;max-height:42vh;overflow:auto;z-index:9999;background:rgba(0,0,0,.88);color:#b6f2b6;font:11px/1.35 ui-monospace,Menlo,monospace;padding:6px 8px 12px;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text';
     const bar=document.createElement('div');bar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px';
     const mk=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.style.cssText='font:11px ui-monospace,monospace;padding:4px 7px;border-radius:6px;border:1px solid #6c6;background:#123;color:#dfd';b.onclick=()=>{try{f();}catch(e){dbg('button error: '+e.message);}};bar.appendChild(b);};
     // PROBES — active calls, tap-only
@@ -509,18 +576,17 @@ function paint(){
   $('mNum').textContent=g.trans?'GET SET UP':'MOVEMENT '+(g.mi+1)+' OF '+MOVES.length;
   $('mName').textContent=m.n; $('mTarget').textContent=g.trans?posCue(m):m.cue;
   $('cue').innerHTML=m.long;
-  $('count').textContent=(g.mi+1)+'/'+MOVES.length;
+  try{const nx=MOVES[g.mi+1];$('nx').textContent=nx?nx.n:'Finish';$('nx').className='caps'+(nx&&nx.n.length>9?' long':'');$('shName').textContent=m.n;$('shCue').textContent=m.cue||'';}catch(e){}
   $('badge').classList.toggle('visible',!g.trans&&!!m.bil);
   $('badge').textContent=dirOnly(m)?'REVERSES · CHANGE DIRECTION AT HALFWAY':'BOTH SIDES · SWITCH AT HALFWAY';
   $('vid').href='https://www.youtube.com/results?search_query='+m.q;
   $('bPrev').disabled=!g.trans&&g.mi<=0; $('bNext').disabled=!g.trans&&g.mi>=MOVES.length-1;
-  if(TR_ALL)document.querySelector('.wrap').classList.toggle('state-trans',!!g.trans);
+  setState(g.trans?'trans':'work');
   MOVES.forEach((_,i)=>{$('d'+i).className='dot'+(i<g.mi?' done':i===g.mi?' active':'');});
   clock();
 }
 function clock(){
   $('tm').textContent=Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0');
-  $('fill').style.width=(100*(1-timeLeft/sdur(SEGS[idx]))).toFixed(1)+'%';
 }
 let segEnd=0,pausedRem=0;
 function go(i){
@@ -535,7 +601,15 @@ function announce(g){
   // line; the display shows just the instruction (mName already carries the name)
   if(g.trans)cSwitch();else cTrans();
   say(cueFor(g));
+  if(g.trans||g.mi===0)poster(g);
 }
+// the transition poster: a flat vermilion sheet naming what comes next, over the paper for the
+// first moment of a change. Visual only: the timer underneath never waits for it.
+let poT=null;
+function posterOff(){try{$('poster').classList.remove('on');document.querySelector('.wrap').classList.remove('poster-on');}catch(e){}}
+function poster(g){try{$('poCount').textContent=(g.mi+1)+' of '+MOVES.length;$('poName').textContent=g.m.n;$('poSub').textContent=g.mi?'Next':'Begin';
+  $('poster').classList.add('on');document.querySelector('.wrap').classList.add('poster-on');
+  clearTimeout(poT);poT=setTimeout(posterOff,1800);}catch(e){}}
 function sync(){
   if(!running)return;
   let rem=Math.ceil((segEnd-Date.now())/1000);
@@ -561,10 +635,12 @@ function finish(){
   MOVES.forEach((_,i)=>$('d'+i).className='dot done');
   $('mNum').textContent='COMPLETE';$('mName').textContent='Movement complete';$('mTarget').textContent='';
   $('badge').classList.remove('visible');
-  document.querySelector('.wrap').classList.remove('state-trans');
-  document.querySelector('.wrap').classList.add('state-done');
+  posterOff();setState('done');
   $('cue').innerHTML='<strong>Done.</strong> Hips and ankles mobile, spine articulated, hip rotation opened, core switched on. Nothing loaded the peroneal tendon.';
-  $('bMain').style.display='none';$('tm').textContent='\u2713';$('fill').style.width='100%';
+  try{$('finLine').innerHTML=$('cue').innerHTML;$('sheet').classList.remove('on');}catch(e){}
+  $('bMain').style.display='none';$('tm').textContent='\u2713';
+  // the day's seal: logged at once, stamped onto the week row as the low note lands
+  weekRow($('week'),false,true);logDone();setTimeout(()=>weekRow($('week'),true,false),1000);
   cDone();say('Movement complete.');
   setTimeout(()=>{if(!running)audioKeepAlive(false);},6000);   // after the finish cues
 }
@@ -593,11 +669,10 @@ $('bNext').onclick=()=>{const g=SEGS[idx],t=g.trans?g.mi:g.mi+1;if(t<=MOVES.leng
 $('bReset').onclick=()=>{
   clearInterval(tick);tick=null;running=false;started=false;unlockScreen();audioKeepAlive(false);
   idx=0;timeLeft=MOVES[0].dur*dm;swAt=false;
-  document.querySelector('.wrap').classList.remove('state-done','state-trans');
+  posterOff();setState('ready');try{$('sheet').classList.remove('on');}catch(e){}
   $('bMain').style.display='';$('bMain').textContent='Start';
   $('mNum').textContent='READY';$('mName').textContent='Tap Start to begin';$('mTarget').textContent='';
-  $('badge').classList.remove('visible');$('fill').style.width='0%';$('tm').textContent='0:00';
-  $('count').textContent='\u2013/12';
+  $('badge').classList.remove('visible');$('tm').textContent='0:00';
   $('cue').innerHTML='<strong>Morning Movement</strong> runs 9 minutes: standing mobility, then floor work, then core. Two-sided movements chime at the halfway point. No impact \u2014 safe for the right peroneal tendon.';
   MOVES.forEach((_,i)=>$('d'+i).className='dot');
 };
@@ -622,16 +697,16 @@ if(window.addEventListener){
 }
 
 // figure animates continuously, whatever the timer is doing
-let t0=performance.now(),last=0,curFit=null,brPh=0;
+let t0=performance.now(),last=0,brPh=0,curM=null;
 (function loop(now){
-  if(now-last>30){last=now;const m=SEGS[idx].m;
-    const tv=(TR_ALL&&SEGS[idx].trans&&m.tview)?m.tview:null, fit=tv?m.fitT:m.fit;
-    if(curFit!==fit){curFit=fit;placeGround(m,fit,tv);applyMirror(false);}
+  if(now-last>30){last=now;const dn=uiState==='done',gap=!dn&&SEGS[idx].trans,m=dn?CELE:SEGS[idx].m;
+    const tv=(TR_ALL&&gap&&m.tview)?m.tview:null, fit=fitFor(m,tv);
+    if(curFit!==fit){const same=curM===m;curFit=fit;curM=m;placeGround(m,fit,tv);applyMirror(same?mirrorOn:false);}
     // TR_ALL gaps hold the upcoming movement's A keyframe as a static preview
-    const ph=(TR_ALL&&SEGS[idx].trans)?0:((now-t0)/1000%m.cyc)/m.cyc;
+    const ph=(TR_ALL&&gap)?0:((now-t0)/1000%m.cyc)/m.cyc;
     // breath-tempo audio on flagged movements: cycle wrap = inhale start (rising),
     // halfway = exhale start (falling). Only while the timer runs and audio exists.
-    if(running&&m.br&&!SEGS[idx].trans&&actx){
+    if(running&&m.br&&!gap&&!dn&&actx){
       const sp=m.split||0.5;   // inhale = A -> B, exhale = B -> A (poseAt)
       if(ph<brPh)breathTone(196,294,m.split?m.cyc*sp*0.9:m.cyc*0.42);
       else if(brPh<sp&&ph>=sp)breathTone(294,196,m.split?m.cyc*(1-sp)*0.9:m.cyc*0.48);
@@ -641,3 +716,13 @@ let t0=performance.now(),last=0,curFit=null,brPh=0;
   requestAnimationFrame(loop);
 })(performance.now());
 timeLeft=MOVES[0].dur;
+// ---- wiring for the new shell: intro text, form sheet behind a tap on the figure, stage size ----
+try{$('intro').innerHTML=$('cue').innerHTML;}catch(e){}
+try{$('shName').textContent=MOVES[0].n;$('shCue').textContent=MOVES[0].cue||'';
+  $('stage').onclick=()=>{if(uiState!=='done')$('sheet').classList.toggle('on');};
+  $('bClose').onclick=()=>$('sheet').classList.remove('on');
+  $('poster').onclick=posterOff;
+  window.addEventListener('resize',measure);
+  if(window.ResizeObserver)new ResizeObserver(measure).observe($('stage'));
+}catch(e){}
+measure();

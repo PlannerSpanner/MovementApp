@@ -23,7 +23,7 @@ const {serve}=require('./serve');
   check(`2x doubles first clock (${t0} -> ${t1})`, mmss(t1)===durs[0]*2);
   await page.click('#bMain');
   await page.clock.runFor(2000);
-  await page.click('#x1b');                              // must be inert now
+  await page.$eval('#x1b',e=>e.click());                 // must be inert now (and is off screen once started)
   await page.clock.runFor(400);
   const t2=await page.textContent('#tm');
   check(`toggle locked after start (@ ${t2})`, mmss(t2)>durs[0]);
