@@ -79,6 +79,7 @@ _rd = """<!DOCTYPE html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Movement">
 <link rel="apple-touch-icon" href="icon-app.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#f4f2fb">
 <title>Daily 13</title>
 <meta http-equiv="refresh" content="0;url=daily-13.html">

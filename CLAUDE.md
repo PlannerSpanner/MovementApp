@@ -81,8 +81,17 @@ by depth); the paper hairline where a right limb crosses the trunk stays; no nam
   when finish() fires and by strength when a workout becomes fully checked; pruned to 400
   days. No streak count anywhere (Will chose the seal sheet over the parked streak design).
   Finish: celebration figure (CELE), `cDone` plus a 110 Hz thud and 1318 Hz ring at the stamp.
-- APP ICON: three options in `icons/` from `node proto/icons/build.js` (figure / seal / both),
-  awaiting Will's choice; `icon-app.png` and the pages are untouched until he picks.
+- APP ICON: Will chose option A (the figure at the finish, cream on vermilion) on 2026-11-13.
+  `icon-app.png` IS `icons/a-180.png`; `manifest.webmanifest` (name Movement, start index.html,
+  192/512 any + maskable) is linked from every head (app_head, wk_head, home, the daily-10 stub
+  in rebuild.py). Options B and C stay in `icons/` unused. Rebuild all with
+  `node proto/icons/build.js`, then copy a-180 over icon-app.png. Do NOT run tools/icons.py (the
+  old gradient icon). iOS keeps the icon it saved when the app was added to the home screen:
+  a new icon shows only after removing and re-adding it. qa/design.js checks the wiring.
+- HANDS OVER AN EDGE: pose `hcL`/`hcR` (with `pL`/`pR` = the surface height) = how far past the
+  wrist the surface's edge is; the palm lies on the surface and the fingers fold down over the
+  edge (`opt.curl` in handLandmarks; folded landmarks are exempt from the ground line). Used by
+  Bench dips, where the BENCH was moved under the hands rather than the hands (AC margins).
 - index.html is BUILT now (src/home.html + d_daily.js + engine + pure app_tpl slice +
   src/home.js, Legge 1891 lines from docs/design/tao-legge.json). Never edit index.html.
 - The diagnostics panel sits at the TOP of the screen (the controls are in the bottom row).

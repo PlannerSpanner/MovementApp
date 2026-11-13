@@ -31,7 +31,7 @@ function blend(A,B,t){const o={swL:lerp(A.swL||0,B.swL||0,t),swR:lerp(A.swR||0,B
   if(A.ikFL&&B.ikFL) o.ikFL=lerpA(A.ikFL,B.ikFL,t); else o.lL=lerpA(A.lL,B.lL,t);
   if(A.ikFR&&B.ikFR) o.ikFR=lerpA(A.ikFR,B.ikFR,t); else o.lR=lerpA(A.lR,B.lR,t);
   // authored foot contact (eng2.js footAt): blend when either key carries it
-  ['fpL','fpR','fyL','fyR','gL','gR','pL','pR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
+  ['fpL','fpR','fyL','fyR','gL','gR','pL','pR','hcL','hcR'].forEach(k=>{if(A[k]!=null||B[k]!=null)o[k]=lerp(A[k]||0,B[k]||0,t);});
   if(!o.lL) o.lL=A.lL||B.lL||[0,0,0,0];
   if(!o.lR) o.lR=A.lR||B.lR||[0,0,0,0];
   return o;}
@@ -128,7 +128,7 @@ function figMarkup(m,fit,ph){
     [['L',LIMB_L,1,5],['R',INK,3,7]].forEach(([sd,col,ia,il])=>{
       // the foot paints OVER the end of its own shin, which it encloses
       parts.push({t:'pg',pts:footOutline(j,sd,v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[il].k),col,d:Math.max((P['ft'+sd].d+P['toe'+sd].d)/2,parts[il].d)+0.02,w:0.35});
-      parts.push({t:'pg',pts:handOutline(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd]},v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[ia].k),col,d:P['ha'+sd].d+0.01,w:0.35});
+      parts.push({t:'pg',pts:handOutline(j,sd,pose['g'+sd],{fist:held[sd],surf:pose['p'+sd],curl:pose['hc'+sd]},v=>{const q=project(v);return {x:q.x*fit.sc+fit.ox,y:q.y*fit.sc+fit.oy,d:q.d};},fit.sc,parts[ia].k),col,d:P['ha'+sd].d+0.01,w:0.35});
     });
   }else{
   parts.push({t:'l',a:P.ftL,b:P.toeL,d:(P.ftL.d+P.toeL.d)/2,col:LIMB_L,w:0.8});

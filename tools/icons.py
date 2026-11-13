@@ -1,3 +1,5 @@
+# SUPERSEDED 2026-11-13: icon-app.png is now icons/a-180.png (Will chose icon option A; built by
+# node proto/icons/build.js). Running this script would put the old gradient icon back. Kept for the record.
 # Single app icon (icon-app.png): the whole collection is ONE home-screen app whose
 # home page is index.html, so every page shares this icon. Will's original glyph
 # (tools/icon-glyph-src.png, white on flat moss) composited onto a diagonal gradient

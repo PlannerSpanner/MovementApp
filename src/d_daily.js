@@ -149,15 +149,19 @@ const MOVES=[
 // The bottom stops 1.5 short of parallel (a safety margin on the AC-joint rule, it sat
 // exactly on it) and the top is a straight arm.
 {n:"Bench dips",pos:'bench',cue:"Stop at parallel — shoulders down and back",dur:40,bil:false,cyc:3.0,cam:72,tdur:15,
- prop:[{l:[[-12,74,0.5],[12,74,0.5]]},{l:[[-12,74,-6.5],[12,74,-6.5]]},
-       {l:[[-12,74,0.5],[-12,74,-6.5]]},{l:[[12,74,0.5],[12,74,-6.5]]},
-       {l:[[-11,74,0.5],[-11,93,0.5]]},{l:[[11,74,0.5],[11,93,0.5]]},
-       {l:[[-11,74,-6.5],[-11,93,-6.5]]},{l:[[11,74,-6.5],[11,93,-6.5]]}],
+ // 2026-11-13 (Will): palms ON the bench, fingers curled over the front edge. The hands did not
+ // move (the AC-joint margins depend on them); the bench moved 3.2 forward under them, so the
+ // wrist sits 2.7 behind its front edge. pL/pR = the bench top the hands lie on, hcL/hcR = how
+ // far past the wrist the edge is (the hand folds down over it there).
+ prop:[{l:[[-12,74,3.7],[12,74,3.7]]},{l:[[-12,74,-3.3],[12,74,-3.3]]},
+       {l:[[-12,74,3.7],[-12,74,-3.3]]},{l:[[12,74,3.7],[12,74,-3.3]]},
+       {l:[[-11,74,3.7],[-11,93,3.7]]},{l:[[11,74,3.7],[11,93,3.7]]},
+       {l:[[-11,74,-3.3],[-11,93,-3.3]]},{l:[[11,74,-3.3],[11,93,-3.3]]}],
  setup:"Dumbbells down, then move to the bench. Hands on the edge beside your hips, feet out in front.",
  A:{p:[0,75.05,6],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},swAL:-92,swAR:92,
-    ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0},
+    ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0,pL:74,pR:74,hcL:2.7,hcR:2.7},
  B:{p:[0,86,7],yaw:0,tw:0,s:[8,4],hf:2,ikL:{w:[-7.5,74,1]},ikR:{w:[7.5,74,1]},
-    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0}},
+    swAL:-92,swAR:92,ikFL:[-5.5,93,27],ikFR:[5.5,93,27],fpL:0,fpR:0,pL:74,pR:74,hcL:2.7,hcR:2.7}},
 
 // Static hold: the fight is grip + anti-shrug + anti-lean. Barely-visible sway.
 {n:"Dumbbell farmer hold",pos:'standing',cue:"Ribs stacked over pelvis — don't let the weights win",dur:35,bil:false,cyc:4.6,cam:40,tdur:15,pin:"LR",

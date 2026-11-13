@@ -191,7 +191,12 @@ Rules: nothing during work except its last three seconds; respect the system set
 
 ## 11. App icon
 
-Three options are built by `node proto/icons/build.js` into `icons/` (180, 192, 512, maskable 192 and 512, 1024 master, SVG), awaiting Will's choice: A the figure at the finish, cream on vermilion; B the seal, a vermilion disc carrying an M on ink; C the ink figure reaching across the seal on paper. No hatching; the icon figure wears a heavier skin (about 1.6 times the limb width) on the same skeleton so it reads at 60 points. Nothing is wired into the pages until one is chosen.
+Will chose option A on 2026-11-13: the figure at the finish, cream on vermilion, no hatching. The icon figure wears a heavier skin (about 1.6 times the limb width) on the same skeleton so it reads at 60 points.
+
+- Files, built by `node proto/icons/build.js` into `icons/`: `a-180.png` (apple-touch-icon, also copied to `icon-app.png`), `a-192.png` and `a-512.png` (manifest), `a-192m.png` and `a-512m.png` (maskable, artwork inside the central 80%), `a-1024.png` (native master), `a.svg`.
+- `manifest.webmanifest` at the root names the app Movement, starts at `index.html` and lists the four manifest icons. Every page links it.
+- Options B (seal) and C (figure and seal) remain in `icons/`, unused.
+- For the native build use `a-1024.png` as the App Store and home-screen master. iOS applies its own mask; do not pre-round it.
 
 ## 12. What the native build must add
 

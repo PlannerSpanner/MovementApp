@@ -118,7 +118,8 @@ shoulder slaps, Lateral weight shifts.
 - **Faults:** a timid half-range swing; arms and knees out of phase; squatting instead of
   folding.
 - **Figure:** A = overhead/back extension arc; B = full fold, head low, hands behind the
-  shins; the midpoint is a flat-back hinge with the arms horizontal; heels planted.
+  shins at mid-shin height with the arms swung back to about 77 deg past plumb (2026-11-13,
+  Will: they hung down beside the feet and read as a third foot); the midpoint is a flat-back hinge with the arms horizontal; heels planted.
 
 ## 3. Punching rotations — 50s, 1.6s cycle, unilateral (switch)
 - **Setup:** wide horse stance — feet well outside shoulders, toes slightly out, knees bent
@@ -839,7 +840,8 @@ Retired: Wall slide (see "Retired — available for future versions").
 
 ## 11. Bench dips (STRICT PARTIAL) — 40s, 3.0s cycle
 - **Setup:** hands fixed on the bench edge beside the hips ([±7.5,74,1], constant in
-  both frames), feet out front on the floor, torso upright. Bench drawn as a real
+  both frames; since 2026-11-13 the palms lie ON the bench and the fingers curl over its
+  front edge, 2.7 ahead of the wrist: the bench moved forward, the hands did not), feet out front on the floor, torso upright. Bench drawn as a real
   box (two edges + four legs) — a single edge line collapses side-on.
 - **Execution:** elbows bend straight back (swAL −150 / swAR 150) lowering the hips;
   HARD STOP with upper arms parallel to the floor; press back up.

@@ -28,7 +28,7 @@ const MOVES=[
 {n:"Arm sweeps with knee dip",pos:'standing',cue:"Arms sweep overhead, then fold and swing through",dur:50,bil:false,cyc:2.0,
  setup:"Stay standing, feet under your hips, arms hanging.",
  A:{p:[2.4,55.7,5.5],yaw:24,tw:0,s:[-12,-18],hf:-22,aL:[196,-9,204,-7],aR:[196,9,204,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]},
- B:{p:[-3.7,56.5,-8.2],yaw:24,tw:0,s:[122,146],hf:14,aL:[-62,-9,-70,-7],aR:[-62,9,-70,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]}},
+ B:{p:[-3.7,56.5,-8.2],yaw:24,tw:0,s:[122,146],hf:14,aL:[-74,-9,-80,-7],aR:[-74,9,-80,7],ikFL:[-4.2,93,2.9],ikFR:[5,93,-1.1]}},
 
 // A = right punch: the trunk twists left (tw<0 brings the right shoulder forward), the
 // right arm extends fully across the body, the left fist retracts to the ribs; B mirrors.
@@ -190,12 +190,15 @@ const MOVES=[
 // the screen instead of into the lens.
 {n:"Thread the needle",pos:'quadruped',cue:"Reach up, then slide the arm under",dur:60,bil:true,cyc:3.6,tdur:15,
  setup:"Drop your knees and come to hands and knees, wrists under shoulders.",
+ // 2026-11-13 (Will): the planted hand moved from [-7,93,23.5] to [-10,93,24]. In the thread the
+ // head came down on top of it and a sliver of hand showed under the head; now it is planted
+ // clear of the head, beside it.
  // Foot contact authored (2026-11-12): toes point straight back, top of the foot on the floor.
- A:{p:[0,74,0],yaw:0,tw:55,s:[64,62],hf:-24,ikL:{w:[-7,93,23.5]},
+ A:{p:[0,74,0],yaw:0,tw:55,s:[64,62],hf:-24,ikL:{w:[-10,93,24]},
     aR:[0,125,0,125],lL:[7,-6,-90,-5],lR:[7,6,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
- M:{p:[0,74,0],yaw:0,tw:-20,s:[80,84],hf:10,ikL:{w:[-7,93,23.5]},
+ M:{p:[0,74,0],yaw:0,tw:-20,s:[80,84],hf:10,ikL:{w:[-10,93,24]},
     aR:[-14,30,-20,-60],lL:[7,-6,-90,-5],lR:[7,6,-90,5],fpL:4,fpR:4,fyL:180,fyR:180},
- B:{p:[0,74,0],yaw:0,tw:-66,s:[104,118],hf:40,ikL:{w:[-7,93,23.5]},
+ B:{p:[0,74,0],yaw:0,tw:-66,s:[104,118],hf:40,ikL:{w:[-10,93,24]},
     aR:[-26,-10,-26,-10],lL:[7,-6,-90,-5],lR:[7,6,-90,5],fpL:4,fpR:4,fyL:180,fyR:180}},
 
 // 2026-11-12: camera raised to pitch 30 so the Z of the legs, which lies in the floor

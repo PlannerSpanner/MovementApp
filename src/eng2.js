@@ -455,8 +455,16 @@ function handLandmarks(J,s,g,opt,k){
      H(3.4,1.05,0,1.0,'knI'),H(3.2,-1.25,0,0.95,'knP'),H(5.3,0.75,0.45,0.75,'tipI'),H(5.7,-0.1,0.5,0.75,'tipM'),H(5.0,-1.05,0.4,0.7,'tipP')];
   // soft tissue rests ON a surface, it does not pass through it: with the hand laid on the floor
   // or a bench, no landmark sits lower than the ground line drawn 1.5 under the joint plane
+  // opt.curl (pose hcL/hcR) = how far beyond the wrist the EDGE of the surface is: the palm lies
+  // on the bench and everything past the edge folds down over it (Will, 2026-11-13, bench dips:
+  // "palms on the bench with fingers curled over the front edge"). Folded landmarks are marked
+  // `over` and are exempt from the ground line, which is the surface they hang off.
+  const e=opt&&opt.curl;
+  if(e&&!(opt&&opt.fist)&&F.flat>0){const w=smooth(Math.min(1,F.flat)),A0=[0,0.9,1.3,3.1,3.4,3.2,5.3,5.7,5.0];
+    pts.forEach((q,i)=>{const a=A0[i];if(a<=e)return;const d=(a-e)*w;   // a - d along the fingers, d down (out of the palm)
+      q.p=[q.p[0]-u[0]*d+n[0]*d+u[0]*0.5*w,q.p[1]-u[1]*d+n[1]*d+u[1]*0.5*w,q.p[2]-u[2]*d+n[2]*d+u[2]*0.5*w];q.over=1;});}
   if(F.flat>0){const lim=(opt&&opt.surf!=null?opt.surf:93)+1.5,w=Math.min(1,F.flat*4);
-    pts.forEach(q=>{const ov=q.p[1]+q.r-lim;if(ov>0)q.p=[q.p[0],q.p[1]-ov*w,q.p[2]];});}
+    pts.forEach(q=>{if(q.over)return;const ov=q.p[1]+q.r-lim;if(ov>0)q.p=[q.p[0],q.p[1]-ov*w,q.p[2]];});}
   return {F,pts};
 }
 function handOutline(J,s,g,opt,pr,sc,k,inset){
@@ -640,7 +648,7 @@ function inkLimb(j,pose,pr,sc,key,held){
   const s=key[1],o=s==='L'?'R':'L',arm=key[0]==='A',N=arm?['sh','el','ha']:['hp','kn','ft'];
   const A=pr(j[N[0]+s]),B=pr(j[N[1]+s]),C=pr(j[N[2]+s]),oA=pr(j[N[0]+o]),oB=pr(j[N[1]+o]),oC=pr(j[N[2]+o]);
   const k1=farK((A.d+B.d)/2,(oA.d+oB.d)/2),k2=farK((B.d+C.d)/2,(oB.d+oC.d)/2);
-  const hopt=arm?{fist:held&&held[s],surf:pose['p'+s]}:null;
+  const hopt=arm?{fist:held&&held[s],surf:pose['p'+s],curl:pose['hc'+s]}:null;
   const mk=ins=>({c1:capPoly(A,B,arm?'upper':'thigh',sc,k1,ins),c2:capPoly(B,C,arm?'fore':'shin',sc,k2,ins,!arm),
     e:polyCCW(arm?handOutline(j,s,pose['g'+s],hopt,pr,sc,k2,ins):footOutline(j,s,pr,sc,k2,ins))});
   // the extremity's own axis on screen (wrist to fingertips, ankle to ball); end-on it has none

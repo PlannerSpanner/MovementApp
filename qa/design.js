@@ -49,6 +49,14 @@ const check=(name,ok,detail)=>{console.log(`${name.padEnd(64)} ${ok?'ok':'FAIL'}
  for(let i=0;i<24;i++){const j=E.solve(E.poseAt(bd,i/24));E.setCam(bd);for(const k in j){const x=E.project(j[k]).x*f.sc+f.ox;a=Math.min(a,x);b=Math.max(b,x);}}
  check(`stage fit: bird dog spans ${(b-a).toFixed(0)} of 100 units wide (was ${(()=>{let c=1e9,d=-1e9;for(let i=0;i<24;i++){const j=E.solve(E.poseAt(bd,i/24));E.setCam(bd);for(const k in j){const x=E.project(j[k]).x*bd.fit.sc+bd.fit.ox;c=Math.min(c,x);d=Math.max(d,x);}}return (d-c).toFixed(0);})()})`,b-a>=84);
 }
+// ---------- pure: one home-screen app (icon A, 2026-11-13) ----------
+{const R=path.join(__dirname,'..'),mf=JSON.parse(fs.readFileSync(path.join(R,'manifest.webmanifest'),'utf8'));
+ const png=f=>{const b=fs.readFileSync(path.join(R,f));return b.readUInt32BE(16)+'x'+b.readUInt32BE(20);};
+ const bad=mf.icons.filter(i=>!fs.existsSync(path.join(R,i.src))||png(i.src)!==i.sizes).map(i=>i.src);
+ check('icon: manifest icons exist at their stated sizes, any and maskable',!bad.length&&mf.icons.some(i=>i.purpose==='maskable')&&mf.icons.some(i=>i.sizes==='512x512'),bad[0]);
+ check('icon: icon-app.png is the 180 px touch icon of option A',fs.readFileSync(path.join(R,'icon-app.png')).equals(fs.readFileSync(path.join(R,'icons','a-180.png'))));
+ const pages=['index','morning-flow','daily-13','strength','prenatal-stretch','prenatal-movement','daily-10'].filter(n=>{const h=fs.readFileSync(path.join(R,n+'.html'),'utf8');return !(h.includes('<link rel="manifest" href="manifest.webmanifest">')&&h.includes('<link rel="apple-touch-icon" href="icon-app.png">'));});
+ check('icon: every built page links the one icon and the manifest',!pages.length,pages[0]);}
 // ---------- pure: launcher helpers ----------
 {const js=fs.readFileSync(path.join(ROOT,'src','home.js'),'utf8'),core=js.slice(0,js.indexOf('// ---- DOM ----'));
  const H=vm.runInNewContext(core+'\n;({taoFor,weekOf,monthOf,nextUp,dayKey,doneOn})',{Math,Date,Array,Object,JSON});

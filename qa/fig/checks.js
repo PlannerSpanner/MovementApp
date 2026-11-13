@@ -200,12 +200,13 @@ function audit(E,m){
         walk(Lm.A,Lm.B,Lm.C,Lm.arm?'elbow':'knee');
         if(Lm.ax)walk(Lm.B,Lm.C,{x:Lm.C.x+Lm.ax.x*3*sc,y:Lm.C.y+Lm.ax.y*3*sc},Lm.arm?'wrist':'ankle',0.8);   // 0.8: a hand or foot seen end-on is short on screen
         if(!Lm.arm){const hp=k==='LL'?G.trunk.hpL:G.trunk.hpR;if(F.c1.r0>G.trunk.rp+1e-6||Math.hypot(Lm.A.x-hp.x,Lm.A.y-hp.y)>1e-6)note('pelvis',k,1,f.ph,`the ${k} thigh root (r ${(F.c1.r0/sc).toFixed(2)}) is not inside the pelvis corner (r ${I.RP})`);}
-        else{const s=k[1],nm=s==='L'?'left':'right',H=E.handLandmarks(f.j,s,f.pose['g'+s],{fist:m._held&&m._held[s],surf:f.pose['p'+s]},Lm.k2);
+        else{const s=k[1],nm=s==='L'?'left':'right',H=E.handLandmarks(f.j,s,f.pose['g'+s],{fist:m._held&&m._held[s],surf:f.pose['p'+s],curl:f.pose['hc'+s]},Lm.k2);
           const hl=E.hullLoop(H.pts.filter(q=>q.id!=='wrist'),G.pr,sc,0,40);let w=1e9;
           for(let a=0;a<12;a++){const cx=Math.cos(a*Math.PI/12),cy=Math.sin(a*Math.PI/12),v=hl.map(p=>p.x*cx+p.y*cy);w=Math.min(w,Math.max(...v)-Math.min(...v));}
           if(w<1.7*sc)note('handWidth',s,1.7-w/sc,f.ph,`the ${nm} hand is only ${(w/sc).toFixed(2)} wide on screen (min 1.7)`);
           const S0=f.pose['p'+s]==null?FLOOR:f.pose['p'+s],h=H.F;
-          if(h.flat>=0.25){const low=Math.max(...H.pts.map(q=>q.p[1]+q.r))-S0;if(low>1.7)note('handFloor',s+':dip',low,f.ph,`the ${nm} hand dips ${low.toFixed(2)} below the surface it rests on (ground line at 1.7)`);}
+          if(h.flat>=0.25){const low=Math.max(...H.pts.filter(q=>!q.over).map(q=>q.p[1]+q.r))-S0;   // fingers curled over an edge hang below it by design
+            if(low>1.7)note('handFloor',s+':dip',low,f.ph,`the ${nm} hand dips ${low.toFixed(2)} below the surface it rests on (ground line at 1.7)`);}
           if(h.flat>=1){const j=f.j,lat=nrm(sub(j.shR,j.shL));let v=sub(j['ha'+s],j.pelvis);const dl=dot(v,lat);v=[v[0]-lat[0]*dl,0,v[2]-lat[2]*dl];
             const fore=Math.abs(j['el'+s][1]-S0)<2.6;
             if(h.palm[1]<0.85)note('handFloor',s+':palm',1,f.ph,`the ${nm} hand lies flat with its palm not down`);
